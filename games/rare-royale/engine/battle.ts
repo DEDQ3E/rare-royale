@@ -22,7 +22,7 @@ export const TUNING = {
   moveBase: 2.4, movePerSpeed: 0.12,
   sightBase: 26, sightPerWits: 0.8,
   woundedFrac: 0.35,
-  mightDmg: 0.035, fightDmgMul: 1.05, hideDmgMul: 1, hideStealth: 0.3, maxStealth: 0.5, lastStandHp: 20, koDmgStep: 0.08, koDmgMaxStacks: 3,
+  mightDmg: 0.035, fightDmgMul: 1, hideDmgMul: 1.12, lootTierBonus: 0.18, hideStealth: 0.3, maxStealth: 0.5, lastStandHp: 20, koDmgStep: 0.08, koDmgMaxStacks: 3,
   hitPerStat: 0.012, rangeFalloff: 0.25, coverHit: 0.15, coverDmg: 0.7,
   koHealFrac: 0.25, bandageHp: 20, maxBandages: 4,
   downedTicks: 5, reviveHpFrac: 0.5, reviveInvulnTicks: 3,
@@ -345,7 +345,7 @@ export function createBattle(options: BattleOptions): Battle {
   }
   function openCrate(f: Fighter, i: number, rng: Rng) {
     crateOpen[i] = true;
-    const tier = Math.min(3, map.crates[i].tier + (rng.chance(f.stats.wits * 0.012) ? 1 : 0));
+    const tier = Math.min(3, map.crates[i].tier + (rng.chance(f.stats.wits * 0.012 + (f.tactic === "loot" ? T.lootTierBonus : 0)) ? 1 : 0));
     const table: readonly (readonly [LootId, number])[] = tier === 1
       ? [["slingshot", 35], ["armor20", 30], ["bandages", 35]]
       : tier === 2 ? [["bow", 25], ["hammer", 20], ["armor35", 30], ["bandages", 25]] : [["wand", 35], ["armor50", 35], ["bow", 15], ["bandages", 15]];

@@ -74,7 +74,7 @@ const oddsOf = (a: Acc) => ({ back: +(a.back / a.n).toFixed(3), profit: +(a.prof
 const odds = { rounds: baselineRounds, all: oddsOf(all), byTactic: Object.fromEntries(TACTICS.map(t => [t, oddsOf(byTactic.get(t)!)])) };
 
 const avgEV = all.prize / all.n;
-let worstRatio = 0, worstEV = 0, worstName = "";
+let worstRatio = 0, worstEV = 0, worstName = "", tacticLo = Infinity, tacticHi = 0;
 function table(title: string, map: Map<unknown, Acc>, keys: readonly unknown[]) {
   out(); out(`## ${title}`); out();
   out(`| Group | Entries | Any RF back | Top 10 | Win rate | Return per 1 RF entry | vs average |`);
@@ -84,6 +84,7 @@ function table(title: string, map: Map<unknown, Acc>, keys: readonly unknown[]) 
     const ev = a.prize / a.n, ratio = ev / avgEV;
     if (ratio > worstRatio) { worstRatio = ratio; worstName = `${title}: ${String(k)}`; }
     worstEV = Math.max(worstEV, ev);
+    if (title === "By tactic") { tacticLo = Math.min(tacticLo, ratio); tacticHi = Math.max(tacticHi, ratio); }
     out(`| ${String(k)} | ${a.n} | ${pc(a.back, a.n)} | ${pc(a.top10, a.n)} | ${pc(a.wins, a.n)} | ${ev.toFixed(3)} RF | ${ratio.toFixed(2)}x |`);
   }
 }
@@ -155,6 +156,7 @@ for (const policy of policies) {
 
 out(); out(`## Targets`); out();
 out(`- No Generation, family or tactic earns more than 1.2x the average prize per entry (${avgEV.toFixed(2)} RF): ${worstRatio <= 1.2 ? "PASS" : "FAIL"} (highest ${worstRatio.toFixed(2)}x, ${worstName}).`);
+out(`- Every tactic returns within 5% of the average, so the round, not the choice, decides which was right: ${tacticLo >= 0.95 && tacticHi <= 1.05 ? "PASS" : "FAIL"} (${tacticLo.toFixed(2)}x to ${tacticHi.toFixed(2)}x).`);
 out(`- No group earns 1 RF or more per 1 RF entry: ${worstEV < 1 ? "PASS" : "FAIL"} (highest ${worstEV.toFixed(3)} RF).`);
 out(`- No purchase's average gain reaches its cost, even at the top of the 95% interval, and no late purchase (100+ rounds) pays for itself: ${purchaseOk ? "PASS" : "FAIL"}.`);
 out(); out(`Simulated in ${((Date.now() - t0) / 1000).toFixed(1)} s.`);

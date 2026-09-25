@@ -62,7 +62,7 @@ Everything below is **simulated** in this preview and labelled on every screen. 
 - **Backed prizes:** prizes come only from the same round's paid entries. Unpaid seats are filled by *wild* Friends that fight but never take RF, and the ladder ranks paid entrants only; with fewer than 5 paid entries a round is free and entries are refunded. In this preview the other 49 seats are simulated paid entrants.
 - **Sponsoring closes when 25 are left**, so nobody can buy the finish.
 
-**An average round** (300 rounds with the simulated crowd): 86.9 RF spent (50 RF entries + 36.9 RF sponsoring and shouts) → **24.1 RF burned (28%)**, 23.4 RF to active Friend rewards, 39.4 RF back to players. The storm alone burns 0.64 RF of bounties a round. The viewer's cosmetics come on top: every aura, title and shout is a pure sink that cannot buy an advantage.
+**An average round** (300 rounds with the simulated crowd): 87.1 RF spent (50 RF entries + 37.1 RF sponsoring and shouts) → **24.2 RF burned (28%)**, 23.6 RF to active Friend rewards, 39.4 RF back to players. The storm alone burns 0.60 RF of bounties a round. The viewer's cosmetics come on top: every aura, title and shout is a pure sink that cannot buy an advantage.
 
 ### Why a player would actually play
 
@@ -70,19 +70,19 @@ A 1 RF entry pays something back almost every other round, and the lobby shows t
 
 | Tactic | Any RF back | 1 RF or more | Top 10 | Win | Average return |
 |---|---:|---:|---:|---:|---:|
-| All | 45.2% | 20.1% | 20.0% | 2.0% | 0.790 RF |
-| Fight | 53.5% | 16.8% | 16.6% | 2.8% | 0.887 RF |
-| Hide | 39.8% | 26.6% | 26.6% | 0.9% | 0.734 RF |
-| Loot | 42.2% | 16.8% | 16.7% | 2.3% | 0.748 RF |
+| All | 45.5% | 20.1% | 20.0% | 2.0% | 0.789 RF |
+| Fight | 51.8% | 15.6% | 15.5% | 2.1% | 0.779 RF |
+| Hide | 41.5% | 27.0% | 27.0% | 1.3% | 0.784 RF |
+| Loot | 43.1% | 17.5% | 17.5% | 2.6% | 0.804 RF |
 
-The average return is 0.79 RF per entry (0.8 RF goes back into the round; the storm burns a little of it), spread over ten places and every knockout instead of three podium spots. Fight earns bounties, Hide reaches the top 10 most often.
+The average return is 0.79 RF per entry (0.8 RF goes back into the round; the storm burns a little of it), spread over ten places and every knockout instead of three podium spots. **All three tactics return the same on average (within 5%)**, so the choice is a style, not an edge, and the round decides which one was right: Fight collects the most bounties, Hide hits harder from ambush and reaches the top 10 most often, Loot finds the best gear.
 
 ### Fair by construction, checked by simulation
 
 Stats, family abilities, tactics and sponsor items change the fight, within limits checked by `npm run balance`:
 
-- No Generation, family or tactic earns more than 1.2× the average return (highest: 1.16×, Colossus). No group averages 1 RF back per 1 RF entry (highest: 0.916 RF).
-- **No purchase pays for itself.** Each purchase is tested by playing the same seeded round twice, with and without it: a shield returns 0.31 RF per 1 RF, a medkit 0.17, a second life 0.08, and buying everything every time 0.13. Purchases made in the last moments before sponsoring closes return 0.22–0.43 RF per 1 RF.
+- No Generation, family or tactic earns more than 1.2× the average return (highest: 1.15×, Colossus). **Every tactic returns within 5% of the average** (0.99× to 1.02×). No group averages 1 RF back per 1 RF entry (highest: 0.904 RF).
+- **No purchase pays for itself.** Each purchase is tested by playing the same seeded round twice, with and without it: a shield returns 0.29 RF per 1 RF, a medkit 0.19, a second life 0.10, and buying everything every time 0.15. Purchases made in the last moments before sponsoring closes return 0.12–0.38 RF per 1 RF.
 
 ## How does it use Rare Friends?
 
@@ -126,7 +126,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 | `npm run test:engine` (map, stats, replay, one winner, sponsoring, decisions, economy, settlement, ledger, rounds, round recording and crowd payments, challenges) | 12 / 12 pass |
 | `npm run check` (`friendsdk check`) | Valid; reference chance game: expected reward 0.8 RF, maximum 0.8 RF |
 | `npx friendsdk test games/rare-royale --width 960` and `--width 390` | Pass |
-| `npm run balance -- 6000 2500 --report` | All three fairness targets pass ([`BALANCE.md`](https://github.com/DEDQ3E/rare-royale/blob/main/BALANCE.md)) |
+| `npm run balance -- 6000 2500 --report` | All four fairness targets pass ([`BALANCE.md`](https://github.com/DEDQ3E/rare-royale/blob/main/BALANCE.md)) |
 | Browser flow (`tests/shots.ts`, SDK test runtime with a fake clock): guide, lobby, Locker purchases, entry, drop, shout, Fighters tab and follow, late game, results, replay of the final, hall of fame, at 960 × 808 and 390 × 844 | Pass |
 | Demo video (`tests/video.mjs`): real SDK runtime, Friend #66666 read live from mainnet, picture and sound checked after recording | Pass |
 | Audio (`Web Audio` in Chromium): starts on the first gesture, suspends on mute | Pass |

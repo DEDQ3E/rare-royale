@@ -78,17 +78,18 @@ the bottom bar. Audio stops while the game is paused or hidden.
 
 | Tactic | Any RF back | 1 RF or more | Top 10 | Win | Average return |
 |---|---:|---:|---:|---:|---:|
-| All | 45.2% | 20.1% | 20.0% | 2.0% | 0.790 RF |
-| Fight | 53.5% | 16.8% | 16.6% | 2.8% | 0.887 RF |
-| Hide | 39.8% | 26.6% | 26.6% | 0.9% | 0.734 RF |
-| Loot | 42.2% | 16.8% | 16.7% | 2.3% | 0.748 RF |
+| All | 45.5% | 20.1% | 20.0% | 2.0% | 0.789 RF |
+| Fight | 51.8% | 15.6% | 15.5% | 2.1% | 0.779 RF |
+| Hide | 41.5% | 27.0% | 27.0% | 1.3% | 0.784 RF |
+| Loot | 43.1% | 17.5% | 17.5% | 2.6% | 0.804 RF |
 
-An average round moves 86.9 RF: 50 RF of entries and 36.9 RF of sponsoring and shouts from the simulated crowd.
-39.4 RF returns to players, 24.1 RF (28%) is burned and 23.4 RF funds active Friend rewards. The viewer's own
+An average round moves 87.1 RF: 50 RF of entries and 37.1 RF of sponsoring and shouts from the simulated crowd.
+39.4 RF returns to players, 24.2 RF (28%) is burned and 23.6 RF funds active Friend rewards. The viewer's own
 cosmetics come on top.
 
 Fairness is checked by `npm run balance`; the results are in `BALANCE.md` and the lobby odds in `engine/odds.json`.
-No Generation, family or tactic earns more than 1.2× the average, no group averages 1 RF back per 1 RF entry, and no
+No Generation, family or tactic earns more than 1.2× the average, every tactic returns within 5% of the average (the
+round, not the choice, decides which was right), no group averages 1 RF back per 1 RF entry, and no
 purchase pays for itself on average, including purchases made just before sponsoring closes.
 
 ## Credits

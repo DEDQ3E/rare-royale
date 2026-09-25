@@ -60,9 +60,9 @@ type Equipped = { title: string | null; aura: string | null };
 type Alert = Readonly<{ key: string; text: string }>;
 
 const TACTIC_INFO: Readonly<Record<Tactic, { label: string; text: string; key: string }>> = {
-  fight: { label: "Fight", text: "Hunts anyone in sight. Most bounties and wins.", key: "1" },
-  hide: { label: "Hide", text: "Holds buildings, avoids fights. Most top-10s.", key: "2" },
-  loot: { label: "Loot", text: "Clears crates first, then fights.", key: "3" },
+  fight: { label: "Fight", text: "Hunts anyone in sight. Most bounties.", key: "1" },
+  hide: { label: "Hide", text: "Holds buildings, ambushes. Most top-10s.", key: "2" },
+  loot: { label: "Loot", text: "Clears crates first. Best gear.", key: "3" },
 };
 const DECISION_TEXT: Readonly<Record<DecisionKind, { title: string; a: string; b: string }>> = {
   engage: { title: "Enemy spotted", a: "Fight", b: "Flee" },
@@ -81,8 +81,8 @@ const TUTORIAL: readonly { icon: string; title: string; lines: readonly string[]
     "Tap a place on the island map. The number shows how many Friends plan to land there.",
     "Busy places have better loot and more fights. The dashed line is the airship's route."] },
   { icon: "hammer", title: "Pick a tactic", lines: [
-    "Fight hunts anyone in sight and collects the most bounties. Hide holds buildings, avoids fights and reaches the top 10 most often. Loot clears crates first.",
-    "Keys 1, 2 and 3 switch tactics. The lobby shows each tactic's real odds from thousands of simulated rounds."] },
+    "Fight hunts anyone in sight and collects the most bounties. Hide holds buildings, hits harder from ambush and reaches the top 10 most often. Loot clears crates first and finds better gear.",
+    "On average all three return the same; the round decides which one was right. Keys 1, 2 and 3 switch tactics, and the lobby shows each one's real odds."] },
   { icon: "medkit", title: "Enter for 1 RF, or practise free", lines: [
     "0.6 RF funds the top-10 prize ladder, 0.2 RF starts as the bounty on your head, 0.1 RF is burned and 0.1 RF funds rewards for active Friends.",
     "Places 1 to 10 pay 8, 5, 4, 3, 2.5 and 1.5 RF. Bounties grow: a knockout pays you half the victim's bounty and adds the other half to yours. The biggest head is WANTED. If the storm gets a Friend, its bounty burns.",
