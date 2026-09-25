@@ -2,9 +2,9 @@
 // (tests/live.mjs: only the wallet and ownership answers are mocked), recorded as the tab plays, picture and sound
 // together (tab capture in headless Microsoft Edge, cropped to the game frame). A fake clock skips the quiet parts of
 // the round, so each jump is a hard cut. Also writes a short silent GIF of the battle for the README.
-// Needs (not in package.json): npm install --no-save gifenc pngjs; Microsoft Edge installed.
+// Needs (not in package.json): npm install --no-save gifenc pngjs fix-webm-duration; Microsoft Edge installed.
 // Run: node tests/video.mjs [tokenId] → media/rare-royale.webm, media/rare-royale.gif
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import gifenc from "gifenc";
 import { PNG } from "pngjs";
 import { liveRuntime } from "./live.mjs";
@@ -28,10 +28,13 @@ try {
       if (frame && window.CropTarget) await v.cropTo(await window.CropTarget.fromElement(frame));
       const r = new MediaRecorder(s, { mimeType: "video/webm;codecs=vp9,opus", videoBitsPerSecond: 3_000_000, audioBitsPerSecond: 128_000 }), parts = [];
       r.ondataavailable = e => parts.push(e.data); r.start(1000); b.remove();
-      window.__stop = () => new Promise(res => { r.onstop = async () => { const buf = new Uint8Array(await new Blob(parts).arrayBuffer()); s.getTracks().forEach(t => t.stop()); res(Array.from(buf)); }; r.stop(); });
+      // MediaRecorder leaves the duration out of the file; fix-webm-duration writes it in so players can seek.
+      window.__stop = ms => new Promise(res => { r.onstop = async () => { const raw = new Blob(parts, { type: "video/webm" }), blob = window.ysFixWebmDuration ? await window.ysFixWebmDuration(raw, ms, { logger: false }) : raw; const buf = new Uint8Array(await blob.arrayBuffer()); s.getTracks().forEach(t => t.stop()); res(Array.from(buf)); }; r.stop(); });
     };
   });
+  await page.addScriptTag({ content: readFileSync("node_modules/fix-webm-duration/fix-webm-duration.js", "utf8") });
   await page.click("#rec"); await page.waitForFunction(() => !!window.__stop);
+  const rec0 = Date.now();
 
   // The guide, then the lobby: tactic, a Starfall aura from the Locker, a drop, the entry.
   await wait(2500);
@@ -92,7 +95,7 @@ try {
   await game.getByRole("dialog", { name: "Replay of the final" }).getByRole("button", { name: /^Close/ }).click(); await wait(1500);
   await game.getByRole("button", { name: "Hall of fame (H)" }).click(); await wait(4500);
 
-  const bytes = await page.evaluate(() => window.__stop());
+  const bytes = await page.evaluate(ms => window.__stop(ms), Date.now() - rec0);
   writeFileSync("media/rare-royale.webm", Buffer.from(bytes));
   console.log("media/rare-royale.webm", (bytes.length / 1e6).toFixed(1), "MB", errors.length ? "ERRORS " + errors.join("; ") : "");
   await close();
