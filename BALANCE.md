@@ -50,14 +50,14 @@ Battle length in seconds: p10 157, median 176, p90 191, max 291. Knockouts in fi
 
 Each pair plays the same seeded round twice for the same Friend: once without the purchase and once with it. The gain is the average extra prize among rounds where the purchase happened, with a 95% interval. Fairness holds when gain < cost.
 
-| Purchase | Rounds bought | Avg cost | Avg return gain | 95% interval | Gain per 1 RF spent | Bought with 30 or fewer standing: gain / cost |
-|---|---:|---:|---:|---:|---:|---:|
-| Shield, bought at a random moment | 945 | 1.00 RF | 0.289 RF | 0.181 to 0.397 | 0.289 RF | 0.27 / 1.00 RF (150 rounds) |
-| Medkit, bought below 50% HP | 1847 | 1.00 RF | 0.189 RF | 0.128 to 0.249 | 0.189 RF | 0.32 / 1.00 RF (196 rounds) |
-| Second life, bought when downed | 1333 | 2.00 RF | 0.205 RF | 0.146 to 0.264 | 0.103 RF | 0.23 / 2.00 RF (220 rounds) |
-| Medkit, bought as late as possible (hurt, 30 or fewer standing) | 693 | 1.00 RF | 0.359 RF | 0.198 to 0.520 | 0.359 RF | 0.36 / 1.00 RF (693 rounds) |
-| Shield, bought as late as possible (30 or fewer standing) | 1322 | 1.00 RF | 0.382 RF | 0.285 to 0.479 | 0.382 RF | 0.38 / 1.00 RF (1322 rounds) |
-| Everything, every time (max spender) | 2500 | 6.02 RF | 0.908 RF | 0.807 to 1.008 | 0.151 RF | none |
+| Purchase | Rounds bought | Avg cost | Avg return gain | 95% interval | Gain per 1 RF spent | Top 10: without → with | Bought with 30 or fewer standing: gain / cost |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Shield, bought at a random moment | 945 | 1.00 RF | 0.289 RF | 0.181 to 0.397 | 0.289 RF | 28.4% → 33.7% | 0.27 / 1.00 RF (150 rounds) |
+| Medkit, bought below 50% HP | 1847 | 1.00 RF | 0.189 RF | 0.128 to 0.249 | 0.189 RF | 7.0% → 10.9% | 0.32 / 1.00 RF (196 rounds) |
+| Second life, bought when downed | 1333 | 2.00 RF | 0.205 RF | 0.146 to 0.264 | 0.103 RF | 0.0% → 5.3% | 0.23 / 2.00 RF (220 rounds) |
+| Medkit, bought as late as possible (hurt, 30 or fewer standing) | 693 | 1.00 RF | 0.359 RF | 0.198 to 0.520 | 0.359 RF | 22.2% → 26.4% | 0.36 / 1.00 RF (693 rounds) |
+| Shield, bought as late as possible (30 or fewer standing) | 1322 | 1.00 RF | 0.382 RF | 0.285 to 0.479 | 0.382 RF | 37.0% → 45.5% | 0.38 / 1.00 RF (1322 rounds) |
+| Everything, every time (max spender) | 2500 | 6.02 RF | 0.908 RF | 0.807 to 1.008 | 0.151 RF | 20.6% → 39.6% | none |
 
 ## Targets
 
@@ -66,4 +66,4 @@ Each pair plays the same seeded round twice for the same Friend: once without th
 - No group earns 1 RF or more per 1 RF entry: PASS (highest 0.904 RF).
 - No purchase's average gain reaches its cost, even at the top of the 95% interval, and no late purchase (100+ rounds) pays for itself: PASS.
 
-Simulated in 482.0 s.
+Simulated in 478.8 s.

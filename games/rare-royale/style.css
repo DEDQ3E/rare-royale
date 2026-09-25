@@ -185,6 +185,8 @@ kbd{font:400 10px/1 Silkscreen,monospace;border:1px solid currentColor;border-ra
 @keyframes rr-embers{from{background-position:0 30px,7px 35px;opacity:.9}to{background-position:0 -10px,7px -5px;opacity:0}}
 .rr-frow em u{text-decoration:none;color:var(--red);font-weight:600}
 .rr-dock-note{position:absolute;left:0;right:0;top:462px;text-align:center;font-size:11px;color:var(--muted);margin:0}
+.rr-dock-note.rr-hint{color:var(--teal2)}
+.rr-buy-wrap{display:inline-flex}.rr-buy:disabled{pointer-events:none}
 .rr-mine{position:absolute;left:230px;right:230px;top:488px;display:grid;grid-template-columns:34px 1fr 150px;gap:8px;align-items:center;background:var(--panel);border:1px solid #1E2146;border-radius:8px;padding:6px 10px;font-size:12px}
 .rr-mine span{color:var(--teal2)}
 .rr-mine i{position:relative;height:10px;background:var(--line);border-radius:3px;overflow:hidden}
@@ -279,6 +281,7 @@ kbd{font:400 10px/1 Silkscreen,monospace;border:1px solid currentColor;border-ra
 .rr-tall .rr-replay{width:464px}
 .rr-tall .rr-burned{flex-basis:100%;text-align:center;margin:0}
 .rr-tall .rr-dock-note{display:none}
+.rr-tall .rr-dock-note.rr-hint{display:block;top:404px;left:12px;right:12px;padding:6px 8px;background:#15172E;border:1px solid #2A2E55;border-radius:8px;z-index:3}
 .rr-tall .rr-mine{left:12px;right:12px;top:540px;grid-template-columns:34px 1fr 130px}
 .rr-tall .rr-spectating{top:546px}
 .rr-tall .rr-alerts p{font-size:11px}

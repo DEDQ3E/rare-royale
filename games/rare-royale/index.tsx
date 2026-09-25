@@ -93,7 +93,7 @@ const TUTORIAL: readonly { icon: string; title: string; lines: readonly string[]
     "Friends grab weapons and armour from crates: slingshot, hammer, bow, star wand. Armour soaks hits first.",
     "Stay inside the white circle: the purple storm outside hurts more every phase. Buildings give cover; woods block shots."] },
   { icon: "revive", title: "Sponsor anyone", lines: [
-    "Send a shield or a medkit, or within 5 seconds of a knockdown a second life, to your Friend or the one on camera.",
+    "Send a shield or a medkit, or within 5 seconds of a knockdown a second life, to your Friend or the one on camera. Point at an item to see how much it raises the chance of a high place.",
     "Every sponsor payment burns 50% and funds 50% Friend rewards. Sponsoring closes when 25 are left, so nobody can buy the finish.",
     "The Fighters tab lists everyone still standing: tap one to follow and sponsor it. Back the winner and you are a Kingmaker."] },
   { icon: "shield", title: "Your calls, your Friend", lines: [
@@ -104,6 +104,15 @@ const TUTORIAL: readonly { icon: string; title: string; lines: readonly string[]
     "Challenges in the lobby unlock free titles, win or lose. After a round, replay the final 20 seconds."] },
 ];
 const rfText = (v: bigint) => `${formatRF(v)} RF`;
+/** What a sponsor item does for its Friend, measured by paired rounds in `npm run balance` (engine/odds.json). */
+const ITEM_VALUE: Readonly<Record<SponsorItemId, string>> = (() => {
+  const p = ODDS.purchases;
+  return {
+    shield: `Shield: returns ${p.shield.perRF} RF per 1 RF on average and raises the chance of a high place: top 10 ${pct(p.shield.top10Without)} → ${pct(p.shield.top10With)}.`,
+    medkit: `Medkit, when hurt: returns ${p.medkit.perRF} RF per 1 RF on average and raises the chance of a high place: top 10 ${pct(p.medkit.top10Without)} → ${pct(p.medkit.top10With)}.`,
+    revive: `Second life: returns ${p.revive.perRF} RF per 1 RF on average. Without it the Friend is out; with it, ${pct(p.revive.top10With)} still reach the top 10.`,
+  };
+})();
 const mmss = (ms: number) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
 
 /** A Friend sprite on a small canvas. */
@@ -327,6 +336,9 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
   const [alerts, setAlerts] = useState<readonly Alert[]>([]);
   const [results, setResults] = useState<Results | null>(null);
   const [target, setTarget] = useState<"you" | "camera">("you");
+  const [hint, setHint] = useState<SponsorItemId | null>(null);
+  // A tapped item's value stays up for a few seconds (touch has no hover to end it).
+  useEffect(() => { if (!hint) return; const id = window.setTimeout(() => setHint(null), 6000); return () => window.clearTimeout(id); }, [hint]);
   const [, setFrame] = useState(0);
   const [toast, setToast] = useState("");
   const ledger = useRef<Ledger>(createLedger(START_BALANCE));
@@ -973,9 +985,13 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
               {(["shield", "medkit", "revive"] as const).map(item => {
                 const price = priceOf(item, tIndex), ok = !!r && tIndex >= 0 && r.battle.canSponsor(tIndex, item).ok;
                 return (
-                  <button key={item} className={`rr-btn rr-buy ${item} ${item === "revive" && tFighter?.state === "downed" ? "rr-hot" : ""}`} onClick={() => sponsor(item)} disabled={paused || !ok}>
-                    <Icon id={item} scale={1} /> {SPONSOR_ITEMS[item].name} {price !== null ? formatRF(price) : "—"} <kbd>{item === "shield" ? "S" : item === "medkit" ? "M" : "R"}</kbd>
-                  </button>
+                  // The wrapper shows what the item does even while its button is disabled (disabled buttons get no hover).
+                  <span key={item} className="rr-buy-wrap" onMouseEnter={() => setHint(item)} onMouseLeave={() => setHint(null)} title={ITEM_VALUE[item]}>
+                    <button className={`rr-btn rr-buy ${item} ${item === "revive" && tFighter?.state === "downed" ? "rr-hot" : ""}`} onClick={() => { setHint(item); sponsor(item); }} disabled={paused || !ok}
+                      onFocus={() => setHint(item)} onBlur={() => setHint(null)}>
+                      <Icon id={item} scale={1} /> {SPONSOR_ITEMS[item].name} {price !== null ? formatRF(price) : "—"} <kbd>{item === "shield" ? "S" : item === "medkit" ? "M" : "R"}</kbd>
+                    </button>
+                  </span>
                 );
               })}
               <button className="rr-btn rr-buy shout" onClick={() => setShoutOpen(o => !o)} disabled={paused || !r || r.battle.isOver()} aria-expanded={shoutOpen}>Shout {formatRF(SHOUT_PRICE)} <kbd>Y</kbd></button>
@@ -986,7 +1002,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
                 {SHOUTS.map((line, i) => <button key={line} role="menuitem" className="rr-chip" onClick={() => shout(line)}>{line} <kbd>{i + 1}</kbd></button>)}
               </div>
             )}
-            <p className="rr-dock-note">{snap && !snap.windowOpen ? `Sponsoring closed: the final ${TUNING.sponsorWindowMin} are on their own.` : "Every sponsor payment: 50% burned, 50% to active Friend rewards. Simulated."}</p>
+            <p className={`rr-dock-note ${hint && snap?.windowOpen ? "rr-hint" : ""}`}>{snap && !snap.windowOpen ? `Sponsoring closed: the final ${TUNING.sponsorWindowMin} are on their own.` : hint ? ITEM_VALUE[hint] : "Every sponsor payment: 50% burned, 50% to active Friend rewards. Simulated."}</p>
             {myFighter && (
               <div className="rr-mine">
                 <span>You</span>

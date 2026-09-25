@@ -106,8 +106,8 @@ const buy = (b: Battle, me: number, item: SponsorItemId, spent: { rf: number; bo
 const once = (item: SponsorItemId, when: (b: Battle, me: number) => boolean): Policy["act"] =>
   (b, me, spent) => { if (spent.bought === 0 && when(b, me)) buy(b, me, item, spent); };
 
-const policies: readonly Policy[] = [
-  { name: "Shield, bought at a random moment", act: (() => {
+const policies: readonly (Policy & { item?: SponsorItemId })[] = [
+  { name: "Shield, bought at a random moment", item: "shield", act: (() => {
     let at = -1;
     return (b: Battle, me: number, spent: { rf: number; bought: number; standing: number }) => {
       const t = b.snapshot().t;
@@ -115,8 +115,8 @@ const policies: readonly Policy[] = [
       if (spent.bought === 0 && t >= at) buy(b, me, "shield", spent);
     };
   })() },
-  { name: "Medkit, bought below 50% HP", act: once("medkit", (b, me) => { const f = b.fighters()[me]; return f.state === "alive" && f.hp < f.maxHp * 0.5; }) },
-  { name: "Second life, bought when downed", act: once("revive", (b, me) => b.fighters()[me].state === "downed") },
+  { name: "Medkit, bought below 50% HP", item: "medkit", act: once("medkit", (b, me) => { const f = b.fighters()[me]; return f.state === "alive" && f.hp < f.maxHp * 0.5; }) },
+  { name: "Second life, bought when downed", item: "revive", act: once("revive", (b, me) => b.fighters()[me].state === "downed") },
   { name: "Medkit, bought as late as possible (hurt, 30 or fewer standing)", act: once("medkit", (b, me) => { const f = b.fighters()[me]; return f.state === "alive" && f.hp < f.maxHp * 0.6 && b.snapshot().standing <= 30; }) },
   { name: "Shield, bought as late as possible (30 or fewer standing)", act: once("shield", (b, me) => b.fighters()[me].state === "alive" && b.snapshot().standing <= 30) },
   { name: "Everything, every time (max spender)", act: (b, me, spent) => {
@@ -131,11 +131,13 @@ out(); out(`## Does any purchase pay for itself?`); out();
 out(`Each pair plays the same seeded round twice for the same Friend: once without the purchase and once with it. ` +
   `The gain is the average extra prize among rounds where the purchase happened, with a 95% interval. Fairness holds when gain < cost.`);
 out();
-out(`| Purchase | Rounds bought | Avg cost | Avg return gain | 95% interval | Gain per 1 RF spent | Bought with 30 or fewer standing: gain / cost |`);
-out(`|---|---:|---:|---:|---:|---:|---:|`);
+out(`| Purchase | Rounds bought | Avg cost | Avg return gain | 95% interval | Gain per 1 RF spent | Top 10: without → with | Bought with 30 or fewer standing: gain / cost |`);
+out(`|---|---:|---:|---:|---:|---:|---:|---:|`);
 let purchaseOk = true;
+/** What each sponsor item does for the Friend it is bought for, shown in the game's dock. */
+const purchases: Partial<Record<SponsorItemId, { perRF: number; top10Without: number; top10With: number }>> = {};
 for (const policy of policies) {
-  let n = 0, sum = 0, sumSq = 0, cost = 0, lateN = 0, lateGain = 0, lateCost = 0;
+  let n = 0, sum = 0, sumSq = 0, cost = 0, lateN = 0, lateGain = 0, lateCost = 0, topBase = 0, topBuy = 0;
   for (let k = 0; k < pairedRounds; k++) {
     const seed = hash32("paired", policy.name, k), fighters = lineFor(hash32("paired-line", k)), me = 0;
     const base = createBattle({ seed, fighters }); base.run();
@@ -145,13 +147,16 @@ for (const policy of policies) {
     if (!spent.bought) continue;
     const gain = returnsOf(withBuy)[me] - returnsOf(base)[me];
     n += 1; sum += gain; sumSq += gain * gain; cost += spent.rf;
+    if (base.fighters()[me].place <= 10) topBase += 1;
+    if (withBuy.fighters()[me].place <= 10) topBuy += 1;
     if (spent.standing <= 30) { lateN += 1; lateGain += gain; lateCost += spent.rf; }
   }
   const mean = sum / n, sd = Math.sqrt(Math.max(0, sumSq / n - mean * mean)), ci = 1.96 * sd / Math.sqrt(n), avgCost = cost / n;
   if (mean + ci >= avgCost) purchaseOk = false;
+  if (policy.item) purchases[policy.item] = { perRF: +(mean / avgCost).toFixed(2), top10Without: +(topBase / n).toFixed(3), top10With: +(topBuy / n).toFixed(3) };
   if (lateN >= 100 && lateGain / lateN >= lateCost / lateN) purchaseOk = false;
   out(`| ${policy.name} | ${n} | ${avgCost.toFixed(2)} RF | ${mean.toFixed(3)} RF | ${(mean - ci).toFixed(3)} to ${(mean + ci).toFixed(3)} | ` +
-    `${(mean / avgCost).toFixed(3)} RF | ${lateN ? `${(lateGain / lateN).toFixed(2)} / ${(lateCost / lateN).toFixed(2)} RF (${lateN} rounds)` : "none"} |`);
+    `${(mean / avgCost).toFixed(3)} RF | ${pc(topBase, n)} → ${pc(topBuy, n)} | ${lateN ? `${(lateGain / lateN).toFixed(2)} / ${(lateCost / lateN).toFixed(2)} RF (${lateN} rounds)` : "none"} |`);
 }
 
 out(); out(`## Targets`); out();
@@ -163,5 +168,5 @@ out(); out(`Simulated in ${((Date.now() - t0) / 1000).toFixed(1)} s.`);
 
 if (writeReport) {
   writeFileSync(new URL("../BALANCE.md", import.meta.url), `${lines.join("\n")}\n`);
-  writeFileSync(new URL("../games/rare-royale/engine/odds.json", import.meta.url), `${JSON.stringify(odds, null, 2)}\n`);
+  writeFileSync(new URL("../games/rare-royale/engine/odds.json", import.meta.url), `${JSON.stringify({ ...odds, purchases }, null, 2)}\n`);
 }

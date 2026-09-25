@@ -29,5 +29,22 @@
       "win": 0.026,
       "avg": 0.804
     }
+  },
+  "purchases": {
+    "shield": {
+      "perRF": 0.29,
+      "top10Without": 0.284,
+      "top10With": 0.337
+    },
+    "medkit": {
+      "perRF": 0.19,
+      "top10Without": 0.07,
+      "top10With": 0.109
+    },
+    "revive": {
+      "perRF": 0.1,
+      "top10Without": 0,
+      "top10With": 0.053
+    }
   }
 }

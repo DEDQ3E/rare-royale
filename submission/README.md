@@ -76,7 +76,7 @@ Everything is simulated; you start with 20 RF.
 - **Odds per 1 RF entry** (6,000 simulated rounds):
   - any RF back 45.5%, 1 RF or more 20.1%, win 2.0%, average return 0.79 RF;
   - Fight, Hide and Loot each return within 5% of that average;
-  - no purchase pays for itself: a shield returns 0.29 RF per 1 RF spent.
+  - no purchase pays for itself in RF, but each one raises the chance of a high place: a shield returns 0.29 RF per 1 RF and lifts the top-10 chance from 28% to 34%, a medkit when hurt from 7% to 11%. The game shows this on each item.
 
 **What have you tested?**
 All of these pass:

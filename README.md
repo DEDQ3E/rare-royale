@@ -98,7 +98,7 @@ The average return is 0.79 RF per entry (0.8 RF goes back into the round; the st
 Stats, family abilities, tactics and sponsor items change the fight, within limits checked by `npm run balance`:
 
 - No Generation, family or tactic earns more than 1.2× the average return (highest: 1.15×, Colossus). **Every tactic returns within 5% of the average** (0.99× to 1.02×). No group averages 1 RF back per 1 RF entry (highest: 0.904 RF).
-- **No purchase pays for itself.** Each purchase is tested by playing the same seeded round twice, with and without it: a shield returns 0.29 RF per 1 RF, a medkit 0.19, a second life 0.10, and buying everything every time 0.15. Purchases made in the last moments before sponsoring closes return 0.12–0.38 RF per 1 RF.
+- **No purchase pays for itself.** Each purchase is tested by playing the same seeded round twice, with and without it: a shield returns 0.29 RF per 1 RF, a medkit 0.19, a second life 0.10, and buying everything every time 0.15. Each still raises the chance of a high place: a shield lifts the top-10 chance from 28% to 34%, a medkit bought when hurt from 7% to 11%, and a second life gives a knocked-down Friend a 5% chance of the top 10 instead of none. The dock shows these numbers when you point at an item. Purchases made in the last moments before sponsoring closes return 0.12–0.38 RF per 1 RF.
 
 ## How does it use Rare Friends?
 
