@@ -505,6 +505,8 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
   useEffect(() => {
     let raf = 0;
     const loop = () => {
+      // Scheduled first, so one bad frame can never stop the round clock.
+      raf = requestAnimationFrame(loop);
       const t = Date.now();
       if (pausedRef.current) { if (pausedAt.current === null) pausedAt.current = t; }
       else if (pausedAt.current !== null) {
@@ -525,6 +527,9 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
           saves.current = 0; shoutSeen.current = 0; pin.current = -1; myShout.current = null; prevStanding.current = ROUND_SIZE; wantedSeen.current = -1;
           focus.current = { index: r.player >= 0 ? r.player : 0, since: t };
           setFeed([]); setResults(null); setTarget(r.player >= 0 ? "you" : "camera");
+          // The last round's arena knows the last round's island: drop it. The live screen builds the new one
+          // as soon as its canvas mounts (the canvas is not on the lobby screen).
+          arena.current = null;
           makeArena(r);
         }
         const tick = Math.floor((t - c.battleAt) / TICK_MS) + 1;
@@ -601,7 +606,6 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
         lastTick.current = left;
       }
       setNow(t);
-      raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);

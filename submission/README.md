@@ -84,7 +84,7 @@ All of these pass:
 - 12 engine tests: map, stats, replay, sponsoring, decisions, economy, settlement, ledger, rounds and challenges;
 - `friendsdk check`, and `friendsdk test` at 960 and 390 px;
 - `npm run balance`: all four fairness targets over 6,000 rounds;
-- an automated browser run through every screen at 960 × 808 and 390 × 844 in the SDK test runtime;
+- an automated browser run through every screen at 960 × 808 and 390 × 844 in the SDK test runtime, and on into a second round;
 - a 106 s recording from the real runtime with a Friend read live from mainnet.
 
 The builder played the public preview with a real wallet and a real Generations Friend. Later additions were checked in the SDK test runtime.

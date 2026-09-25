@@ -144,6 +144,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 | `npx friendsdk test games/rare-royale --width 960` and `--width 390` | Pass |
 | `npm run balance -- 6000 2500 --report` | All four fairness targets pass ([`BALANCE.md`](https://github.com/DEDQ3E/rare-royale/blob/main/BALANCE.md)) |
 | Browser flow (`tests/shots.ts`, SDK test runtime with a fake clock): guide, lobby, Locker purchases, entry, drop, shout, Fighters tab and follow, late game, results, replay of the final, hall of fame, at 960 × 808 and 390 × 844 | Pass (the SDK test RPC refuses the hall's live RF supply read, so that tile shows "unavailable" there) |
+| Next round (`tests/next-round.ts`): a second round starts after the first, after waiting out the lobby and with Next round now | Pass |
 | Demo video (`tests/video.mjs`): real SDK runtime, Friend #66666 read live from mainnet, picture and sound checked after recording | Pass |
 | Audio (`Web Audio` in Chromium): starts on the first gesture, suspends on mute | Pass |
 | Real-wallet playtest with a real Generations Friend | Pass: the builder played the public preview with a real wallet; later additions were checked in the SDK test runtime and the live-mainnet recording |
