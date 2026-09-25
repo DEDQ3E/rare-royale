@@ -19,7 +19,7 @@ The SDK runtime handles wallet connection, Friend selection and the ownership ch
 Every round starts with a 1-minute lobby from the moment you arrive ("Start now" skips the wait), then the drop, a battle of about 3 minutes and 25 s of results. A short "How to play" guide opens on the first visit and pauses the countdown. Rounds are named after the minute of their drop, so viewers who drop in the same minute share the same island, line-up and base battle.
 
 - **Lobby:** pick where to drop on this round's island (the map shows how many Friends plan to land at each place)
-  and a tactic (Fight, Hide or Loot). The entry panel shows your odds with that tactic. Enter for 1 RF, practise for
+  and a tactic (Fight, Hide or Loot). The entry panel shows the odds for that tactic (averaged over all Friends). Enter for 1 RF, practise for
   free, or just watch.
 - **Drop:** an airship crosses the island; every Friend jumps over its target and glides down.
 - **Loot:** crates in three tiers hold a slingshot, hammer, bow or star wand, armour and bandages.
@@ -65,7 +65,7 @@ the bottom bar. Audio stops while the game is paused or hidden.
 - **Ladder:** with 50 paid entries the ladder is 30 RF: 8, 5, 4, 3 and 2.5 RF for places 1 to 5 and 1.5 RF for places
   6 to 10. There is one paid place per five paid entries (at most ten), ranked among paid entrants only.
 - **Progressive bounties:** every head starts at 0.2 RF. A knockout pays the paid entrant who made it half the
-  victim's bounty and adds the other half to its own head; the biggest head is marked WANTED. The winner keeps its
+  victim's bounty and adds the other half to its own head; the biggest head, once worth 0.4 RF or more, is marked WANTED. The winner keeps its
   whole head. A bounty whose owner falls to the storm or to a wild Friend is burned.
 - **Backing:** prizes come only from the same round's paid entries. Unpaid seats are wild Friends that fight but never
   take RF. With fewer than 5 paid entries the round is free and entries are refunded. In this preview all 49 other

@@ -60,9 +60,9 @@ type Equipped = { title: string | null; aura: string | null };
 type Alert = Readonly<{ key: string; text: string }>;
 
 const TACTIC_INFO: Readonly<Record<Tactic, { label: string; text: string; key: string }>> = {
-  fight: { label: "Fight", text: "Hunts anyone in sight. Most bounties.", key: "1" },
+  fight: { label: "Fight", text: "Hunts anyone in sight. Most bounties and wins.", key: "1" },
   hide: { label: "Hide", text: "Holds buildings, avoids fights. Most top-10s.", key: "2" },
-  loot: { label: "Loot", text: "Clears crates first. Most wins.", key: "3" },
+  loot: { label: "Loot", text: "Clears crates first, then fights.", key: "3" },
 };
 const DECISION_TEXT: Readonly<Record<DecisionKind, { title: string; a: string; b: string }>> = {
   engage: { title: "Enemy spotted", a: "Fight", b: "Flee" },
@@ -891,8 +891,8 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
               <p className="rr-legend"><span className="pool">0.6 ladder</span><span className="bounty">0.2 bounty</span><span className="burn">0.1 burn</span><span className="rew">0.1 rewards</span></p>
               <p className="rr-ladder" aria-label="Prize ladder">{FULL_LADDER.slice(0, 5).map((p, i) => <span key={i}><small>{ordinal(i + 1)}</small>{formatRF(p, 1)}</span>)}<span><small>6–10th</small>{formatRF(FULL_LADDER[5], 1)}</span></p>
               <p className="rr-muted rr-small rr-bounty-note">Bounties grow: a knockout pays half the head, the rest joins yours</p>
-              <div className="rr-odds" title={`From ${ODDS.rounds.toLocaleString("en-US")} simulated rounds (npm run balance)`}>
-                <p className="rr-muted rr-small">Your odds with {TACTIC_INFO[tactic].label}</p>
+              <div className="rr-odds" title={`Averaged over every family and Generation, from ${ODDS.rounds.toLocaleString("en-US")} simulated rounds (npm run balance). Your own Friend's stats move them a little.`}>
+                <p className="rr-muted rr-small">Odds with {TACTIC_INFO[tactic].label} · average Friend</p>
                 <p><b>{pct(odds.back)}</b><small>any RF back</small></p>
                 <p><b>{pct(odds.profit)}</b><small>1 RF or more</small></p>
                 <p><b>{(odds.win * 100).toFixed(1)}%</b><small>win</small></p>
