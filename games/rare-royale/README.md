@@ -16,7 +16,7 @@ The SDK runtime handles wallet connection, Friend selection and the ownership ch
 
 ## How a round works
 
-Every round starts with a 1-minute lobby from the moment you arrive ("Start now" skips the wait), then the drop, a battle of about 2.5 minutes and 25 s of results. A short "How to play" guide opens on the first visit and pauses the countdown. Rounds are named after the minute of their drop, so viewers who drop in the same minute share the same island, line-up and base battle.
+Every round starts with a 1-minute lobby from the moment you arrive ("Start now" skips the wait), then the drop, a battle of about 3 minutes and 25 s of results. A short "How to play" guide opens on the first visit and pauses the countdown. Rounds are named after the minute of their drop, so viewers who drop in the same minute share the same island, line-up and base battle.
 
 - **Lobby:** pick where to drop on this round's island (the map shows how many Friends plan to land at each place)
   and a tactic (Fight, Hide or Loot). The entry panel shows your odds with that tactic. Enter for 1 RF, practise for
@@ -76,10 +76,10 @@ the bottom bar. Audio stops while the game is paused or hidden.
 
 | Tactic | Any RF back | 1 RF or more | Top 10 | Win | Average return |
 |---|---:|---:|---:|---:|---:|
-| All | 45.5% | 20.5% | 20.0% | 2.0% | 0.797 RF |
-| Fight | 52.0% | 18.2% | 17.1% | 2.6% | 0.876 RF |
-| Hide | 39.9% | 25.0% | 25.0% | 0.9% | 0.707 RF |
-| Loot | 44.8% | 18.3% | 17.9% | 2.5% | 0.809 RF |
+| All | 45.2% | 20.6% | 20.0% | 2.0% | 0.797 RF |
+| Fight | 53.5% | 18.2% | 16.6% | 2.8% | 0.909 RF |
+| Hide | 39.8% | 26.6% | 26.6% | 0.9% | 0.740 RF |
+| Loot | 42.2% | 17.0% | 16.7% | 2.3% | 0.743 RF |
 
 An average round moves 86.9 RF: 50 RF of entries and 36.9 RF of sponsoring and shouts from the simulated crowd.
 39.8 RF returns to players, 23.6 RF (27%) is burned and 23.4 RF funds active Friend rewards. The viewer's own

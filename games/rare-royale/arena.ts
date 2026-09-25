@@ -11,7 +11,9 @@ export const CAM_W = 600, CAM_H = 300;
 
 type Shot = { born: number; dur: number; fx: number; fy: number; tx: number; ty: number; weapon: WeaponId; hit: boolean; dmg: number; armor: number; blocked: string; to: number; from: number };
 type Pop = { born: number; x: number; y: number; text: string; color: string };
-type Effect = { born: number; kind: "down" | "revive" | "loot" | "heal" | "flash" | "land"; who: number; item?: string; x: number; y: number };
+type Effect = { born: number; kind: "down" | "revive" | "loot" | "heal" | "flash" | "land" | "poof"; who: number; item?: string; x: number; y: number };
+/** A short body movement: a melee lunge, a shot's recoil or the knock-back of a hit (screen pixels, per sprite scale). */
+type Motion = { born: number; dur: number; who: number; dx: number; dy: number; amp: number };
 
 /** How the viewer's own Friend is dressed up: cosmetics only, never the fight. */
 export type ArenaLook = Readonly<{ aura: string | null; title: string | null; shout: string | null }>;
@@ -93,6 +95,20 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
   let camX = map.airship.ax, camY = map.airship.ay, zoom = 2, camInit = false;
   const shots: Shot[] = [], pops: Pop[] = [], effects: Effect[] = [];
   const hitFlash = new Map<number, number>();
+  const motions: Motion[] = [];
+  /** Camera shakes for hits and knockdowns on the Friend on camera. */
+  const shakes: { born: number; who: number; amp: number }[] = [];
+  const offsetOf = (i: number, now: number) => {
+    let dx = 0, dy = 0;
+    for (const m of motions) {
+      if (m.who !== i) continue;
+      const p = (now - m.born) / m.dur;
+      if (p < 0 || p > 1) continue;
+      const a = Math.sin(p * Math.PI) * m.amp;
+      dx += m.dx * a; dy += m.dy * a;
+    }
+    return { dx, dy };
+  };
 
   function posOf(i: number, k: number) {
     const b = cur!.fighters[i], a = prev?.fighters[i] ?? b;
@@ -108,8 +124,17 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
         if (e.kind === "shot") {
           const a = prev?.fighters[e.from] ?? snapshot.fighters[e.from], b = prev?.fighters[e.to] ?? snapshot.fighters[e.to];
           const d = Math.hypot(b.x - a.x, b.y - a.y), w = WEAPONS[e.weapon];
-          shots.push({ born: now + e.at * TICK_MS * 0.9, dur: w.ranged ? Math.max(90, d * (e.weapon === "bow" ? 9 : 13)) : 140, fx: a.x, fy: a.y, tx: b.x, ty: b.y, weapon: e.weapon, hit: !e.blocked, dmg: e.dmg, armor: e.armorDmg, blocked: e.blocked, to: e.to, from: e.from });
-        } else if (e.kind === "downed") effects.push({ born: now, kind: "down", who: e.who, x: 0, y: 0 });
+          const born = now + e.at * TICK_MS * 0.9, dur = w.ranged ? Math.max(90, d * (e.weapon === "bow" ? 9 : 13)) : 140;
+          shots.push({ born, dur, fx: a.x, fy: a.y, tx: b.x, ty: b.y, weapon: e.weapon, hit: !e.blocked, dmg: e.dmg, armor: e.armorDmg, blocked: e.blocked, to: e.to, from: e.from });
+          const ux = d > 0 ? (b.x - a.x) / d : 1, uy = d > 0 ? (b.y - a.y) / d : 0;
+          // The attacker lunges into a swing or kicks back from a shot; a hit knocks the target back.
+          motions.push(w.ranged ? { born, dur: 130, who: e.from, dx: -ux, dy: -uy, amp: 1.5 } : { born: born - 60, dur: 240, who: e.from, dx: ux, dy: uy, amp: 4 });
+          if (!e.blocked && e.dmg + e.armorDmg > 0) {
+            motions.push({ born: born + dur, dur: 200, who: e.to, dx: ux, dy: uy, amp: Math.min(4, 1.5 + (e.dmg + e.armorDmg) / 6) });
+            if (e.dmg + e.armorDmg >= 12) shakes.push({ born: born + dur, who: e.to, amp: 2 });
+          }
+        } else if (e.kind === "downed") { effects.push({ born: now, kind: "down", who: e.who, x: 0, y: 0 }); shakes.push({ born: now, who: e.who, amp: 3 }); }
+        else if (e.kind === "out") { const f = snapshot.fighters[e.who], q = prev?.fighters[e.who] ?? f; effects.push({ born: now, kind: "poof", who: e.who, x: q.x, y: q.y }); }
         else if (e.kind === "revived") effects.push({ born: now, kind: "revive", who: e.who, x: 0, y: 0 });
         else if (e.kind === "loot") effects.push({ born: now + Math.random() * 400, kind: "loot", who: e.who, item: e.item, x: 0, y: 0 });
         else if (e.kind === "sponsor" && e.item !== "revive") effects.push({ born: now, kind: "loot", who: e.who, item: e.item, x: 0, y: 0 });
@@ -118,7 +143,7 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
         else if (e.kind === "storm_hit") { const f = snapshot.fighters[e.who]; pops.push({ born: now, x: f.x, y: f.y, text: `-${e.dmg}`, color: "#AFA9EC" }); }
       }
       const cutoff = now - 4000;
-      for (const list of [shots, pops, effects] as { born: number }[][]) while (list.length && list[0].born < cutoff) list.shift();
+      for (const list of [shots, pops, effects, motions, shakes] as { born: number }[][]) while (list.length && list[0].born < cutoff) list.shift();
     },
     draw(now, focus, player, reducedMotion) {
       if (!cur) return;
@@ -130,7 +155,9 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
       const wantZoom = flying ? 1.6 : cur.zone.r < 25 ? 4.5 : 3.5;
       if (!camInit || reducedMotion) { camX = target.x; camY = target.y; zoom = wantZoom; camInit = true; }
       else { camX += (target.x - camX) * 0.08; camY += (target.y - camY) * 0.08; zoom += (wantZoom - zoom) * 0.05; }
-      const Z = zoom, ox = CAM_W / 2 - camX * Z, oy = CAM_H / 2 - camY * Z;
+      let shake = 0;
+      if (!reducedMotion) for (const q of shakes) { const age = now - q.born; if (q.who === focus && age >= 0 && age < 220) shake = Math.max(shake, q.amp * (1 - age / 220)); }
+      const Z = zoom, ox = CAM_W / 2 - camX * Z + Math.sin(now * 0.09) * shake, oy = CAM_H / 2 - camY * Z + Math.cos(now * 0.13) * shake;
       const sx = (x: number) => Math.round(ox + x * Z), sy = (y: number) => Math.round(oy + y * Z);
 
       g.imageSmoothingEnabled = Z < TERRAIN_PX * 0.9;
@@ -175,7 +202,8 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
       const spriteScale = Z >= 3 ? 2 : 1, size = 18 * spriteScale;
       const standing = cur.fighters.filter(f => f.state === "alive" || f.state === "downed").map(f => ({ f, p: posOf(f.index, k) })).sort((a, b) => a.p.y - b.p.y);
       for (const { f, p } of standing) {
-        const x = sx(p.x), y = sy(p.y);
+        const off = reducedMotion ? { dx: 0, dy: 0 } : offsetOf(f.index, now);
+        const x = sx(p.x) + Math.round(off.dx * spriteScale), y = sy(p.y) + Math.round(off.dy * spriteScale);
         if (x < -50 || y < -60 || x > CAM_W + 50 || y > CAM_H + 60) continue;
         const art = artOf(f);
         const walk = p.moving && f.state === "alive";
@@ -192,7 +220,16 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
         const mine = f.index === player ? look() : NO_LOOK;
         if (mine.aura) drawAura(g, mine.aura, x, y, size, now, reducedMotion);
         if (f.state === "downed") g.globalAlpha = 0.5 + 0.3 * Math.sin(now / 110);
-        if (rows) {
+        if (rows && f.state === "downed") {
+          // Knocked down: lying on its side, with stars circling over its head.
+          const img = spriteCanvas(rows);
+          g.save(); g.translate(x, y - size * 0.25); g.rotate(f.facing > 0 ? Math.PI / 2 : -Math.PI / 2); g.drawImage(img, -size / 2, -size / 2, size, size); g.restore();
+          g.globalAlpha = 1;
+          for (let q = 0; q < 3; q++) {
+            const a = (reducedMotion ? 0 : now / 260) + q * (Math.PI * 2 / 3), r = size * 0.35;
+            g.fillStyle = "#FAC775"; g.fillRect(Math.round(x + Math.cos(a) * r) - 1, Math.round(y - size * 0.75 + Math.sin(a) * r * 0.4) - 1, 3, 3);
+          }
+        } else if (rows) {
           const img = spriteCanvas(rows), feet = (feetRow(rows) + 2) * spriteScale;
           g.drawImage(img, x - size / 2, y - feet, size, size);
           const flash = hitFlash.get(f.index);
@@ -240,7 +277,10 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
           const x = lerp(fx, tx, t), y = lerp(fy, ty, t) - (s.weapon === "slingshot" ? Math.sin(t * Math.PI) * 10 : 0);
           if (s.weapon === "slingshot") { g.fillStyle = "#5F5E5A"; g.fillRect(Math.round(x) - 2, Math.round(y) - 2, 4, 4); g.fillStyle = "#B4B2A9"; g.fillRect(Math.round(x) - 1, Math.round(y) - 2, 2, 1); }
           else if (s.weapon === "bow") { const ang = Math.atan2(ty - fy, tx - fx); g.strokeStyle = "#633806"; g.lineWidth = 2; g.beginPath(); g.moveTo(x - Math.cos(ang) * 10, y - Math.sin(ang) * 10); g.lineTo(x, y); g.stroke(); g.fillStyle = "#E8E6F5"; g.fillRect(Math.round(x) - 1, Math.round(y) - 1, 3, 3); }
-          else if (s.weapon === "wand") { for (let q = 0; q < 4; q++) { const tt = Math.max(0, t - q * 0.06); g.fillStyle = q ? `rgba(250,199,117,${0.5 - q * 0.1})` : "#FFF3C4"; g.fillRect(Math.round(lerp(fx, tx, tt)) - 2 + q, Math.round(lerp(fy, ty, tt)) - 2, 4 - q, 4 - q); } }
+          else if (s.weapon === "wand") {
+            if (age < 160) { const r = 3 + age / 30; g.fillStyle = `rgba(255,243,196,${1 - age / 160})`; for (let q = 0; q < 4; q++) { const aa = q * Math.PI / 2 + age / 80; g.fillRect(Math.round(fx + Math.cos(aa) * r) - 1, Math.round(fy + Math.sin(aa) * r) - 1, 2, 2); } }
+            for (let q = 0; q < 4; q++) { const tt = Math.max(0, t - q * 0.06); g.fillStyle = q ? `rgba(250,199,117,${0.5 - q * 0.1})` : "#FFF3C4"; g.fillRect(Math.round(lerp(fx, tx, tt)) - 2 + q, Math.round(lerp(fy, ty, tt)) - 2, 4 - q, 4 - q); }
+          }
           else { const r = 8 + t * 6, ang = Math.atan2(ty - fy, tx - fx); g.strokeStyle = s.weapon === "hammer" ? "#E8E6F5" : "#FAEEDA"; g.lineWidth = 2; g.beginPath(); g.arc(fx, fy, r, ang - 0.8, ang + 0.8); g.stroke(); }
         } else if (age <= s.dur + 20 && s.hit) hitFlash.set(s.to, now);
         if (age > s.dur && age < s.dur + 250) {
@@ -264,6 +304,14 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
       for (const e of effects) {
         const age = now - e.born, f = cur.fighters[e.who];
         if (age < 0 || age > 900 || !f) continue;
+        if (e.kind === "poof") {
+          const x = sx(e.x), y = sy(e.y) - 8, s = age / 900;
+          for (let q = 0; q < 6; q++) {
+            const a = q * Math.PI / 3 + 0.4, r = 3 + s * 16 * (0.7 + (q % 2) * 0.3);
+            g.fillStyle = `rgba(206,203,246,${0.55 * (1 - s)})`; g.beginPath(); g.arc(x + Math.cos(a) * r, y + Math.sin(a) * r * 0.6 - s * 10, 3 + s * 5, 0, Math.PI * 2); g.fill();
+          }
+          continue;
+        }
         const p = posOf(e.who, k), x = sx(p.x), y = sy(p.y) - 14, s = age / 900;
         if (e.kind === "down") { g.fillStyle = `rgba(226,75,74,${1 - s})`; for (let q = 0; q < 10; q++) { const aa = q * 0.63; g.fillRect(Math.round(x + Math.cos(aa) * s * 26), Math.round(y + Math.sin(aa) * s * 26), 3, 3); } }
         else if (e.kind === "revive") { g.strokeStyle = `rgba(93,202,165,${1 - s})`; g.lineWidth = 3; g.beginPath(); g.arc(x, y + 12, 6 + s * 26, 0, Math.PI * 2); g.stroke(); g.fillStyle = `rgba(159,225,203,${0.5 * (1 - s)})`; g.fillRect(x - 3, y - 60 + s * 40, 6, 60); }

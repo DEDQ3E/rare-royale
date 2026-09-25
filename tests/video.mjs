@@ -87,7 +87,7 @@ try {
   writeFileSync("media/rare-royale.gif", gif.bytes());
 
   // Results, the replay of the final and the hall of fame.
-  await page.clock.setSystemTime(t0 + 232_000);
+  await page.clock.setSystemTime(t0 + 300_000);
   await game.getByText("Next lobby opens in").waitFor({ timeout: 30_000 });
   console.log("place:", await game.locator(".rr-yours .rr-huge").textContent(), "|", await game.locator(".rr-yours .rr-win, .rr-yours .rr-muted").first().textContent());
   await wait(3500);

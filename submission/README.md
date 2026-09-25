@@ -22,11 +22,11 @@ A spectator-sponsored battle royale where your Generations Friend drops onto an 
 
 ## What did you build?
 
-A complete battle royale that runs itself, in rounds of about four minutes: a one-minute lobby, the drop, about 2.5 minutes of battle and the results.
+A complete battle royale that runs itself, in rounds of about four and a half minutes: a one-minute lobby, the drop, about 3 minutes of battle and the results.
 
 - **Lobby.** Your Friend on a lit pedestal with its stats and family ability; this round's island with seven places to drop on (and how many Friends plan to land at each); a tactic (Fight, Hide, Loot); the entry panel with the prize ladder and **your real odds for that tactic**; enter for 1 RF, practise for free, or just watch. A short *How to play* guide opens on the first visit and pauses the countdown.
 - **Drop.** An airship crosses the island and every Friend parachutes to its target.
-- **Battle.** Tiered loot (slingshot, hammer, bow, star wand, armour, bandages), six storm circles that shift and shrink, ranged fights with line of sight, cover inside buildings, knockdowns with a five-second window for a second life, and loot left behind. A broadcast camera follows your Friend (teal ring, YOU arrow, edge pointer, minimap marker), with a kill feed, an announcer and up to four quick decisions per round (fight or flee, open a crate, sprint out of the storm).
+- **Battle.** Tiered loot (slingshot, hammer, bow, star wand, armour, bandages), six storm circles that shift and shrink, ranged fights with line of sight, cover inside buildings, knockdowns with a five-second window for a second life, and loot left behind. A broadcast camera follows your Friend (teal ring, YOU arrow, edge pointer, minimap marker), with a kill feed, an announcer and up to four quick decisions per round (fight or flee, open a crate, sprint out of the storm). Friends play with a plan: they head for places inside the coming circle, finish weakened rivals, join fights already under way, take cover in buildings and never chase into the storm. Every fight animates: lunges, recoil, knock-back on hits, wand sparks, knocked-down Friends lying with stars over their heads, a puff of smoke on elimination and a small camera shake for big hits. The storm eases in and out over six slow, shifting circles.
 - **Crowd.** Anyone watching can sponsor your Friend or any other until 25 are left. The **Fighters** tab lists everyone still standing with HP and knockouts: tap one to follow it with the camera and sponsor it.
 - **Locker and shouts.** Auras (embers, frost, falling stars) and titles drawn on your Friend in the arena, and paid shouts in the announcer's ticker and a speech bubble. Looks only: they never change the fight.
 - **Challenges.** Three goals in the lobby at a time (finish top 10, two knockouts, sponsor another Friend, back the winner, win…). Each unlocks a free title, win or lose, so every round moves you forward.
@@ -69,10 +69,10 @@ A 1 RF entry pays something back almost every other round, and the lobby tells y
 
 | Tactic | Any RF back | 1 RF or more | Top 10 | Win | Average return |
 |---|---:|---:|---:|---:|---:|
-| All | 45.5% | 20.5% | 20.0% | 2.0% | 0.797 RF |
-| Fight | 52.0% | 18.2% | 17.1% | 2.6% | 0.876 RF |
-| Hide | 39.9% | 25.0% | 25.0% | 0.9% | 0.707 RF |
-| Loot | 44.8% | 18.3% | 17.9% | 2.5% | 0.809 RF |
+| All | 45.2% | 20.6% | 20.0% | 2.0% | 0.797 RF |
+| Fight | 53.5% | 18.2% | 16.6% | 2.8% | 0.909 RF |
+| Hide | 39.8% | 26.6% | 26.6% | 0.9% | 0.740 RF |
+| Loot | 42.2% | 17.0% | 16.7% | 2.3% | 0.743 RF |
 
 The average return stays at 0.8 RF per entry (the other 0.2 RF is the burn and the rewards), but it is spread over ten places and every knockout instead of three podium spots. Fight earns bounties, Hide reaches the top 10 most often.
 
@@ -80,8 +80,8 @@ The average return stays at 0.8 RF per entry (the other 0.2 RF is the burn and t
 
 Stats, family abilities, tactics and sponsor items change the fight, within limits checked by `npm run balance`:
 
-- No Generation, family or tactic earns more than 1.2× the average return (highest: 1.10×, Fight). No group averages 1 RF back per 1 RF entry (highest: 0.876 RF).
-- **No purchase pays for itself.** Each purchase is tested by playing the same seeded round twice, with and without it: a shield returns 0.31 RF per 1 RF, a medkit 0.20, a second life 0.08, and buying everything every time 0.12. Purchases made in the last moments before sponsoring closes return 0.29–0.53 RF per 1 RF.
+- No Generation, family or tactic earns more than 1.2× the average return (highest: 1.14×, Colossus). No group averages 1 RF back per 1 RF entry (highest: 0.909 RF).
+- **No purchase pays for itself.** Each purchase is tested by playing the same seeded round twice, with and without it: a shield returns 0.30 RF per 1 RF, a medkit 0.18, a second life 0.08, and buying everything every time 0.12. Purchases made in the last moments before sponsoring closes return 0.34–0.42 RF per 1 RF.
 
 ## How does it use Rare Friends?
 

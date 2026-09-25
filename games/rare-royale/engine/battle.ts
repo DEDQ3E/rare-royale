@@ -16,7 +16,7 @@ import type { SponsorItemId } from "./economy.ts";
 export const TICK_MS = 1000;
 
 export const TUNING = {
-  maxTicks: 230,
+  maxTicks: 290,
   airTicks: 16, glideSpeed: 8,
   baseHp: 90, hpPerMight: 1.5, armorCap: 50,
   moveBase: 2.4, movePerSpeed: 0.12,
@@ -32,8 +32,8 @@ export const TUNING = {
   maxDecisions: 4, decisionGapTicks: 12, decisionWindowTicks: 5, decisionHoldTicks: 10,
   /** Storm circles: radius per phase, wait and shrink seconds, damage per second outside. */
   zoneRadius: [135, 88, 58, 36, 20, 9, 0],
-  zoneWait: [34, 16, 14, 12, 10, 8],
-  zoneShrink: [16, 14, 12, 10, 10, 10],
+  zoneWait: [34, 14, 12, 10, 8, 6],
+  zoneShrink: [26, 22, 20, 16, 14, 12],
   stormDps: [1, 2, 3, 5, 8, 12, 16],
 };
 
@@ -76,6 +76,10 @@ export type Fighter = {
   downedAt: number; place: number; kos: number; koBy: number; koCause: "" | KoCause; damage: number;
   revives: number; invulnUntil: number; firstHitTaken: boolean; lastStandUsed: boolean;
   sprintUntil: number; sponsored: number;
+  /** Where the Friend is heading when nothing else needs it, and until when it keeps that plan. */
+  goalX: number; goalY: number; goalUntil: number;
+  /** Side-step direction in a firefight, kept for a few seconds. */
+  strafe: 1 | -1; strafeUntil: number;
 };
 
 export type Zone = Readonly<{ cx: number; cy: number; r: number; ncx: number; ncy: number; nr: number; phase: number; shrinking: boolean; nextChangeAt: number }>;
@@ -143,7 +147,7 @@ export function zoneSchedule(map: GameMap) {
     const prev = circles[k - 1], r = T.zoneRadius[k];
     let cx = prev.cx, cy = prev.cy;
     for (let tries = 0; tries < 80; tries++) {
-      const a = rng.next() * Math.PI * 2, d = Math.sqrt(rng.next()) * Math.max(0, prev.r - r) * (k === 1 ? 0.45 : 0.85);
+      const a = rng.next() * Math.PI * 2, d = Math.sqrt(rng.next()) * Math.max(0, prev.r - r) * (k === 1 ? 0.4 : 0.7);
       const x = prev.cx + Math.cos(a) * d, y = prev.cy + Math.sin(a) * d;
       if (map.height(x, y) > 0.12) { cx = x; cy = y; break; }
     }
@@ -158,7 +162,8 @@ export function zoneSchedule(map: GameMap) {
       if (tick < end) {
         const a = circles[k], b = circles[k + 1];
         if (tick < wait) return { cx: a.cx, cy: a.cy, r: a.r, ncx: b.cx, ncy: b.cy, nr: b.r, phase: k, shrinking: false, nextChangeAt: wait };
-        const s = (tick - wait) / T.zoneShrink[k];
+        // Eased: the storm starts and settles slowly instead of snapping between circles.
+        const u = (tick - wait) / T.zoneShrink[k], s = u * u * (3 - 2 * u);
         return { cx: a.cx + (b.cx - a.cx) * s, cy: a.cy + (b.cy - a.cy) * s, r: a.r + (b.r - a.r) * s, ncx: b.cx, ncy: b.cy, nr: b.r, phase: k, shrinking: true, nextChangeAt: end };
       }
     }
@@ -218,6 +223,7 @@ export function createBattle(options: BattleOptions): Battle {
       weapon: "fists", bandages: 0, charge: 0, target: -1, lastHitAt: -99, seenBy: [],
       downedAt: -1, place: 0, kos: 0, koBy: -1, koCause: "", damage: 0,
       revives: 0, invulnUntil: -1, firstHitTaken: false, lastStandUsed: false, sprintUntil: -1, sponsored: 0,
+      goalX: 0, goalY: 0, goalUntil: -1, strafe: 1, strafeUntil: -1,
     };
   });
   const crateOpen = map.crates.map(() => false);
@@ -370,10 +376,15 @@ export function createBattle(options: BattleOptions): Battle {
       if (dist(f.x, f.y, c.x, c.y) <= 2.2) openCrate(f, grab, rng); else stepTo(f, c.x, c.y, speedOf(f));
       return;
     }
+    // The best target in sight: close, weak, or busy fighting someone else (a third party).
+    const inStorm = (o: Fighter) => zone.r > 0 && dist(o.x, o.y, zone.cx, zone.cy) > zone.r;
+    const pick = seen.filter(s => s.d <= nearest!.d * 1.4 + 3 && !(inStorm(s.o) && !inStorm(f)))
+      .map(s => ({ s, score: s.d + (s.o.hp + s.o.armor) * 0.12 - (s.o.state === "alive" && s.o.target >= 0 && s.o.target !== f.index ? 6 : 0) }))
+      .sort((a, b) => a.score - b.score)[0]?.s ?? nearest;
     if (engage === "fight") target = nearest?.o ?? null;
     else if (engage !== "flee" && nearest) {
       const attacker = attacked ? seen.find(s => s.o.target === f.index)?.o ?? null : null;
-      if (f.tactic === "fight") target = !wounded && (w.ranged || nearest.d < 14) ? nearest.o : attacker;
+      if (f.tactic === "fight") target = !wounded && (w.ranged || pick!.d < 14) ? pick!.o : attacker;
       else if (f.tactic === "loot") target = attacker ?? (nearest.d < w.range * 0.8 ? nearest.o : null);
       else target = attacker ?? (nearest.d < 6 ? nearest.o : null);
       if (wounded && target && nearest.d > 5) target = null;
@@ -400,7 +411,14 @@ export function createBattle(options: BattleOptions): Battle {
       if (!w.ranged) stepTo(f, target.x, target.y, Math.min(step, Math.max(0, d - 2.2)));
       else if (d > w.range * 0.85) stepTo(f, target.x, target.y, Math.min(step, d - w.range * 0.7));
       else if (d < w.range * 0.4) { const a = Math.atan2(f.y - target.y, f.x - target.x); stepTo(f, f.x + Math.cos(a) * 4, f.y + Math.sin(a) * 4, step * 0.7); }
-      else { const a = Math.atan2(target.y - f.y, target.x - f.x) + (rng.chance(0.5) ? 1.4 : -1.4); stepTo(f, f.x + Math.cos(a) * 3, f.y + Math.sin(a) * 3, step * 0.5); }
+      else {
+        const cover = map.buildingAt(f.x, f.y) ? null : map.buildings.find(b => dist(f.x, f.y, b.x + b.w / 2, b.y + b.h / 2) < 7 && dist(b.x + b.w / 2, b.y + b.h / 2, zone.cx, zone.cy) < zone.r);
+        if (cover) { stepTo(f, cover.x + cover.w / 2, cover.y + cover.h / 2, step * 0.7); return; }
+        if (t >= f.strafeUntil) { f.strafe = rng.chance(0.5) ? 1 : -1; f.strafeUntil = t + 2 + rng.int(3); }
+        const a = Math.atan2(target.y - f.y, target.x - f.x) + f.strafe * 1.4;
+        stepTo(f, f.x + Math.cos(a) * 3, f.y + Math.sin(a) * 3, step * 0.5);
+        if (!f.moved) { f.strafe = f.strafe === 1 ? -1 : 1; f.strafeUntil = t + 2; }
+      }
       return;
     }
     if (nearest && (wounded || engage === "flee" || (f.tactic === "hide" && nearest.d < 18))) {
@@ -457,8 +475,15 @@ export function createBattle(options: BattleOptions): Battle {
       return;
     }
     f.mode = "roam";
-    const a = rng.next() * Math.PI * 2, r = zone.nr * 0.5;
-    stepTo(f, zone.ncx + Math.cos(a) * r, zone.ncy + Math.sin(a) * r, step * 0.7);
+    const goalOk = t < f.goalUntil && dist(f.x, f.y, f.goalX, f.goalY) > 2 && dist(f.goalX, f.goalY, zone.ncx, zone.ncy) < zone.nr;
+    if (!goalOk) {
+      // A place worth going to inside the coming circle: a named place or a building, else a point near its middle.
+      const spots = [...map.pois.map(q => ({ x: q.x, y: q.y })), ...map.buildings.map(b => ({ x: b.x + b.w / 2, y: b.y + b.h / 2 }))]
+        .filter(q => dist(q.x, q.y, zone.ncx, zone.ncy) < zone.nr * 0.8 && dist(q.x, q.y, f.x, f.y) > 6);
+      const q = spots.length ? rng.pick(spots) : (() => { const a = rng.next() * Math.PI * 2, r = zone.nr * 0.5 * Math.sqrt(rng.next()); return { x: zone.ncx + Math.cos(a) * r, y: zone.ncy + Math.sin(a) * r }; })();
+      f.goalX = q.x; f.goalY = q.y; f.goalUntil = t + 10 + rng.int(8);
+    }
+    stepTo(f, f.goalX, f.goalY, step * 0.75);
   }
 
   function step(): readonly BattleEvent[] {

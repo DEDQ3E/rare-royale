@@ -51,7 +51,7 @@ await testGame("./games/rare-royale", {
       }
       await shot(name);
     }
-    await page.clock.setSystemTime(t0 + 232_000);
+    await page.clock.setSystemTime(t0 + 300_000);
     await game.getByText("Next lobby opens in").waitFor({ timeout: 30_000 });
     await shot("7-results");
     await game.getByRole("button", { name: /Replay the final/ }).click();

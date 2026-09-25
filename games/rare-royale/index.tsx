@@ -64,7 +64,7 @@ const DECISION_TEXT: Readonly<Record<DecisionKind, { title: string; a: string; b
 const TUTORIAL: readonly { icon: string; title: string; lines: readonly string[] }[] = [
   { icon: "wand", title: "Welcome to Rare Royale", lines: [
     "Your Friend drops onto an island with 49 real Rare Friends. The top 10 are paid, and every knockout pays a bounty.",
-    "Every round: 1 minute in the lobby, then the drop, about 2.5 minutes of battle, then results.",
+    "Every round: 1 minute in the lobby, then the drop, about 3 minutes of battle, then results.",
     "Everything here uses simulated RF. Nothing asks for a transaction."] },
   { icon: "armor50", title: "Your Friend is your fighter", lines: [
     "Might (HP and damage), Speed (running and dodging) and Wits (aim, sight and better loot) come from your NFT: its family, generation and sprite.",
@@ -819,8 +819,8 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
             <div className="rr-cam">
               <canvas ref={camCanvas} width={CAM_W} height={CAM_H} className="rr-cam-canvas" aria-label="Arena camera" />
               <canvas ref={miniCanvas} width={110} height={110} className="rr-mini" aria-label="Island map" />
-              <span className="rr-cam-label">{pin.current >= 0 && snap?.fighters[pin.current] ? `Cam 3 · following #${snap.fighters[pin.current].id.tokenId}` : myFighter && myFighter.state !== "out" ? "Cam 1 · your Friend" : "Cam 2 · the action"}</span>
-              {pin.current >= 0 && myFighter && myFighter.state !== "out" && <button className="rr-chip rr-back" onClick={() => follow(player)}>Back to you</button>}
+              <span className="rr-cam-label">{pin.current >= 0 && snap?.fighters[pin.current] && snap.fighters[pin.current].state !== "out" ? `Cam 3 · following #${snap.fighters[pin.current].id.tokenId}` : myFighter && myFighter.state !== "out" ? "Cam 1 · your Friend" : "Cam 2 · the action"}</span>
+              {pin.current >= 0 && snap?.fighters[pin.current]?.state !== "out" && myFighter && myFighter.state !== "out" && <button className="rr-chip rr-back" onClick={() => follow(player)}>Back to you</button>}
               {decision && (
                 <div className="rr-decision" role="dialog" aria-label={DECISION_TEXT[decision.kind].title}>
                   <b>{DECISION_TEXT[decision.kind].title}</b>
