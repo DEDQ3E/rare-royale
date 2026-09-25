@@ -46,13 +46,20 @@ export type SponsorItemId = keyof typeof SPONSOR_ITEMS;
 export const REVIVE_PRICES: readonly bigint[] = [rf("2"), rf("4"), rf("8")];
 export const revivePrice = (usedThisRound: number): bigint | null => REVIVE_PRICES[usedThisRound] ?? null;
 
-export const COSMETICS = [
-  { id: "title-underdog", name: "Title: Underdog", price: rf("1") },
-  { id: "title-showrunner", name: "Title: Showrunner", price: rf("3") },
-  { id: "aura-ember", name: "Aura: Ember", price: rf("2") },
-  { id: "aura-starfall", name: "Aura: Starfall", price: rf("5") },
-  { id: "shout", name: "Arena shout", price: rf("1") },
-] as const;
+/** Cosmetics: pure gameplay payments (50% burned, 50% rewards). They never change the fight. */
+export type CosmeticKind = "title" | "aura";
+export type Cosmetic = Readonly<{ id: string; kind: CosmeticKind; name: string; price: bigint; text: string }>;
+export const COSMETICS: readonly Cosmetic[] = [
+  { id: "title-underdog", kind: "title", name: "Underdog", price: rf("1"), text: "A title under your Friend's name." },
+  { id: "title-showrunner", kind: "title", name: "Showrunner", price: rf("3"), text: "A title under your Friend's name." },
+  { id: "title-highroller", kind: "title", name: "High Roller", price: rf("5"), text: "A gold title under your Friend's name." },
+  { id: "aura-ember", kind: "aura", name: "Ember aura", price: rf("2"), text: "Embers rise around your Friend in the arena." },
+  { id: "aura-frost", kind: "aura", name: "Frost aura", price: rf("2"), text: "Snowflakes circle your Friend in the arena." },
+  { id: "aura-starfall", kind: "aura", name: "Starfall aura", price: rf("5"), text: "Golden stars fall around your Friend in the arena." },
+];
+/** An arena shout: one line in the announcer's ticker and over your Friend. */
+export const SHOUT_PRICE = rf("1");
+export const SHOUTS: readonly string[] = ["Dinner's on me!", "Catch me if you can!", "Storm? What storm?", "For the Friends!", "Burn it all!", "GG, see you next round!"];
 
 export type SpendKind = "entry" | "shield" | "medkit" | "revive" | "cosmetic";
 export const SPEND_KINDS: readonly SpendKind[] = ["entry", "shield", "medkit", "revive", "cosmetic"];

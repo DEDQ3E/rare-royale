@@ -13,6 +13,10 @@ type Shot = { born: number; dur: number; fx: number; fy: number; tx: number; ty:
 type Pop = { born: number; x: number; y: number; text: string; color: string };
 type Effect = { born: number; kind: "down" | "revive" | "loot" | "heal" | "flash" | "land"; who: number; item?: string; x: number; y: number };
 
+/** How the viewer's own Friend is dressed up: cosmetics only, never the fight. */
+export type ArenaLook = Readonly<{ aura: string | null; title: string | null; shout: string | null }>;
+const NO_LOOK: ArenaLook = { aura: null, title: null, shout: null };
+
 export type ArenaView = Readonly<{
   push(snapshot: BattleSnapshot, events: readonly BattleEvent[], now: number): void;
   draw(now: number, focus: number, player: number, reducedMotion: boolean): void;
@@ -37,6 +41,38 @@ function drawYou(g: CanvasRenderingContext2D, x0: number, top: number, now: numb
   g.restore();
 }
 
+/** Aura particles around the player's Friend; a steady glow with reduced motion. */
+function drawAura(g: CanvasRenderingContext2D, aura: string, x: number, y: number, size: number, now: number, reduced: boolean) {
+  const color = aura === "aura-ember" ? "239,159,39" : aura === "aura-frost" ? "159,225,255" : "250,199,117";
+  const glow = g.createRadialGradient(x, y - size * 0.45, 2, x, y - size * 0.45, size * 0.9);
+  glow.addColorStop(0, `rgba(${color},.35)`); glow.addColorStop(1, `rgba(${color},0)`);
+  g.fillStyle = glow; g.fillRect(x - size, y - size * 1.4, size * 2, size * 1.9);
+  if (reduced) return;
+  const n = aura === "aura-starfall" ? 7 : 9;
+  for (let i = 0; i < n; i++) {
+    const phase = (now / (aura === "aura-frost" ? 1400 : 1100) + i / n) % 1;
+    let px: number, py: number;
+    if (aura === "aura-ember") { px = x + Math.sin(i * 2.3 + now / 500) * size * 0.45; py = y - phase * size * 1.3; }
+    else if (aura === "aura-frost") { const a = phase * Math.PI * 2 + i; px = x + Math.cos(a) * size * 0.6; py = y - size * 0.45 + Math.sin(a) * size * 0.25; }
+    else { px = x + (((i * 37) % 11) / 10 - 0.5) * size * 1.2; py = y - size * 1.3 + phase * size * 1.3; }
+    const alpha = aura === "aura-frost" ? 0.9 : 1 - phase;
+    g.fillStyle = `rgba(${color},${alpha.toFixed(2)})`;
+    const d = Math.max(2, Math.round(size / 12));
+    if (aura === "aura-starfall") { g.fillRect(px - d, py, d * 3, d); g.fillRect(px, py - d, d, d * 3); }
+    else g.fillRect(Math.round(px), Math.round(py), d, d);
+  }
+}
+
+/** A speech bubble with the viewer's shout. */
+function drawBubble(g: CanvasRenderingContext2D, text: string, x: number, top: number) {
+  g.font = "9px Silkscreen, monospace";
+  const w = Math.ceil(g.measureText(text).width) + 10, h = 14, bx = Math.max(2, Math.min(CAM_W - w - 2, x - w / 2)), by = Math.max(2, top - h - 6);
+  g.fillStyle = "#0E1020"; g.fillRect(bx - 1, by - 1, w + 2, h + 2);
+  g.fillStyle = "#FAEEDA"; g.fillRect(bx, by, w, h);
+  g.beginPath(); g.moveTo(x - 4, by + h); g.lineTo(x + 4, by + h); g.lineTo(x, by + h + 5); g.fill();
+  g.fillStyle = "#0E1020"; g.fillText(text, bx + 5, by + 10);
+}
+
 function drawAirship(g: CanvasRenderingContext2D, x: number, y: number, s: number, dir: number, now: number) {
   g.save(); g.translate(Math.round(x), Math.round(y)); g.scale(dir * s, s);
   g.fillStyle = "rgba(20,20,40,.25)"; g.beginPath(); g.ellipse(6, 30, 26, 6, 0, 0, Math.PI * 2); g.fill();
@@ -50,7 +86,7 @@ function drawAirship(g: CanvasRenderingContext2D, x: number, y: number, s: numbe
   g.restore();
 }
 
-export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: (f: Readonly<Fighter>) => FriendArt | null): ArenaView {
+export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: (f: Readonly<Fighter>) => FriendArt | null, look: () => ArenaLook = () => NO_LOOK): ArenaView {
   const g = canvas.getContext("2d")!;
   const terrain = terrainFor(map);
   let prev: BattleSnapshot | null = null, cur: BattleSnapshot | null = null, tickAt = 0;
@@ -153,6 +189,8 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
           g.strokeStyle = "rgba(93,202,165,.35)"; g.lineWidth = 4;
           g.beginPath(); g.ellipse(x, y, (11 + pulse) * spriteScale, (4.5 + pulse / 2) * spriteScale, 0, 0, Math.PI * 2); g.stroke();
         }
+        const mine = f.index === player ? look() : NO_LOOK;
+        if (mine.aura) drawAura(g, mine.aura, x, y, size, now, reducedMotion);
         if (f.state === "downed") g.globalAlpha = 0.5 + 0.3 * Math.sin(now / 110);
         if (rows) {
           const img = spriteCanvas(rows), feet = (feetRow(rows) + 2) * spriteScale;
@@ -168,7 +206,16 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
         g.fillStyle = "#111"; g.fillRect(x - bw / 2 - 1, y + 3, bw + 2, ar > 0 ? 7 : 4);
         g.fillStyle = f.state === "downed" ? "#E24B4A" : hp > 0.5 ? "#5DCAA5" : hp > 0.25 ? "#EF9F27" : "#E24B4A"; g.fillRect(x - bw / 2, y + 4, Math.round(bw * hp), 2);
         if (ar > 0) { g.fillStyle = "#85B7EB"; g.fillRect(x - bw / 2, y + 7, Math.round(bw * ar), 2); }
-        if (f.index === player) drawYou(g, x, y - size - 4, now, reducedMotion, spriteScale > 1 ? 1.25 : 1.6);
+        if (f.index === player) {
+          if (mine.title && spriteScale > 1) {
+            g.font = "8px Silkscreen, monospace";
+            const tw = Math.ceil(g.measureText(mine.title).width) + 6, ty = y + (ar > 0 ? 12 : 9);
+            g.fillStyle = "#0E1020"; g.fillRect(x - tw / 2, ty, tw, 10);
+            g.fillStyle = mine.title === "High Roller" ? "#FAC775" : "#9FE1CB"; g.fillText(mine.title, x - tw / 2 + 3, ty + 8);
+          }
+          drawYou(g, x, y - size - 4, now, reducedMotion, spriteScale > 1 ? 1.25 : 1.6);
+          if (mine.shout) drawBubble(g, mine.shout, x, y - size - 4 - (spriteScale > 1 ? 34 : 44));
+        }
         const labelled = f.index !== player && (f.index === focus || f.state === "downed" || f.kos >= 3);
         if (labelled && spriteScale > 1) {
           const label = f.kos >= 3 ? `#${f.id.tokenId} ${f.kos}KO` : `#${f.id.tokenId}`;

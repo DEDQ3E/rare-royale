@@ -28,15 +28,21 @@ Every round starts with a 1-minute lobby from the moment you arrive ("Start now"
   A knocked-down Friend has 5 seconds for someone to buy it a second life.
   Up to 4 free decisions per round: fight or flee, open a crate, sprint out of the storm.
 - **Sponsoring:** shield, medkit or second life for your Friend or the one on camera. Sponsoring closes when 25 are left.
+- **Spectating:** the Fighters tab lists everyone still standing; pick one to follow it with the camera and sponsor it.
 - **Results:** the top 10 with their payouts, your place and what you won (ladder place plus bounties), damage,
-  who knocked you out and what the round burned.
+  who knocked you out, the round's top sponsor and Kingmakers (who backed the winner), and what the round burned.
+  **Replay the final** plays the last 20 seconds again with the winner on camera.
+- **Locker and shouts:** auras and titles for your Friend, and paid shouts in the arena. Looks only, never the fight.
+- **Challenges:** three goals in the lobby at a time (top 10, two knockouts, sponsor another Friend, back the winner
+  and more). Each unlocks a free title, win or lose. Progress lasts for the session.
 
 ## Controls
 
 | Where | Keys | Touch or mouse |
 |---|---|---|
-| Lobby | 1, 2, 3: tactic · E: enter for 1 RF · P: practice | Tap a place on the map, the tactic cards and the buttons |
-| Battle | S: shield · M: medkit · R: second life · T: switch sponsor target · 1, 2: decisions | Dock buttons |
+| Lobby | 1, 2, 3: tactic · E: enter for 1 RF · P: practice · L: locker | Tap a place on the map, the tactic cards and the buttons |
+| Battle | S: shield · M: medkit · R: second life · T: switch sponsor target · 1, 2: decisions · Y: shout (then 1–6) · F: Fighters tab | Dock buttons, tap a Friend in the Fighters tab to follow it |
+| Results | V: replay the final | Replay the final button |
 | Anywhere | H: hall of fame · Esc: close · arrows and Enter in the guide | How to play, Sound and Hall of fame buttons |
 
 Sound starts after your first click or key press; the "Sound on/off" button mutes it. A reduced-motion switch is in
@@ -51,6 +57,9 @@ the bottom bar. Audio stops while the game is paused or hidden.
 | Shield (soaks the next 30 damage) | 1 RF | 50% burned, 50% active Friend rewards |
 | Medkit (+45 HP) | 1 RF | 50% burned, 50% active Friend rewards |
 | Second life | 2, then 4, then 8 RF (max 3 per Friend per round) | 50% burned, 50% active Friend rewards |
+| Aura (Ember, Frost 2 RF · Starfall 5 RF) | once per session | 50% burned, 50% active Friend rewards; looks only |
+| Title (Underdog 1 · Showrunner 3 · High Roller 5 RF) | once per session | 50% burned, 50% active Friend rewards; looks only. Challenge titles are free |
+| Shout | 1 RF | 50% burned, 50% active Friend rewards; a line in the ticker and over your Friend |
 
 - **Ladder:** with 50 paid entries the ladder is 30 RF: 8, 5, 4, 3 and 2.5 RF for places 1 to 5 and 1.5 RF for places
   6 to 10. There is one paid place per five paid entries (at most ten), ranked among paid entrants only.
@@ -72,8 +81,9 @@ the bottom bar. Audio stops while the game is paused or hidden.
 | Hide | 39.9% | 25.0% | 25.0% | 0.9% | 0.707 RF |
 | Loot | 44.8% | 18.3% | 17.9% | 2.5% | 0.809 RF |
 
-An average round moves 85.3 RF: 50 RF of entries and 35.3 RF of sponsoring. 39.8 RF returns to players,
-22.9 RF (27%) is burned and 22.7 RF funds active Friend rewards.
+An average round moves 86.9 RF: 50 RF of entries and 36.9 RF of sponsoring and shouts from the simulated crowd.
+39.8 RF returns to players, 23.6 RF (27%) is burned and 23.4 RF funds active Friend rewards. The viewer's own
+cosmetics come on top.
 
 Fairness is checked by `npm run balance`; the results are in `BALANCE.md` and the lobby odds in `engine/odds.json`.
 No Generation, family or tactic earns more than 1.2× the average, no group averages 1 RF back per 1 RF entry, and no

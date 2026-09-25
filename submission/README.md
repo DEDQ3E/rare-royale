@@ -4,6 +4,10 @@
 
 🕹️ **Play: https://dedq3e.github.io/rare-royale/**
 
+🎬 **Demo with sound (97 s):** recorded from the real SDK runtime with Sparkling Friend #66666 read live from mainnet (only the wallet is mocked; `tests/video.mjs`): lobby, a Starfall aura from the Locker, the drop, a paid shout, following and sponsoring another Friend from the Fighters tab, results, the replay of the final and the hall of fame. [Watch `media/rare-royale.webm`](https://github.com/DEDQ3E/rare-royale/blob/main/media/rare-royale.webm).
+
+![The late game, sped up](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/rare-royale.gif)
+
 **Project name**
 Rare Royale
 
@@ -23,12 +27,18 @@ A complete battle royale that runs itself, in rounds of about four minutes: a on
 - **Lobby.** Your Friend on a lit pedestal with its stats and family ability; this round's island with seven places to drop on (and how many Friends plan to land at each); a tactic (Fight, Hide, Loot); the entry panel with the prize ladder and **your real odds for that tactic**; enter for 1 RF, practise for free, or just watch. A short *How to play* guide opens on the first visit and pauses the countdown.
 - **Drop.** An airship crosses the island and every Friend parachutes to its target.
 - **Battle.** Tiered loot (slingshot, hammer, bow, star wand, armour, bandages), six storm circles that shift and shrink, ranged fights with line of sight, cover inside buildings, knockdowns with a five-second window for a second life, and loot left behind. A broadcast camera follows your Friend (teal ring, YOU arrow, edge pointer, minimap marker), with a kill feed, an announcer and up to four quick decisions per round (fight or flee, open a crate, sprint out of the storm).
-- **Crowd.** Anyone watching can sponsor your Friend or the one on camera until 25 are left.
-- **Results.** The top 10 with their payouts, your place and what you won (ladder plus bounties), and exactly what the round burned.
+- **Crowd.** Anyone watching can sponsor your Friend or any other until 25 are left. The **Fighters** tab lists everyone still standing with HP and knockouts: tap one to follow it with the camera and sponsor it.
+- **Locker and shouts.** Auras (embers, frost, falling stars) and titles drawn on your Friend in the arena, and paid shouts in the announcer's ticker and a speech bubble. Looks only: they never change the fight.
+- **Challenges.** Three goals in the lobby at a time (finish top 10, two knockouts, sponsor another Friend, back the winner, win…). Each unlocks a free title, win or lose, so every round moves you forward.
+- **Results.** The top 10 with their payouts, your place and what you won (ladder plus bounties), the round's top sponsor and its **Kingmakers** (everyone who sponsored the winner), and exactly what the round burned. **Replay the final** plays the last 20 seconds again with the winner on camera.
 - **Hall of fame.** RF burned to date read **live from the RF token's `totalSupply` on Robinhood mainnet**, the burn of the last 12 rounds and their champions (past rounds replay from their seeds, the same for everyone).
 - **Sound.** Its own synthesized arena sound: a formant-built stadium crowd, a drum-and-bass bed that speeds up as the field shrinks, plucked-string bows and slingshots, a ring-modulated star wand, bells for loot, a flame whoosh for every burn, the airship drone and the storm siren. Mute button in the top bar.
 
 ![Lobby: the Friend, the island, the tactic, the ladder and your odds](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/lobby.png)
+
+![The Locker: auras and titles, bought with RF or earned in challenges](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/locker.png)
+
+![Replay the final: the last 20 seconds with the winner on camera](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/replay.png)
 
 ## How does it spend and burn $RAREFRIENDS?
 
@@ -41,6 +51,9 @@ Everything below is **simulated** in this preview and labelled on every screen. 
 | Shield (soaks the next 30 damage) | 1 RF | **50% burned** · 50% active Friend rewards |
 | Medkit (+45 HP) | 1 RF | **50% burned** · 50% active Friend rewards |
 | Second life (within 5 s of a knockdown) | 2, then 4, then 8 RF, max 3 per Friend per round | **50% burned** · 50% active Friend rewards |
+| Aura: Ember or Frost 2 RF, Starfall 5 RF | once per session | **50% burned** · 50% active Friend rewards · looks only |
+| Title: Underdog 1, Showrunner 3, High Roller 5 RF | once per session | **50% burned** · 50% active Friend rewards · looks only (challenge titles are free) |
+| Shout | 1 RF | **50% burned** · 50% active Friend rewards · a line in the arena |
 
 - The 50/50 split is the protocol's own rule for gameplay payments ([rarefriends.com/docs/economy](https://rarefriends.com/docs/economy)), so the game feeds both the burn and the rewards of every active Friend holder.
 - **Ladder:** with 50 paid entries, 30 RF: 8 · 5 · 4 · 3 · 2.5 RF for places 1–5 and 1.5 RF for places 6–10. Any top-10 place returns more than the entry.
@@ -48,7 +61,7 @@ Everything below is **simulated** in this preview and labelled on every screen. 
 - **Backed prizes:** prizes come only from the same round's paid entries. Unpaid seats are filled by *wild* Friends that fight but never take RF, and the ladder ranks paid entrants only; with fewer than 5 paid entries a round is free and entries are refunded. In this preview the other 49 seats are simulated paid entrants.
 - **Sponsoring closes when 25 are left**, so nobody can buy the finish.
 
-**An average round** (300 rounds with the simulated crowd): 85.3 RF spent (50 RF entries + 35.3 RF sponsoring) → **22.9 RF burned (27%)**, 22.7 RF to active Friend rewards, 39.8 RF back to players.
+**An average round** (300 rounds with the simulated crowd): 86.9 RF spent (50 RF entries + 36.9 RF sponsoring and shouts) → **23.6 RF burned (27%)**, 23.4 RF to active Friend rewards, 39.8 RF back to players. The viewer's cosmetics come on top: every aura, title and shout is a pure sink that cannot buy an advantage.
 
 ### Why a player would actually play
 
@@ -84,8 +97,9 @@ Open the preview, connect a browser wallet on **Robinhood mainnet (chain 4663)**
 
 | Where | Keys | Touch or mouse |
 |---|---|---|
-| Lobby | 1, 2, 3: tactic · E: enter for 1 RF · P: practice | Tap a place on the map, the tactic cards and the buttons |
-| Battle | S: shield · M: medkit · R: second life · T: switch sponsor target · 1, 2: decisions | Dock buttons |
+| Lobby | 1, 2, 3: tactic · E: enter for 1 RF · P: practice · L: locker | Tap a place on the map, the tactic cards and the buttons |
+| Battle | S: shield · M: medkit · R: second life · T: switch sponsor target · 1, 2: decisions · Y: shout · F: Fighters tab | Dock buttons; tap a Friend in the Fighters tab to follow it |
+| Results | V: replay the final | Replay the final button |
 | Anywhere | H: hall of fame · Esc: close · arrows and Enter in the guide | How to play, Sound and Hall of fame buttons |
 
 Portrait phones get their own 3:4 layout. Reduced motion, mute, loading and error states are included, and the game honours the runtime's `paused` state.
@@ -108,11 +122,12 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 | Check | Result |
 |---|---|
 | `npm run typecheck` | Pass |
-| `npm run test:engine` (map, stats, replay, one winner, sponsoring, decisions, economy, settlement, ledger, rounds) | 10 / 10 pass |
+| `npm run test:engine` (map, stats, replay, one winner, sponsoring, decisions, economy, settlement, ledger, rounds, round recording and crowd payments, challenges) | 12 / 12 pass |
 | `npm run check` (`friendsdk check`) | Valid; reference chance game: expected reward 0.8 RF, maximum 0.8 RF |
 | `npx friendsdk test games/rare-royale --width 960` and `--width 390` | Pass |
 | `npm run balance -- 6000 2500 --report` | All three fairness targets pass ([`BALANCE.md`](https://github.com/DEDQ3E/rare-royale/blob/main/BALANCE.md)) |
-| Browser flow (`tests/shots.ts`, SDK test runtime with a fake clock): guide, lobby, entry, drop, landing, fight, late game, results, hall of fame, at 960 × 808 and 390 × 844 | Pass |
+| Browser flow (`tests/shots.ts`, SDK test runtime with a fake clock): guide, lobby, Locker purchases, entry, drop, shout, Fighters tab and follow, late game, results, replay of the final, hall of fame, at 960 × 808 and 390 × 844 | Pass |
+| Demo video (`tests/video.mjs`): real SDK runtime, Friend #66666 read live from mainnet, picture and sound checked after recording | Pass |
 | Audio (`Web Audio` in Chromium): starts on the first gesture, suspends on mute | Pass |
 | Real-wallet playtest with a real Generations Friend | Pass (the builder played the public preview with a real wallet) |
 

@@ -22,8 +22,15 @@ await testGame("./games/rare-royale", {
     await shot("0b-tutorial-drop");
     await game.getByRole("button", { name: "Skip" }).click();
     await shot("1-lobby");
+    const gotIt = () => game.getByRole("button", { name: /Got it/ }).click({ timeout: 1500 }).catch(() => {});
+    await game.getByRole("button", { name: /^Locker/ }).click();
+    await game.getByRole("dialog", { name: "Locker" }).getByRole("button", { name: /^2 RF/ }).first().click();
+    await gotIt();
+    await game.getByRole("dialog", { name: "Locker" }).getByRole("button", { name: /^3 RF/ }).first().click();
+    await shot("2-locker");
+    await game.getByRole("dialog", { name: "Locker" }).getByRole("button", { name: /^Close/ }).click();
     await game.getByRole("button", { name: /Enter round/ }).click();
-    await game.getByRole("button", { name: /Got it/ }).click();
+    await gotIt();
     await game.getByRole("button", { name: /^Loot/ }).click();
     await game.getByRole("button", { name: /^Drop at/ }).first().click();
     await shot("3-lobby-entered");
@@ -33,11 +40,24 @@ await testGame("./games/rare-royale", {
     for (const [at, name] of [[5_000, "4-live-drop"], [30_000, "5-live-landed"], [75_000, "6-live-fight"], [130_000, "6b-live-late"]] as const) {
       await page.clock.setSystemTime(t0 + at);
       await page.waitForTimeout(1500);
+      if (name === "5-live-landed") {
+        await game.getByRole("button", { name: /^Shout/ }).click();
+        await game.getByRole("menuitem").first().click();
+        await page.waitForTimeout(300);
+      }
+      if (name === "6-live-fight") {
+        await game.getByRole("tab", { name: /Fighters/ }).click();
+        await game.getByRole("listitem").nth(2).click();
+      }
       await shot(name);
     }
     await page.clock.setSystemTime(t0 + 232_000);
     await game.getByText("Next lobby opens in").waitFor({ timeout: 30_000 });
     await shot("7-results");
+    await game.getByRole("button", { name: /Replay the final/ }).click();
+    await page.waitForTimeout(6000);
+    await shot("7b-replay");
+    await game.getByRole("dialog", { name: "Replay of the final" }).getByRole("button", { name: /^Close/ }).click();
     await game.getByRole("button", { name: "Hall of fame (H)" }).click();
     await game.getByRole("dialog", { name: "Hall of fame" }).waitFor();
     await page.waitForTimeout(2500);

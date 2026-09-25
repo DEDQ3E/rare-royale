@@ -179,3 +179,33 @@ test("rounds: the clock gives the same round, line-up and player seat to everyon
   const already = withPlayer(a, a[7], 5);
   assert.equal(already.index, 7);
 });
+
+test("runner: records every tick; crowd shouts and sponsors are paid gameplay payments", async () => {
+  const { createRoundRunner } = await import("../games/rare-royale/runner.ts");
+  const { splitPayment: split } = await import("../games/rare-royale/engine/index.ts");
+  const r = createRoundRunner(4242, line(9, 300));
+  r.advanceTo(Number.MAX_SAFE_INTEGER);
+  assert.equal(r.frames.length, r.battle.snapshot().t + 1);
+  assert.ok(r.frames.at(-1)!.snap.over);
+  const sponsored = [...r.sponsors.values()].reduce((a, b) => a + b, 0n), shouts = BigInt(r.shouts.length) * rf("1");
+  assert.equal(sponsored + shouts, r.tally.crowd);
+  const gameplay = split("shield", r.tally.crowd);
+  const entries = split("entry", r.tally.entries);
+  assert.equal(r.tally.burned, gameplay.burned + entries.burned + r.tally.bountyBurned);
+  for (const [who, by] of r.backers) for (const name of by) assert.ok(r.sponsors.has(name) && who >= 0);
+});
+
+test("challenges: each unlocks its title once, from what the round shows", async () => {
+  const { CHALLENGES, activeChallenges, completedBy } = await import("../games/rare-royale/challenges.ts");
+  const done = new Set<string>();
+  const base = { entered: true, place: 30, kos: 0, tactic: "fight" as const, loots: 0, fanSaves: 0, phaseReached: 0, sponsoredOthers: 0, won: false, kingmaker: false };
+  assert.deepEqual(completedBy(base, done), []);
+  const good = { ...base, place: 1, kos: 3, loots: 6, phaseReached: 5, won: true };
+  const got = completedBy(good, done).map(c => c.id);
+  assert.deepEqual(got.sort(), ["circle4", "ko2", "loot5", "top10", "win"]);
+  got.forEach(id => done.add(id));
+  assert.deepEqual(completedBy(good, done), []);
+  assert.equal(activeChallenges(done).length, 3);
+  assert.ok(completedBy({ ...base, entered: false, kingmaker: true, sponsoredOthers: 1 }, done).every(c => c.id === "kingmaker" || c.id === "patron"));
+  assert.equal(new Set(CHALLENGES.map(c => c.title)).size, CHALLENGES.length);
+});
