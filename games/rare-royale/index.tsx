@@ -286,7 +286,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
     const pub = createFriendPublicClient();
     Promise.all([
       createFriendReader().read(friendId),
-      pub.readContract({ address: GENERATION_SPRITE_MANIFEST.generations, abi: GENERATION_ELIGIBILITY_ABI, functionName: "generation", args: [friendId] }).then(Number, () => 6),
+      pub.readContract({ address: GENERATION_SPRITE_MANIFEST.generations, abi: GENERATION_ELIGIBILITY_ABI, functionName: "generation", args: [friendId] }).then(Number),
     ]).then(([art, generation]) => {
       if (!alive) return;
       const family = (FAMILIES as readonly string[]).includes(art.familyName) ? art.familyName as Family : "Family";
@@ -295,7 +295,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
         init: { tokenId: friendId, family, generation: Math.min(6, Math.max(1, generation)), seed: art.seed },
         art: { idle: rows(art.familyId === 6 ? art.clips.idle.right : art.clips.idle.down), walkLeft: rows(art.clips.walk.left), walkRight: rows(art.clips.walk.right) },
       });
-    }).catch(cause => { if (alive) setLoadError(cause instanceof Error ? cause.message : "Could not load your Friend's artwork."); });
+    }).catch(cause => { if (alive) setLoadError(cause instanceof Error ? cause.message.split("\n")[0] : "Could not read your Friend from the chain."); });
     return () => { alive = false; };
   }, [friendId, attempt]);
 
@@ -307,7 +307,10 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
   const [tutorial, setTutorial] = useState<number | null>(0);
   const [frozen, setFrozen] = useState<number | null>(LOBBY_MS);
   const frozenRef = useRef(frozen); frozenRef.current = frozen;
-  const battleAt = frozen !== null ? now + frozen : sched.battleAt;
+  // While the runtime pauses the game (its menus are open), the round waits: the pause is added to the schedule.
+  const pausedAt = useRef<number | null>(null);
+  const shiftNow = pausedAt.current !== null ? now - pausedAt.current : 0;
+  const battleAt = (frozen !== null ? now + frozen : sched.battleAt) + shiftNow;
   const clock = { id: sched.id, battleAt, phase: now < battleAt ? "lobby" as const : "battle" as const };
   const [tactic, setTactic] = useState<Tactic>("fight");
   const [drop, setDrop] = useState<string | null>(null);
@@ -443,8 +446,10 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
       const d = Math.hypot(f.x - view.x, f.y - view.y), reach = view.halfWidth * 1.4;
       return d > reach ? null : { gain: 1 - 0.7 * (d / reach), pan: Math.max(-0.8, Math.min(0.8, (f.x - view.x) / view.halfWidth)), d, far: d / reach };
     };
+    let bows = 0;
     const shots = events.flatMap(e => (e.kind === "shot" ? [{ e, n: e.from === me || e.to === me ? { gain: 1, pan: 0, d: 0 } : near(e.from) }] : []))
-      .filter(x => x.n).sort((x, y) => x.n!.d - y.n!.d).slice(0, 3);
+      .filter(x => x.n).sort((x, y) => x.n!.d - y.n!.d)
+      .filter(x => x.e.kind !== "shot" || x.e.weapon !== "bow" || bows++ < 1).slice(0, 3);
     shots.forEach(({ e, n }, i) => {
       if (e.kind !== "shot") return;
       const far = "far" in n! ? n!.far : 0;
@@ -495,8 +500,16 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
   useEffect(() => {
     let raf = 0;
     const loop = () => {
-      const t = Date.now(), sc = schedRef.current;
-      const c = { id: sc.id, battleAt: frozenRef.current !== null ? t + frozenRef.current : sc.battleAt };
+      const t = Date.now();
+      if (pausedRef.current) { if (pausedAt.current === null) pausedAt.current = t; }
+      else if (pausedAt.current !== null) {
+        const d = t - pausedAt.current, s0 = schedRef.current;
+        pausedAt.current = null;
+        schedRef.current = { ...s0, battleAt: s0.battleAt + d, overAt: s0.overAt ? s0.overAt + d : 0 };
+        setSched(schedRef.current);
+      }
+      const shift = pausedAt.current !== null ? t - pausedAt.current : 0, sc = schedRef.current;
+      const c = { id: sc.id, battleAt: (frozenRef.current !== null ? t + frozenRef.current : sc.battleAt) + shift };
       if (t >= c.battleAt) {
         let r = runner.current;
         if (!r || r.id !== c.id) {
@@ -542,7 +555,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
         if (!wasOver && r.battle.isOver()) finishRound(r);
         if (r.battle.isOver() && !replayRef.current) {
           if (!sc.overAt) setSched(s => (s.id === sc.id && !s.overAt ? { ...s, overAt: t } : s));
-          else if (t - sc.overAt > RESULTS_MS) setSched(newSched(t));
+          else if (t - shift - sc.overAt > RESULTS_MS) setSched(newSched(t));
         }
         // Director: a Friend the viewer picked, else the player's Friend while it is in the game, else the hottest fight.
         const fs = r.battle.fighters(), cur = fs[focus.current.index];
@@ -806,7 +819,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
   if (loadError && !me) {
     return (
       <div className="rr-root rr-center" role="alert">
-        <p>Couldn't load your Friend's artwork: {loadError}</p>
+        <p>Couldn't read your Friend from Robinhood Chain (artwork and generation): {loadError}</p>
         <button className="rr-btn rr-primary" onClick={() => setAttempt(a => a + 1)}>Try again</button>
       </div>
     );
@@ -821,7 +834,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
   const decision = battleNow && player >= 0 && snap?.fighters[player].state === "alive" ? r!.battle.pendingDecision(player) : null;
   const inRound = entered === clock.id;
   const odds = ODDS.byTactic[tactic];
-  const nextIn = sched.overAt ? sched.overAt + RESULTS_MS - now : RESULTS_MS;
+  const nextIn = sched.overAt ? sched.overAt + shiftNow + RESULTS_MS - now : RESULTS_MS;
   const zone = snap?.zone;
   const zoneText = !snap || snap.over ? null : snap.fighters.every(f => f.state === "air") || snap.t < TUNING.airTicks ? "Drop in progress" : zone!.r <= 0 ? "Final storm" : `${zone!.shrinking ? "Storm moving" : `Circle ${zone!.phase + 1}`} · ${mmss((zone!.nextChangeAt - snap.t) * TICK_MS)}`;
   const dropName = drop ? generateMap(roundSeed(clock.id)).pois.find(p => p.id === drop)?.name : null;

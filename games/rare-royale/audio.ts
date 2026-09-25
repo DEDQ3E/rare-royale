@@ -67,8 +67,8 @@ export function createRoyaleAudio() {
     f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t); if (f1 !== f0) f.frequency.exponentialRampToValueAtTime(f1, t + dur);
     s.connect(f).connect(env(t, peak, attack, dur, dest)); s.start(t, Math.random() * 1.5); s.stop(t + attack + dur + 0.05);
   }
-  /** A plucked string (Karplus–Strong), rendered once per pitch and damping and cached. */
-  function pluck(t: number, freq: number, damping: number, dur: number, peak: number, dest: AudioNode) {
+  /** A plucked string (Karplus–Strong), rendered once per pitch and damping and cached; `tone` softens it. */
+  function pluck(t: number, freq: number, damping: number, dur: number, peak: number, dest: AudioNode, tone = 5000) {
     const key = `${freq}:${damping}:${dur}`;
     let buf = strings.get(key);
     if (!buf) {
@@ -77,8 +77,11 @@ export function createRoyaleAudio() {
       for (let i = n; i < len; i++) y[i] = damping * 0.5 * (y[i - n] + y[i - n - 1 < 0 ? 0 : i - n - 1]);
       buf = ctx!.createBuffer(1, len, sr); buf.copyToChannel(y, 0); strings.set(key, buf);
     }
-    const s = ctx!.createBufferSource(), g = ctx!.createGain(); s.buffer = buf; g.gain.value = peak;
-    s.connect(g).connect(dest); s.start(t);
+    const s = ctx!.createBufferSource(), g = ctx!.createGain(), hp = ctx!.createBiquadFilter(), lp = ctx!.createBiquadFilter();
+    s.buffer = buf; hp.type = "highpass"; hp.frequency.value = 70; lp.type = "lowpass"; lp.frequency.value = tone;
+    // The tail fades out instead of stopping on a hard edge.
+    g.gain.setValueAtTime(peak, t); g.gain.setTargetAtTime(0.0001, t + dur * 0.6, dur * 0.15);
+    s.connect(hp).connect(lp).connect(g).connect(dest); s.start(t);
   }
   /** A struck bell: inharmonic partials with their own decays. */
   function bell(t: number, f: number, peak: number, dur: number, dest: AudioNode) {
@@ -135,14 +138,15 @@ export function createRoyaleAudio() {
       case "jump": hiss(t, 0.6, 0.9 * v, d, "lowpass", 300, 2200, 1, 0.1); break;
       case "land": osc(t, "sine", 95, 42, 0.2, 0.5 * v, d); hiss(t, 0.12, 0.2 * v, d, "lowpass", 900, 200); break;
       case "shot-fists": hiss(t, 0.07, 0.4 * v, d, "lowpass", 1000, 300); osc(t, "sine", 130, 70, 0.08, 0.3 * v, d); break;
-      case "shot-slingshot": pluck(t, 330, 0.93, 0.25, 0.5 * v, d); hiss(t + 0.03, 0.12, 0.12 * v, d, "highpass", 2500, 6000); break;
+      case "shot-slingshot": pluck(t, [330, 370, 392][Math.floor(Math.random() * 3)], 0.93, 0.22, 0.3 * v, d, 3500); hiss(t + 0.03, 0.12, 0.12 * v, d, "highpass", 2500, 6000); break;
       case "shot-hammer": {
         const ws = ctx.createWaveShaper(), curve = new Float32Array(256);
         for (let i = 0; i < 256; i++) { const x = i / 128 - 1; curve[i] = Math.tanh(x * 4); }
-        ws.curve = curve; ws.connect(d);
-        osc(t, "sine", 75, 38, 0.22, 0.7 * v, ws); bell(t, 520, 0.08 * v, 0.35, d); break;
+        const after = ctx.createGain(); after.gain.value = 0.55;
+        ws.curve = curve; ws.connect(after).connect(d);
+        osc(t, "sine", 75, 38, 0.22, 0.42 * v, ws); bell(t, 520, 0.05 * v, 0.3, d); break;
       }
-      case "shot-bow": pluck(t, 147, 0.985, 0.6, 0.55 * v, d); hiss(t + 0.02, 0.2, 0.1 * v, d, "bandpass", 1500, 4500, 2); break;
+      case "shot-bow": pluck(t, [196, 220, 247][Math.floor(Math.random() * 3)], 0.965, 0.35, 0.5 * v, d, 2600); hiss(t + 0.02, 0.2, 0.12 * v, d, "bandpass", 1500, 4500, 2); break;
       case "shot-wand": ring(t, 1100, 2600, 310, 0.22, 0.22 * v, d); hiss(t, 0.18, 0.06 * v, d, "highpass", 5000); break;
       case "hit": {
         const ws = ctx.createWaveShaper(), curve = new Float32Array(64);
@@ -230,7 +234,7 @@ export function createRoyaleAudio() {
       const n = e > 0.55 ? root + [0, 12, 7, 12, 0, 12, 10, 12][k / 2] : root;
       osc(t, "sawtooth", midi(n), midi(n), 0.2, 0.2, lp, 0.004);
     }
-    if (e > 0.3 && k % 4 === 2) pluck(t, midi(CHORDS[chord][(k / 4) % 3 | 0] + 12), 0.97, 0.4, 0.07, music);
+    if (e > 0.3 && k % 4 === 2) pluck(t, midi(CHORDS[chord][(k / 4) % 3 | 0] + 12), 0.96, 0.35, 0.05, music, 2500);
     if (e > 0.7 && k % 2 === 0) { const n = HOOK[chord][k / 2]; if (n) lead(t, final ? n + 12 : n, step * 1.6, 0.045); }
     // A riser into every fourth bar near the end.
     if (e > 0.8 && k === 0 && bar % 4 === 3) hiss(t, step * 16, 0.06, music, "bandpass", 400, 4000, 2, step * 14);

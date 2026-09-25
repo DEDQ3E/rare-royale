@@ -4,7 +4,7 @@
 
 🕹️ **Play: https://dedq3e.github.io/rare-royale/**
 
-🎬 **Demo with sound (107 s):** recorded from the real SDK runtime with Sparkling Friend #66666 read live from mainnet (only the wallet is mocked; `tests/video.mjs`): lobby, a Starfall aura from the Locker, the drop, a paid shout, following and sponsoring another Friend from the Fighters tab, results, the replay of the final and the hall of fame. **[▶ Watch the demo](https://dedq3e.github.io/rare-royale/demo.html)** (plays in the browser; [download the file](https://dedq3e.github.io/rare-royale/media/rare-royale.webm)).
+🎬 **Demo with sound (106 s):** recorded from the real SDK runtime with Sparkling Friend #66666 read live from mainnet (only the wallet is mocked; `tests/video.mjs`): lobby, a Starfall aura from the Locker, the drop, a paid shout, following and sponsoring another Friend from the Fighters tab, results, the replay of the final and the hall of fame. **[▶ Watch the demo](https://dedq3e.github.io/rare-royale/demo.html)** (plays in the browser; [download the file](https://dedq3e.github.io/rare-royale/media/rare-royale.webm)).
 
 ![The late game, sped up](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/rare-royale.gif)
 
@@ -130,7 +130,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 | Browser flow (`tests/shots.ts`, SDK test runtime with a fake clock): guide, lobby, Locker purchases, entry, drop, shout, Fighters tab and follow, late game, results, replay of the final, hall of fame, at 960 × 808 and 390 × 844 | Pass |
 | Demo video (`tests/video.mjs`): real SDK runtime, Friend #66666 read live from mainnet, picture and sound checked after recording | Pass |
 | Audio (`Web Audio` in Chromium): starts on the first gesture, suspends on mute | Pass |
-| Real-wallet playtest with a real Generations Friend | Pass (the builder played the public preview with a real wallet) |
+| Real-wallet playtest with a real Generations Friend | Pass: the builder played the public preview with a real wallet; later additions were checked in the SDK test runtime and the live-mainnet recording |
 
 ## Known issues and limits
 
@@ -138,6 +138,9 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 - **Shared rounds without a server.** Rounds are named after the minute of their drop, so viewers who drop in the same minute see the same island, line-up and base battle, but each viewer's own sponsoring and decisions change only their own view.
 - **Hall of fame supply read** uses the public Robinhood RPC; if it is unreachable, the tile shows "unavailable".
 - **The chance-game definition in `game.json` is a required reference only**; the game does not call buy, play or settle.
+- **Sound** is synthesized in the browser and was checked by measurement in Chromium and Edge (every cue's level, no clipping), not by ear on physical devices.
+- **The runtime's `paused` state** stops input, sound and the round itself (lobby countdown and battle) until the runtime's menus close.
+- **A failed read** of the Friend's artwork or generation from Robinhood Chain shows an error with a retry; the game never guesses a generation.
 
 ## What live play would need (integration gaps)
 
