@@ -31,7 +31,8 @@ Every round starts with a 1-minute lobby from the moment you arrive ("Start now"
   sponsor's name. A furnace in the dock fills with the round's burn. Sponsoring closes when 25 are left.
 - **Spectating:** the Fighters tab lists everyone still standing; pick one to follow it with the camera and sponsor it.
 - **Results:** the top 10 with their payouts, your place and what you won (ladder place plus bounties), damage,
-  who knocked you out, the round's top sponsor and Kingmakers (who backed the winner), and what the round burned.
+  who knocked you out, the round's top sponsor and Kingmakers (who backed the winner), what the round burned and what
+  your own payments burned this round and this session.
   **Replay the final** plays the last 20 seconds again with the winner on camera.
 - **Locker and shouts:** auras and titles for your Friend, and paid shouts in the arena. Looks only, never the fight.
 - **Challenges:** three goals in the lobby at a time (top 10, two knockouts, sponsor another Friend, back the winner
@@ -91,6 +92,12 @@ Fairness is checked by `npm run balance`; the results are in `BALANCE.md` and th
 No Generation, family or tactic earns more than 1.2× the average, every tactic returns within 5% of the average (the
 round, not the choice, decides which was right), no group averages 1 RF back per 1 RF entry, and no
 purchase pays for itself on average, including purchases made just before sponsoring closes.
+
+## Real RF
+
+`contracts/RareRoyaleRounds.sol` is a reference round contract with the same numbers (entries held until settlement,
+`burn()` on the RF token, exact settlement, sponsor window, refunds below 5 entries, a seed fixed after entries close).
+`npm run test:contract` runs its tests on an in-process EVM. It is not deployed or audited; the game never calls it.
 
 ## Credits
 

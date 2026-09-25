@@ -20,6 +20,22 @@ Token Activity
 **One sentence**
 A spectator-sponsored battle royale where your Generations Friend drops onto an island with 49 real Rare Friends: entries fund a top-10 prize ladder and knockout bounties, and every sponsor purchase from the crowd (a shield, a medkit or a second life for any Friend) burns 50% of its $RAREFRIENDS and sends 50% to active Friend rewards (all RF is simulated in this preview).
 
+## Token Activity at a glance
+
+| An average round (300 simulated rounds, `npm run balance`) | RF |
+|---|---:|
+| Spent | **87.1 RF**: 50 RF of entries + 37.1 RF of sponsoring and shouts |
+| **Burned** | **24.2 RF (28% of all spending)** |
+| To active Friend rewards | 23.6 RF |
+| Back to players (top-10 ladder and bounties) | 39.4 RF |
+
+- **Four ways to spend RF, for players and for viewers:** the entry, sponsoring any Friend (a shield, a medkit, a second life for 2, then 4, then 8 RF), shouts and Locker cosmetics. Someone who is only watching still spends: they sponsor the Friend they back.
+- **Every gameplay payment burns 50%** under the protocol's own 50/50 rule. The entry burns 10% and keeps 80% in play for the players.
+- **Why the entry burns only 10%.** A game that keeps the whole entry gets played once. Here an entry returns 0.79 RF on average, 45% of entrants get RF back and every top-10 place pays more than the entry. That brings players back for the next round, and every round burns again: the burn comes from volume, not from taking the entry.
+- **The burn is on screen.** A furnace fills with every RF, sponsor capsules land with the sponsor's name, the results count the round's burn up and show what *your* payments burned this round and this session, and the hall of fame reads the RF token's real `totalSupply` on Robinhood mainnet.
+- **The crowd is simulated here.** 37.1 RF of the 87.1 RF comes from the simulated entrants and viewers. At launch they are real holders watching the same round. A single real player spends 1 RF per round plus whatever they choose to sponsor.
+- **Ready for real RF.** [`contracts/RareRoyaleRounds.sol`](https://github.com/DEDQ3E/rare-royale/blob/main/contracts/RareRoyaleRounds.sol) is a reference round contract with the game's numbers: entries held until settlement, the RF token's `burn()` for every burned share, a settlement that must pay out exactly the pool, a sponsor window, full refunds below 5 entries, and a battle seed fixed only after entries close. Five tests pass on an in-process EVM (`npm run test:contract`). It is not deployed or audited, and the preview never calls it.
+
 ## What did you build?
 
 A complete battle royale that runs itself, in rounds of about four and a half minutes: a one-minute lobby, the drop, about 3 minutes of battle and the results.
@@ -31,7 +47,7 @@ A complete battle royale that runs itself, in rounds of about four and a half mi
 - **Crowd.** Anyone watching can sponsor your Friend or any other until 25 are left. The **Fighters** tab lists everyone still standing with HP and knockouts: tap one to follow it with the camera and sponsor it.
 - **Locker and shouts.** Auras (embers, frost, falling stars) and titles drawn on your Friend in the arena, and paid shouts in the announcer's ticker and a speech bubble. Looks only: they never change the fight.
 - **Challenges.** Three goals in the lobby at a time (finish top 10, two knockouts, sponsor another Friend, back the winner, win…). Each unlocks a free title, win or lose, so every round moves you forward.
-- **Results.** The top 10 with their payouts, your place and what you won (ladder plus bounties), the round's top sponsor and its **Kingmakers** (everyone who sponsored the winner), and exactly what the round burned. **Replay the final** plays the last 20 seconds again with the winner on camera.
+- **Results.** The top 10 with their payouts, your place and what you won (ladder plus bounties), the round's top sponsor and its **Kingmakers** (everyone who sponsored the winner), exactly what the round burned, and what your own payments burned this round and this session. **Replay the final** plays the last 20 seconds again with the winner on camera.
 - **Hall of fame.** RF burned to date read **live from the RF token's `totalSupply` on Robinhood mainnet**, the burn of the last 12 rounds and their champions (past rounds replay from their seeds, the same for everyone).
 - **Sound.** Its own synthesized arena sound, no samples: a formant-built stadium crowd with a slap-back echo; a score in D minor that builds in layers as the field shrinks (pad, bass, drums, arpeggio, a lead hook, risers and a heartbeat kick for the final duel); plucked-string bows and slingshots, a ring-modulated star wand, bells for loot, a flame whoosh for every burn, the airship drone and the storm siren. Your own Friend gets its own cues (the parachute, weapon, armour and bandage pickups, hits, near misses, shield blocks, storm zaps and a heartbeat when low), with beeps before the storm moves and stingers for the top 10 and the final two; the score ducks under them and distant fights sound muffled. The Sound button cycles sound on, music off and sound off.
 
@@ -124,6 +140,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 |---|---|
 | `npm run typecheck` | Pass |
 | `npm run test:engine` (map, stats, replay, one winner, sponsoring, decisions, economy, settlement, ledger, rounds, round recording and crowd payments, challenges) | 12 / 12 pass |
+| `npm run test:contract` (reference round contract on an in-process EVM: entry, lock, sponsoring and second-life prices, the sponsor window, cosmetics, exact settlement, burn and rewards, refunds, the 50-seat cap) | 5 / 5 pass |
 | `npm run check` (`friendsdk check`) | Valid; reference chance game: expected reward 0.8 RF, maximum 0.8 RF |
 | `npx friendsdk test games/rare-royale --width 960` and `--width 390` | Pass |
 | `npm run balance -- 6000 2500 --report` | All four fairness targets pass ([`BALANCE.md`](https://github.com/DEDQ3E/rare-royale/blob/main/BALANCE.md)) |
@@ -144,7 +161,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 
 ## What live play would need (integration gaps)
 
-- A round contract: entries from the Friend's canonical wallet; 10% burned with the RF token's `burn()`, 10% to protocol rewards (the reward-funding path needs the Rare Friends team), 60% ladder and 20% bounties held until settlement.
+- A round contract: entries from the Friend's canonical wallet; 10% burned with the RF token's `burn()`, 10% to protocol rewards (the reward-funding path needs the Rare Friends team), 60% ladder and 20% bounties held until settlement. A tested reference version is in [`contracts/RareRoyaleRounds.sol`](https://github.com/DEDQ3E/rare-royale/blob/main/contracts/RareRoyaleRounds.sol); it would need an audit, a verifiable-randomness seed and a dispute window before deployment.
 - One randomness request per round for the battle seed. The battle is deterministic from that seed, so anyone can replay a round and verify places and knockouts; the contract pays out by `settleRound` from the posted result, and a disputed result is checked by replay.
 - Matchmaking: a lobby that closes after a minute or at 50 paid entries, with wild Friends in the empty seats.
 - Sponsor payments recorded per round phase with the same 50/50 split.

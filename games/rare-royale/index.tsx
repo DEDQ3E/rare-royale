@@ -54,6 +54,8 @@ type Results = Readonly<{
   };
   tally: Tally;
   winner: string; kingmakers: readonly string[]; topSponsor: null | { by: string; rf: bigint }; unlocked: readonly string[];
+  /** What the viewer's own payments burned: since the last results, and this session. */
+  myBurn: { round: bigint; session: bigint };
 }>;
 type Session = { rounds: number; best: number; kos: number; wins: number; spent: bigint; nemesis: Map<string, number>; kingmaker: number; done: Set<string> };
 type Equipped = { title: string | null; aura: string | null };
@@ -73,7 +75,7 @@ const TUTORIAL: readonly { icon: string; title: string; lines: readonly string[]
   { icon: "wand", title: "Welcome to Rare Royale", lines: [
     "Your Friend drops onto an island with 49 real Rare Friends. The top 10 are paid, and every knockout pays a bounty.",
     "Every round: 1 minute in the lobby, then the drop, about 3 minutes of battle, then results.",
-    "Everything here uses simulated RF. Nothing asks for a transaction."] },
+    "Everything here uses simulated RF, and the other entrants and the sponsoring crowd are simulated too. Nothing asks for a transaction."] },
   { icon: "armor50", title: "Your Friend is your fighter", lines: [
     "Might (HP and damage), Speed (running and dodging) and Wits (aim, sight and better loot) come from your NFT: its family, generation and sprite.",
     "Your family also gives a signature ability. It is shown under the stats."] },
@@ -354,6 +356,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
   const mutedRef = useRef(muted); mutedRef.current = muted;
   const prevStanding = useRef(50), lastWarn = useRef(-1);
   const lastTick = useRef(0);
+  const lastBurn = useRef(0n);
   const wantedSeen = useRef(-1);
   const musicOffRef = useRef(false);
   const sfx = useCallback((cue: Cue, gain = 1, pan = 0) => { audio.current?.play(cue, { gain, pan }); }, []);
@@ -431,9 +434,11 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
         kos: f.kos, damage: f.damage, weapon: f.weapon, koBy, koCause: f.koCause, nemesis, saves: saves.current, spent: r.tally.yours + (isPractice ? 0n : ENTRY_PRICE),
       };
     } else audio.current?.play("win", { gain: 0.5 });
+    const burnedNow = ledger.current.receipt().burned, myBurn = { round: burnedNow - lastBurn.current, session: burnedNow };
+    lastBurn.current = burnedNow;
     setResults({
       id: r.id, paidOut, you, tally: { ...r.tally }, winner: winner.index === r.player ? "You" : fighterName(winner.id),
-      kingmakers, topSponsor: top ? { by: top[0], rf: top[1] } : null, unlocked,
+      kingmakers, topSponsor: top ? { by: top[0], rf: top[1] } : null, unlocked, myBurn,
     });
   }, []);
 
@@ -1035,7 +1040,8 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
               <p className="rr-bebas rr-mid rr-amber rr-embers"><CountUp value={results.tally.burned} reduced={reducedMotion} /> RF</p>
               <p className="rr-row"><span>Entries ({results.tally.paid} × 1 RF)</span><span>{rfText(results.tally.entries)}</span></p>
               <p className="rr-row"><span>Crowd sponsors (simulated)</span><span>{rfText(results.tally.crowd)}</span></p>
-              <p className="rr-row"><span>Your sponsors</span><span>{rfText(results.tally.yours)}</span></p>
+              <p className="rr-row rr-row-yours"><span>Your sponsors</span><span>{rfText(results.tally.yours)}</span></p>
+              {results.myBurn.session > 0n && <p className="rr-row rr-row-mine"><span>You burned (all your payments)</span><span>{rfText(results.myBurn.round)} · {rfText(results.myBurn.session)} this session</span></p>}
               <p className="rr-row"><span>Bounties burned by the storm</span><span>{rfText(results.tally.bountyBurned)}</span></p>
               <p className="rr-row"><span>To Friend rewards</span><span>{rfText(results.tally.rewards)}</span></p>
               {results.topSponsor && <p className="rr-row rr-row-extra"><span>Top sponsor: {results.topSponsor.by}</span><span>{rfText(results.topSponsor.rf)}</span></p>}

@@ -154,9 +154,12 @@ test("ledger: refuses overspending and keeps an exact receipt", () => {
   const r = ledger.receipt();
   assert.equal(ledger.balance(), rf("12"));
   assert.equal(r.toPool, rf("0.8"));
-  ledger.refund(rf("0.5"));
-  assert.equal(ledger.receipt().toPool, rf("0.3"));
-  assert.equal(ledger.balance(), rf("12.5"));
+  ledger.refund(ENTRY_PRICE);
+  const back = ledger.receipt();
+  assert.equal(back.toPool, 0n);
+  assert.equal(back.burned, rf("1"));
+  assert.equal(back.rewards, rf("1"));
+  assert.equal(ledger.balance(), rf("13"));
   assert.equal(r.burned, rf("1.1"));
   assert.equal(r.rewards, rf("1.1"));
   assert.equal(r.won, rf("12"));

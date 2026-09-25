@@ -181,7 +181,12 @@ export function createLedger(start: bigint = rf("20")): Ledger {
       return split;
     },
     win(amount) { if (amount < 0n) throw new RangeError("A prize cannot be negative."); balance += amount; won += amount; },
-    refund(amount) { if (amount < 0n) throw new RangeError("A refund cannot be negative."); balance += amount; toPool -= amount; },
+    refund(amount) {
+      if (amount < 0n) throw new RangeError("A refund cannot be negative.");
+      // A refunded entry comes back whole, so its burn and its rewards are undone too.
+      const split = splitPayment("entry", amount);
+      balance += amount; spent.entry -= amount; toPool -= split.pool + split.bounty; burned -= split.burned; rewards -= split.rewards;
+    },
     receipt: () => ({ spent: { ...spent }, count: { ...count }, toPool, burned, rewards, won }),
   };
 }
