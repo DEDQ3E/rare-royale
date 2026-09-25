@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "friendsdk dev games/rare-royale",
     "check": "friendsdk check games/rare-royale",
-    "build": "friendsdk build games/rare-royale --outdir docs",
+    "build": "friendsdk build games/rare-royale --outdir .friendsdk/pages && node scripts/pages.mjs",
     "typecheck": "tsc -p tsconfig.json",
     "test:engine": "node --test tests/engine.test.ts",
     "balance": "node scripts/balance.ts"

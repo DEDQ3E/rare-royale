@@ -4,7 +4,7 @@
 
 🕹️ **Play: https://dedq3e.github.io/rare-royale/**
 
-🎬 **Demo with sound (97 s):** recorded from the real SDK runtime with Sparkling Friend #66666 read live from mainnet (only the wallet is mocked; `tests/video.mjs`): lobby, a Starfall aura from the Locker, the drop, a paid shout, following and sponsoring another Friend from the Fighters tab, results, the replay of the final and the hall of fame. [Watch `media/rare-royale.webm`](https://github.com/DEDQ3E/rare-royale/blob/main/media/rare-royale.webm).
+🎬 **Demo with sound (97 s):** recorded from the real SDK runtime with Sparkling Friend #66666 read live from mainnet (only the wallet is mocked; `tests/video.mjs`): lobby, a Starfall aura from the Locker, the drop, a paid shout, following and sponsoring another Friend from the Fighters tab, results, the replay of the final and the hall of fame. **[▶ Watch the demo](https://dedq3e.github.io/rare-royale/demo.html)** (plays in the browser; [download the file](https://dedq3e.github.io/rare-royale/media/rare-royale.webm)).
 
 ![The late game, sped up](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/rare-royale.gif)
 
