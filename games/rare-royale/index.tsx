@@ -31,6 +31,7 @@ const RESULTS_MS = 25_000;
 /** The placement ladder when every seat is a paid entry (the preview's simulated entrants all paid). */
 const FULL_LADDER = ladderPrizes(ENTRY_PRICE * BigInt(ROUND_SIZE) * ENTRY_POOL_BPS / BPS, ROUND_SIZE);
 const pct = (x: number) => `${Math.round(x * 100)}%`;
+const soundModeNext = (m: "on" | "nomusic" | "off") => (m === "on" ? "nomusic" : m === "nomusic" ? "off" : "on");
 
 /** A round's timing for this viewer: a one-minute lobby from arrival, then the drop. */
 type Sched = Readonly<{ id: number; battleAt: number; overAt: number }>;
@@ -297,9 +298,12 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
   const saves = useRef(0);
   const pausedRef = useRef(paused); pausedRef.current = paused;
   const audio = useRef<RoyaleAudio | null>(null);
-  const [muted, setMuted] = useState(false);
+  const [soundMode, setSoundMode] = useState<"on" | "nomusic" | "off">("on");
+  const muted = soundMode === "off";
   const mutedRef = useRef(muted); mutedRef.current = muted;
+  const prevStanding = useRef(50), lastWarn = useRef(-1);
   const lastTick = useRef(0);
+  const musicOffRef = useRef(false);
   const sfx = useCallback((cue: Cue, gain = 1, pan = 0) => { audio.current?.play(cue, { gain, pan }); }, []);
 
   // Sound starts on the first click or key press inside the game, never before.
@@ -310,8 +314,12 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
     return () => { window.removeEventListener("pointerdown", first, true); window.removeEventListener("keydown", first, true); a.dispose(); audio.current = null; };
   }, []);
   useEffect(() => { audio.current?.setPaused(paused); }, [paused]);
+  /** Sound on → music off → sound off → sound on. */
   const toggleSound = useCallback(() => {
-    const next = !mutedRef.current; setMuted(next); audio.current?.setMuted(next);
+    const mode = soundModeNext(mutedRef.current ? "off" : musicOffRef.current ? "nomusic" : "on");
+    setSoundMode(mode); musicOffRef.current = mode === "nomusic";
+    audio.current?.setMusic(mode === "on"); audio.current?.setMuted(mode === "off");
+    const next = mode === "off";
     if (!next) void audio.current?.unlock().then(() => audio.current?.play("ui"));
   }, []);
 
@@ -384,29 +392,34 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
     const near = (i: number) => {
       const f = fs[i]; if (!f) return null;
       const d = Math.hypot(f.x - view.x, f.y - view.y), reach = view.halfWidth * 1.4;
-      return d > reach ? null : { gain: 1 - 0.7 * (d / reach), pan: Math.max(-0.8, Math.min(0.8, (f.x - view.x) / view.halfWidth)), d };
+      return d > reach ? null : { gain: 1 - 0.7 * (d / reach), pan: Math.max(-0.8, Math.min(0.8, (f.x - view.x) / view.halfWidth)), d, far: d / reach };
     };
     const shots = events.flatMap(e => (e.kind === "shot" ? [{ e, n: e.from === me || e.to === me ? { gain: 1, pan: 0, d: 0 } : near(e.from) }] : []))
       .filter(x => x.n).sort((x, y) => x.n!.d - y.n!.d).slice(0, 3);
     shots.forEach(({ e, n }, i) => {
       if (e.kind !== "shot") return;
-      a.play(`shot-${e.weapon}` as Cue, { gain: n!.gain * (i ? 0.6 : 0.9), pan: n!.pan });
-      if (i === 0 && !e.blocked && e.dmg + e.armorDmg > 0) a.play("hit", { gain: n!.gain * 0.5, pan: n!.pan });
+      const far = "far" in n! ? n!.far : 0;
+      a.play(`shot-${e.weapon}` as Cue, { gain: n!.gain * (i ? 0.6 : 0.9), pan: n!.pan, far });
+      if (i === 0 && !e.blocked && e.dmg + e.armorDmg > 0 && e.to !== me) a.play("hit", { gain: n!.gain * 0.5, pan: n!.pan, far });
     });
+    // Whatever reaches the viewer's own Friend, once per tick.
+    const atMe = events.find(e => e.kind === "shot" && e.to === me);
+    if (atMe && atMe.kind === "shot") a.play(atMe.blocked === "shield" ? "tink" : atMe.blocked ? "whiff" : "hurt", { gain: 0.8 });
+    if (events.some(e => e.kind === "storm_hit" && e.who === me)) a.play("zap", { gain: 0.7 });
     let loud = 0;
     for (const e of events) {
       const mine = "who" in e && e.who === me;
       if (e.kind === "zone" && e.shrinking) a.play("zone", { gain: 0.8 });
-      else if (e.kind === "jump" && mine) a.play("jump");
+      else if (e.kind === "jump" && mine) { a.play("jump"); a.play("parachute", { gain: 0.8 }); }
       else if (e.kind === "land" && mine) a.play("land");
-      else if (e.kind === "loot" && mine) a.play("loot", { gain: 0.8 });
+      else if (e.kind === "loot" && mine) a.play(e.item === "wand" || e.item === "armor50" ? "pickup-gold" : e.item.startsWith("armor") ? "pickup-armor" : e.item === "bandages" ? "pickup-bandage" : "pickup-weapon", { gain: 0.8 });
       else if (e.kind === "heal" && mine) a.play("heal", { gain: 0.7 });
       else if (e.kind === "decision" && mine) a.play("decision");
       else if (e.kind === "out" && e.by === me && e.cause === "fight" && paid[me] && paid[e.who]) a.play("bounty");
-      else if (e.kind === "sponsor" && e.by !== "You" && (mine || near(e.who))) a.play(e.item === "shield" ? "shield" : e.item === "medkit" ? "heal" : "revive", { gain: mine ? 1 : 0.5 });
+      else if (e.kind === "sponsor" && e.by !== "You" && (mine || near(e.who))) { if (mine) a.play("airdrop"); a.play(e.item === "shield" ? "shield" : e.item === "medkit" ? "heal" : "revive", { gain: mine ? 1 : 0.5, far: mine ? 0 : near(e.who)?.far }); }
       else if ((e.kind === "downed" || e.kind === "out") && loud < 1) {
         const n = mine ? { gain: 1, pan: 0 } : near(e.who);
-        if (n) { a.play(e.kind, { gain: n.gain * 0.8, pan: n.pan }); loud += 1; }
+        if (n) { a.play(e.kind, { gain: n.gain * 0.8, pan: n.pan, far: "far" in n ? n.far : 0 }); loud += 1; }
       }
     }
   }, []);
@@ -439,7 +452,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
           r = runner.current = createRoundRunner(c.id, ROSTER_INITS, seat, practice);
           audio.current?.play("go");
           narrator.current = createNarrator(c.id, r.player, r.battle.map);
-          saves.current = 0; shoutSeen.current = 0; pin.current = -1; myShout.current = null;
+          saves.current = 0; shoutSeen.current = 0; pin.current = -1; myShout.current = null; prevStanding.current = ROUND_SIZE;
           focus.current = { index: r.player >= 0 ? r.player : 0, since: t };
           setFeed([]); setResults(null); setTarget(r.player >= 0 ? "you" : "camera");
           makeArena(r);
@@ -486,13 +499,24 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
           const inStorm = foc && foc.state !== "out" && foc.state !== "air" && Math.hypot(foc.x - snap.zone.cx, foc.y - snap.zone.cy) > snap.zone.r ? 1 : 0;
           audio.current?.setScene(snap.over ? "results" : "battle", 1 - snap.standing / ROUND_SIZE);
           audio.current?.setAmbience(shipNear, inStorm);
+          const mine = r.player >= 0 ? snap.fighters[r.player] : null;
+          audio.current?.setHeartbeat(!!mine && mine.state === "alive" && !snap.over && mine.hp < mine.maxHp * 0.3);
+          // Three beeps before the storm moves; stingers for the top 10 and the final two.
+          const left = snap.zone.nextChangeAt - snap.t;
+          if (!snap.over && !snap.zone.shrinking && snap.zone.r > 0 && left >= 1 && left <= 3 && lastWarn.current !== snap.t) { lastWarn.current = snap.t; audio.current?.play("warn", { gain: 0.8 }); }
+          if (prevStanding.current > 10 && snap.standing <= 10 && !snap.over) {
+            audio.current?.play("top10");
+            if (mine && mine.state !== "out") alert("Top 10! Your Friend is in the money.");
+          }
+          if (prevStanding.current > 2 && snap.standing === 2 && !snap.over) audio.current?.play("final");
+          prevStanding.current = snap.standing;
         }
         arena.current?.draw(t, focus.current.index, r.player, reducedMotion);
         if (miniCanvas.current) arena.current?.drawMinimap(miniCanvas.current, r.player, t);
       }
       else {
         // Lobby: the last ten seconds tick down.
-        audio.current?.setScene("lobby");
+        audio.current?.setScene("lobby"); audio.current?.setHeartbeat(false);
         const left = Math.ceil((c.battleAt - t) / 1000);
         if (frozenRef.current === null && left !== lastTick.current && left <= 10 && left >= 1) audio.current?.play(left <= 3 ? "tick-hi" : "tick");
         lastTick.current = left;
@@ -751,7 +775,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
           <span className="rr-clock">{screen === "lobby" ? (frozen !== null ? <>Drop in <b>{mmss(frozen)}</b> <small>paused</small></> : <>Drop in <b>{mmss(clock.battleAt - now)}</b></>) : zoneText ? <b className="rr-zone">{zoneText}</b> : <>Next round <b>{mmss(nextIn)}</b></>}</span>
           {screen === "lobby" && frozen === null && <button className="rr-chip" onClick={startNow} disabled={paused}>Start now</button>}
           <button className="rr-chip" onClick={openTutorial}>How to play</button>
-          <button className="rr-chip rr-sound" onClick={toggleSound} aria-pressed={!muted} aria-label={muted ? "Sound off. Turn sound on" : "Sound on. Turn sound off"}>{muted ? "Sound off" : "Sound on"}</button>
+          <button className="rr-chip rr-sound" onClick={toggleSound} aria-label={soundMode === "on" ? "Sound on. Switch the music off" : soundMode === "nomusic" ? "Music off. Switch all sound off" : "Sound off. Switch sound on"}>{soundMode === "on" ? "Sound on" : soundMode === "nomusic" ? "Music off" : "Sound off"}</button>
           <button className="rr-chip" onClick={() => setHall(true)} aria-label="Hall of fame (H)">Hall of fame</button>
         </header>
 
@@ -835,8 +859,8 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
             </div>
             <aside className="rr-feed" aria-label={rightTab === "feed" ? "Kill feed" : "Fighters"} aria-live="off">
               <div className="rr-tabs" role="tablist">
-                <button role="tab" aria-selected={rightTab === "feed"} className={rightTab === "feed" ? "on" : ""} onClick={() => setRightTab("feed")}>Feed</button>
-                <button role="tab" aria-selected={rightTab === "fighters"} className={rightTab === "fighters" ? "on" : ""} onClick={() => setRightTab("fighters")}>Fighters {snap ? snap.standing : ""} <kbd>F</kbd></button>
+                <button role="tab" aria-selected={rightTab === "feed"} className={rightTab === "feed" ? "on" : ""} onClick={() => { sfx("tab"); setRightTab("feed"); }}>Feed</button>
+                <button role="tab" aria-selected={rightTab === "fighters"} className={rightTab === "fighters" ? "on" : ""} onClick={() => { sfx("tab"); setRightTab("fighters"); }}>Fighters {snap ? snap.standing : ""} <kbd>F</kbd></button>
               </div>
               {rightTab === "fighters" && snap && (
                 <div className="rr-fighters" role="list">
