@@ -1,0 +1,30 @@
+{
+  "name": "rare-royale",
+  "version": "0.1.0",
+  "description": "Rare Royale - a spectator-sponsored battle royale of real Rare Friends Generations NFTs (FriendSDK vibeathon game, Token Activity)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "friendsdk dev games/rare-royale",
+    "check": "friendsdk check games/rare-royale",
+    "build": "friendsdk build games/rare-royale --outdir docs",
+    "typecheck": "tsc -p tsconfig.json",
+    "test:engine": "node --test tests/engine.test.ts",
+    "balance": "node scripts/balance.ts"
+  },
+  "author": "DEDQ3E",
+  "license": "Apache-2.0",
+  "repository": "github:DEDQ3E/rare-royale",
+  "dependencies": {
+    "@rarefriends/friendsdk": "file:vendor/rarefriends-friendsdk-0.1.2.tgz",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "playwright": "^1.63.0",
+    "typescript": "^7.0.2"
+  }
+}

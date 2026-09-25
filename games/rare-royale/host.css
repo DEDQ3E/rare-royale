@@ -1,0 +1,25 @@
+/* Rare Royale: trusted runtime layout (FriendSDK host.css).
+ * The standard 3:2 frame (up to 960 px) on a dark studio page; phones held upright get a 3:4 portrait frame,
+ * and the game switches to its portrait layout. SDK controls keep their positions, in the broadcast palette. */
+:root {
+  --rf-game-aspect-ratio: 3 / 2;
+  --rf-game-max-width: min(960px, calc(100vw - 32px), calc((100vh - 40px) * 1.5));
+}
+@media (max-width: 640px) and (orientation: portrait) {
+  :root {
+    --rf-game-aspect-ratio: 3 / 4;
+    --rf-game-max-width: min(480px, calc(100vw - 8px), calc((100vh - 16px) * 0.75));
+  }
+}
+html:root { min-height: 100%; background: #07080F; }
+html:root body { background: transparent; }
+html:root body .rf-game-frame { border-color: #2F3158; background: #0E1020; }
+html:root body .rf-frame-toolbar > * { background: rgba(21,23,51,.94); color: #E8E6F5; border: 1px solid #3A3D63; box-shadow: none; }
+html:root body .rf-game-frame .rf-frame-toolbar button:hover:not(:disabled) { background: #1A1D36; }
+html:root body .rf-frame-menu { background: #151733; color: #E8E6F5; border: 1px solid #3A3D63; }
+html:root body .rf-frame-scrim button { background: #1A1D36; color: #E8E6F5; border: 1px solid #3A3D63; }
+html:root body .rf-frame-scrim .rf-frame-primary { background: #F0997B; color: #4A1B0C; }
+html:root body .rf-runtime-status { background: #151733; color: #E8E6F5; }
+@media (max-width: 640px) {
+  html:root body .rf-frame-toolbar > *, html:root body .rf-game-frame .rf-frame-toolbar button { height: 26px; min-height: 26px; padding: 0 6px; font-size: 10px; }
+}
