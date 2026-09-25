@@ -10,8 +10,7 @@
     "build": "friendsdk build games/rare-royale --outdir .friendsdk/pages && node scripts/pages.mjs",
     "typecheck": "tsc -p tsconfig.json",
     "test:engine": "node --test tests/engine.test.ts",
-    "balance": "node scripts/balance.ts",
-    "test:contract": "node --test tests/contract.test.mjs"
+    "balance": "node scripts/balance.ts"
   },
   "author": "DEDQ3E",
   "license": "Apache-2.0",
@@ -22,16 +21,10 @@
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
-    "@ethereumjs/block": "^10.1.3",
-    "@ethereumjs/common": "^10.1.3",
-    "@ethereumjs/evm": "^10.1.3",
-    "@ethereumjs/util": "^10.1.3",
     "@types/node": "^24.0.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "ethers": "^6.17.0",
     "playwright": "^1.63.0",
-    "solc": "^0.8.26",
     "typescript": "^7.0.2"
   }
 }

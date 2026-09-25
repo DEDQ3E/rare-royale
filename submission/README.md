@@ -33,17 +33,16 @@ An average round (300 simulated rounds with the crowd):
 - **The crowd is simulated here:** 37.1 RF of the 87.1 RF comes from simulated entrants and viewers. At launch they would be real holders.
 
 **What would be on-chain?**
-Nothing in this build. [`contracts/RareRoyaleRounds.sol`](https://github.com/DEDQ3E/rare-royale/blob/main/contracts/RareRoyaleRounds.sol) is a reference round contract with the game's numbers:
-- entries are held until settlement;
-- every burned share goes through the RF token's `burn()`;
-- the settlement must pay out exactly the pool;
-- sponsoring has a closing window;
-- rounds with fewer than 5 paid entries are refunded in full.
+Nothing in this build: no contract or transaction code, as the SDK asks for prototypes. The on-chain phase with the Rare Friends team would add a round contract where:
+- every payment comes from the Friend's canonical NFT wallet;
+- a 1 RF entry is held until settlement, then 0.1 RF goes through the RF token's `burn()`, 0.1 RF to active Friend rewards, and 0.8 RF is paid out as the ladder and bounties;
+- sponsor items, shouts and cosmetics burn 50% and fund 50% rewards at once;
+- the settlement pays out exactly the pool, and a round with fewer than 5 paid entries refunds every entry.
 
-Five tests pass on an in-process EVM (`npm run test:contract`). The contract is not deployed or audited, and the game never calls it. Live play would also need the reward-funding address from the Rare Friends team, matchmaking, and saves (the SDK has no save API).
+Live play would also need the reward-funding path from the Rare Friends team, matchmaking, and saves (the SDK has no save API).
 
 **How does it use randomness?**
-The battle is deterministic from a round seed, so anyone can replay a round and check places and knockouts. In the preview the seed comes from the round number: everyone who drops in the same minute gets the same island, line-up and base battle. In the contract the seed is fixed only after entries close, so nobody can simulate a round before entering. A verifiable-randomness source would replace it before launch.
+The battle is deterministic from a round seed, so anyone can replay a round and check places and knockouts. In the preview the seed comes from the round number: everyone who drops in the same minute gets the same island, line-up and base battle. Live, one Dice request per round, made after entries close, would set the seed, so nobody could simulate a round before entering.
 
 **Source code**
 [GitHub repository](https://github.com/DEDQ3E/rare-royale) · FriendSDK v0.1.2 · React, TypeScript, Canvas 2D, Web Audio. Full rules and odds tables are in the [README](https://github.com/DEDQ3E/rare-royale#readme), and the fairness report is in [BALANCE.md](https://github.com/DEDQ3E/rare-royale/blob/main/BALANCE.md).
@@ -83,7 +82,6 @@ Everything is simulated; you start with 20 RF.
 All of these pass:
 - typecheck;
 - 12 engine tests: map, stats, replay, sponsoring, decisions, economy, settlement, ledger, rounds and challenges;
-- 5 contract tests;
 - `friendsdk check`, and `friendsdk test` at 960 and 390 px;
 - `npm run balance`: all four fairness targets over 6,000 rounds;
 - an automated browser run through every screen at 960 × 808 and 390 × 844 in the SDK test runtime;

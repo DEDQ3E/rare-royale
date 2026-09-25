@@ -93,12 +93,6 @@ No Generation, family or tactic earns more than 1.2× the average, every tactic 
 round, not the choice, decides which was right), no group averages 1 RF back per 1 RF entry, and no
 purchase pays for itself on average, including purchases made just before sponsoring closes.
 
-## Real RF
-
-`contracts/RareRoyaleRounds.sol` is a reference round contract with the same numbers (entries held until settlement,
-`burn()` on the RF token, exact settlement, sponsor window, refunds below 5 entries, a seed fixed after entries close).
-`npm run test:contract` runs its tests on an in-process EVM. It is not deployed or audited; the game never calls it.
-
 ## Credits
 
 - Friends: 300 real hardwired Generations Friends (`roster.json`, built by `scripts/roster.ts` from public reads) and

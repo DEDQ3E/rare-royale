@@ -34,7 +34,7 @@ A spectator-sponsored battle royale where your Generations Friend drops onto an 
 - **Why the entry burns only 10%.** A game that keeps the whole entry gets played once. Here an entry returns 0.79 RF on average, 45% of entrants get RF back and every top-10 place pays more than the entry. That brings players back for the next round, and every round burns again: the burn comes from volume, not from taking the entry.
 - **The burn is on screen.** A furnace fills with every RF, sponsor capsules land with the sponsor's name, the results count the round's burn up and show what *your* payments burned this round and this session, and the hall of fame reads the RF token's real `totalSupply` on Robinhood mainnet.
 - **The crowd is simulated here.** 37.1 RF of the 87.1 RF comes from the simulated entrants and viewers. At launch they are real holders watching the same round. A single real player spends 1 RF per round plus whatever they choose to sponsor.
-- **Ready for real RF.** [`contracts/RareRoyaleRounds.sol`](https://github.com/DEDQ3E/rare-royale/blob/main/contracts/RareRoyaleRounds.sol) is a reference round contract with the game's numbers: entries held until settlement, the RF token's `burn()` for every burned share, a settlement that must pay out exactly the pool, a sponsor window, full refunds below 5 entries, and a battle seed fixed only after entries close. Five tests pass on an in-process EVM (`npm run test:contract`). It is not deployed or audited, and the preview never calls it.
+- **Ready for real RF.** Every payment already has its on-chain destination written down (see *What live play would need*): the RF token's `burn()` for every burned share, active Friend rewards for the other half, and the ladder and bounties held until settlement. As the SDK asks for prototypes, no contract or transaction code is included.
 
 ## What did you build?
 
@@ -140,7 +140,6 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 |---|---|
 | `npm run typecheck` | Pass |
 | `npm run test:engine` (map, stats, replay, one winner, sponsoring, decisions, economy, settlement, ledger, rounds, round recording and crowd payments, challenges) | 12 / 12 pass |
-| `npm run test:contract` (reference round contract on an in-process EVM: entry, lock, sponsoring and second-life prices, the sponsor window, cosmetics, exact settlement, burn and rewards, refunds, the 50-seat cap) | 5 / 5 pass |
 | `npm run check` (`friendsdk check`) | Valid; reference chance game: expected reward 0.8 RF, maximum 0.8 RF |
 | `npx friendsdk test games/rare-royale --width 960` and `--width 390` | Pass |
 | `npm run balance -- 6000 2500 --report` | All four fairness targets pass ([`BALANCE.md`](https://github.com/DEDQ3E/rare-royale/blob/main/BALANCE.md)) |
@@ -161,8 +160,8 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 
 ## What live play would need (integration gaps)
 
-- A round contract: entries from the Friend's canonical wallet; 10% burned with the RF token's `burn()`, 10% to protocol rewards (the reward-funding path needs the Rare Friends team), 60% ladder and 20% bounties held until settlement. A tested reference version is in [`contracts/RareRoyaleRounds.sol`](https://github.com/DEDQ3E/rare-royale/blob/main/contracts/RareRoyaleRounds.sol); it would need an audit, a verifiable-randomness seed and a dispute window before deployment.
-- One randomness request per round for the battle seed. The battle is deterministic from that seed, so anyone can replay a round and verify places and knockouts; the contract pays out by `settleRound` from the posted result, and a disputed result is checked by replay.
+- A round contract, built with the Rare Friends team in the on-chain phase: entries and every other payment from the Friend's canonical NFT wallet; each 1 RF entry held until settlement, then 0.1 RF burned with the RF token's `burn()`, 0.1 RF to active Friend rewards (the reward-funding path needs the Rare Friends team) and 0.8 RF paid out as the ladder and bounties to the winners' NFT wallets; sponsor items, shouts and cosmetics split 50% `burn()` and 50% rewards at once; fewer than 5 paid entries refund every entry.
+- One Dice request per round, made after entries close, for the battle seed, so nobody can simulate a round before entering. The battle is deterministic from that seed, so anyone can replay a round and verify places and knockouts; the settlement pays out exactly the pool by `settleRound` from the posted result, and a disputed result is checked by replay.
 - Matchmaking: a lobby that closes after a minute or at 50 paid entries, with wild Friends in the empty seats.
 - Sponsor payments recorded per round phase with the same 50/50 split.
 - Persistence for sessions and the hall of fame (not in SDK v0.1.2).
