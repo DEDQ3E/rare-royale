@@ -47,7 +47,7 @@ Every round starts with a 1-minute lobby from the moment you arrive ("Start now"
 | Results | V: replay the final | Replay the final button |
 | Anywhere | H: hall of fame · Esc: close · arrows and Enter in the guide | How to play, Sound and Hall of fame buttons |
 
-Sound starts after your first click or key press; the "Sound on/off" button mutes it. A reduced-motion switch is in
+Sound starts after your first click or key press; the Sound button cycles sound on, music off and sound off. A reduced-motion switch is in
 the bottom bar. Audio stops while the game is paused or hidden.
 
 ## Economy (simulated)

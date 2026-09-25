@@ -74,7 +74,7 @@ Everything below is **simulated** in this preview and labelled on every screen. 
 
 - The 50/50 split is the protocol's own rule for gameplay payments ([rarefriends.com/docs/economy](https://rarefriends.com/docs/economy)), so the game feeds both the burn and the rewards of every active Friend holder.
 - **Ladder:** with 50 paid entries, 30 RF: 8 · 5 · 4 · 3 · 2.5 RF for places 1–5 and 1.5 RF for places 6–10. Any top-10 place returns more than the entry.
-- **Progressive bounties:** every head starts at 0.2 RF. A knockout pays the paid entrant who made it **half** the victim's bounty in RF and adds the other half to its own head, so the best fighters grow into the most valuable targets. Once a head is worth 0.4 RF or more, the biggest one on the island is marked **WANTED** in the arena, the Fighters tab and the minimap. The winner keeps its whole head. If the storm or a wild Friend gets a Friend, its whole bounty **burns**.
+- **Progressive bounties:** every head starts at 0.2 RF. A knockout pays the paid entrant who made it **half** the victim's bounty in RF and adds the other half to its own head, so the best fighters grow into the most valuable targets. Once a head is worth 0.4 RF or more, the biggest one on the island is marked **WANTED** in the arena and on the minimap, and the Fighters tab shows every head's bounty. The winner keeps its whole head. If the storm or a wild Friend gets a Friend, its whole bounty **burns**.
 - **Backed prizes:** prizes come only from the same round's paid entries. Unpaid seats are filled by *wild* Friends that fight but never take RF, and the ladder ranks paid entrants only; with fewer than 5 paid entries a round is free and entries are refunded. In this preview the other 49 seats are simulated paid entrants.
 - **Sponsoring closes when 25 are left**, so nobody can buy the finish.
 
@@ -91,7 +91,7 @@ A 1 RF entry pays something back almost every other round, and the lobby shows t
 | Hide | 41.5% | 27.0% | 27.0% | 1.3% | 0.784 RF |
 | Loot | 43.1% | 17.5% | 17.5% | 2.6% | 0.804 RF |
 
-The average return is 0.79 RF per entry (0.8 RF goes back into the round; the storm burns a little of it), spread over ten places and every knockout instead of three podium spots. **All three tactics return the same on average (within 5%)**, so the choice is a style, not an edge, and the round decides which one was right: Fight collects the most bounties, Hide hits harder from ambush and reaches the top 10 most often, Loot finds the best gear.
+The average return is 0.79 RF per entry (0.8 RF goes back into the round; the storm burns a little of it), spread over ten places and every knockout instead of three podium spots. **All three tactics return the same on average (within 5%)**, so the choice is a style, not an edge, and the round decides which one was right: Fight collects the most bounties, Hide hits 12% harder and reaches the top 10 most often, Loot finds the best gear.
 
 ### Fair by construction, checked by simulation
 
@@ -102,7 +102,7 @@ Stats, family abilities, tactics and sponsor items change the fight, within limi
 
 ## How does it use Rare Friends?
 
-- **Your Friend is your fighter.** The ownership-verified Friend is drawn from its canonical Generations frames through the SDK sprite reader and fights with stats from its NFT: Might, Speed and Wits come from its family profile, its generation (read with one `generation(tokenId)` call) and its sprite seed. Each of the nine families has a signature ability (a Hoverer glides further and shrugs off the storm, a Skeleton ignores the first hit, a Cellular gets a last stand).
+- **Your Friend is your fighter.** The ownership-verified Friend is drawn from its canonical Generations frames through the SDK sprite reader and fights with stats from its NFT: Might, Speed and Wits come from its family profile, its generation (read with one `generation(tokenId)` call) and its sprite seed. Each of the nine families has a signature ability (a Hoverer glides further and takes 60% less storm damage, a Skeleton ignores the first hit, a Cellular gets a last stand).
 - **The other 49 are real Friends too.** A roster of 300 real hardwired Generations Friends (generations 1–6), sampled from the chain with public reads only and baked into the build with their canonical sprites. No owner addresses are read or stored.
 - The SDK runtime handles the wallet, Friend selection and the ownership gate; the game adds no wallet code.
 
@@ -144,7 +144,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 | `npm run check` (`friendsdk check`) | Valid; reference chance game: expected reward 0.8 RF, maximum 0.8 RF |
 | `npx friendsdk test games/rare-royale --width 960` and `--width 390` | Pass |
 | `npm run balance -- 6000 2500 --report` | All four fairness targets pass ([`BALANCE.md`](https://github.com/DEDQ3E/rare-royale/blob/main/BALANCE.md)) |
-| Browser flow (`tests/shots.ts`, SDK test runtime with a fake clock): guide, lobby, Locker purchases, entry, drop, shout, Fighters tab and follow, late game, results, replay of the final, hall of fame, at 960 × 808 and 390 × 844 | Pass |
+| Browser flow (`tests/shots.ts`, SDK test runtime with a fake clock): guide, lobby, Locker purchases, entry, drop, shout, Fighters tab and follow, late game, results, replay of the final, hall of fame, at 960 × 808 and 390 × 844 | Pass (the SDK test RPC refuses the hall's live RF supply read, so that tile shows "unavailable" there) |
 | Demo video (`tests/video.mjs`): real SDK runtime, Friend #66666 read live from mainnet, picture and sound checked after recording | Pass |
 | Audio (`Web Audio` in Chromium): starts on the first gesture, suspends on mute | Pass |
 | Real-wallet playtest with a real Generations Friend | Pass: the builder played the public preview with a real wallet; later additions were checked in the SDK test runtime and the live-mainnet recording |

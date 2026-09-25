@@ -83,7 +83,7 @@ const TUTORIAL: readonly { icon: string; title: string; lines: readonly string[]
     "Tap a place on the island map. The number shows how many Friends plan to land there.",
     "Busy places have better loot and more fights. The dashed line is the airship's route."] },
   { icon: "hammer", title: "Pick a tactic", lines: [
-    "Fight hunts anyone in sight and collects the most bounties. Hide holds buildings, hits harder from ambush and reaches the top 10 most often. Loot clears crates first and finds better gear.",
+    "Fight hunts anyone in sight and collects the most bounties. Hide holds buildings, hits 12% harder and reaches the top 10 most often. Loot clears crates first and finds better gear.",
     "On average all three return the same; the round decides which one was right. Keys 1, 2 and 3 switch tactics, and the lobby shows each one's real odds."] },
   { icon: "medkit", title: "Enter for 1 RF, or practise free", lines: [
     "0.6 RF funds the top-10 prize ladder, 0.2 RF starts as the bounty on your head, 0.1 RF is burned and 0.1 RF funds rewards for active Friends.",
