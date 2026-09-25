@@ -114,7 +114,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 | `npm run balance -- 6000 2500 --report` | All three fairness targets pass ([`BALANCE.md`](https://github.com/DEDQ3E/rare-royale/blob/main/BALANCE.md)) |
 | Browser flow (`tests/shots.ts`, SDK test runtime with a fake clock): guide, lobby, entry, drop, landing, fight, late game, results, hall of fame, at 960 × 808 and 390 × 844 | Pass |
 | Audio (`Web Audio` in Chromium): starts on the first gesture, suspends on mute | Pass |
-| Real-wallet playtest with a real Generations Friend | Pending (the SDK mocks the wallet in automated tests) |
+| Real-wallet playtest with a real Generations Friend | Pass (the builder played the public preview with a real wallet) |
 
 ## Known issues and limits
 
