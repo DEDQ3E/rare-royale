@@ -3,6 +3,10 @@
   "consumable": "Round entry (reference only: prizes come from the round's paid entries, see README)",
   "price": "1000000000000000000",
   "outcomes": [
-    { "name": "Average return to entrants: 0.6 RF placement ladder + 0.2 RF knockout bounties per entry", "chanceBps": 10000, "reward": "800000000000000000" }
+    {
+      "name": "Returned to entrants per entry: 0.6 RF placement ladder + 0.2 RF progressive bounties (storm-burned bounties excepted)",
+      "chanceBps": 10000,
+      "reward": "800000000000000000"
+    }
   ]
 }

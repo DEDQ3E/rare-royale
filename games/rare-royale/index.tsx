@@ -31,6 +31,13 @@ const RESULTS_MS = 25_000;
 /** The placement ladder when every seat is a paid entry (the preview's simulated entrants all paid). */
 const FULL_LADDER = ladderPrizes(ENTRY_PRICE * BigInt(ROUND_SIZE) * ENTRY_POOL_BPS / BPS, ROUND_SIZE);
 const pct = (x: number) => `${Math.round(x * 100)}%`;
+/** The Friend with the biggest bounty still standing, once it is worth at least two starting bounties. */
+function wantedOf(r: RoundRunner): { index: number; head: bigint } {
+  let index = -1, head = BOUNTY * 2n - 1n;
+  const fs = r.battle.fighters();
+  r.bounties.head.forEach((h, i) => { if (h > head && fs[i].state === "alive") { head = h; index = i; } });
+  return { index, head: index >= 0 ? head : 0n };
+}
 const soundModeNext = (m: "on" | "nomusic" | "off") => (m === "on" ? "nomusic" : m === "nomusic" ? "off" : "on");
 
 /** A round's timing for this viewer: a one-minute lobby from arrival, then the drop. */
@@ -77,8 +84,8 @@ const TUTORIAL: readonly { icon: string; title: string; lines: readonly string[]
     "Fight hunts anyone in sight and collects the most bounties. Hide holds buildings, avoids fights and reaches the top 10 most often. Loot clears crates first.",
     "Keys 1, 2 and 3 switch tactics. The lobby shows each tactic's real odds from thousands of simulated rounds."] },
   { icon: "medkit", title: "Enter for 1 RF, or practise free", lines: [
-    "0.6 RF funds the top-10 prize ladder, 0.2 RF is the bounty on your head, 0.1 RF is burned and 0.1 RF funds rewards for active Friends.",
-    "Places 1 to 10 pay 8, 5, 4, 3, 2.5 and 1.5 RF. Knock out a Friend and its 0.2 RF bounty is yours; if the storm gets it, the bounty burns.",
+    "0.6 RF funds the top-10 prize ladder, 0.2 RF starts as the bounty on your head, 0.1 RF is burned and 0.1 RF funds rewards for active Friends.",
+    "Places 1 to 10 pay 8, 5, 4, 3, 2.5 and 1.5 RF. Bounties grow: a knockout pays you half the victim's bounty and adds the other half to yours. The biggest head is WANTED. If the storm gets a Friend, its bounty burns.",
     "Practice rounds are free: same battle, no RF in or out."] },
   { icon: "slingshot", title: "The battle", lines: [
     "Friends grab weapons and armour from crates: slingshot, hammer, bow, star wand. Armour soaks hits first.",
@@ -171,6 +178,47 @@ function DropMap({ roundId, selected, onSelect, disabled }: { roundId: number; s
       })}
     </div>
   );
+}
+
+/** The round's burn as a furnace that fills with every payment, with a "+0.5" for each one. */
+function Furnace({ burned, reduced }: { burned: bigint; reduced: boolean }) {
+  const prev = useRef(burned);
+  const [pops, setPops] = useState<readonly { key: number; text: string }[]>([]);
+  useEffect(() => {
+    const d = burned - prev.current; prev.current = burned;
+    if (d <= 0n || reduced) return;
+    const key = performance.now() + Math.random();
+    setPops(p => [...p.slice(-3), { key, text: `+${formatRF(d, 2)}` }]);
+    const id = window.setTimeout(() => setPops(p => p.filter(x => x.key !== key)), 1300);
+    return () => window.clearTimeout(id);
+  }, [burned, reduced]);
+  // Full at 30 RF, a bit above an average round.
+  const fill = Math.min(100, Number(burned * 100n / rf("30")));
+  return (
+    <div className="rr-furnace" role="status" aria-label={`${formatRF(burned, 1)} RF burned this round`}>
+      <i className={`rr-flame ${reduced ? "" : "lit"}`} aria-hidden="true" />
+      <div className="rr-furnace-bar" aria-hidden="true"><b style={{ width: `${fill}%` }} /></div>
+      <span>{formatRF(burned, 1)} RF burned</span>
+      {pops.map(p => <em key={p.key} aria-hidden="true">{p.text}</em>)}
+    </div>
+  );
+}
+
+/** Counts up to a value once, for the results' burn total. */
+function CountUp({ value, reduced }: { value: bigint; reduced: boolean }) {
+  const [shown, setShown] = useState(reduced ? value : 0n);
+  useEffect(() => {
+    if (reduced) { setShown(value); return; }
+    let raf = 0; const t0 = performance.now();
+    const tick = () => {
+      const q = Math.min(1, (performance.now() - t0) / 1400), e = 1 - (1 - q) ** 3;
+      setShown(value * BigInt(Math.round(e * 1000)) / 1000n);
+      if (q < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, reduced]);
+  return <>{formatRF(shown, 1)}</>;
 }
 
 /** The last 20 seconds of a finished round, replayed from the recorded ticks with the winner on camera. */
@@ -303,6 +351,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
   const mutedRef = useRef(muted); mutedRef.current = muted;
   const prevStanding = useRef(50), lastWarn = useRef(-1);
   const lastTick = useRef(0);
+  const wantedSeen = useRef(-1);
   const musicOffRef = useRef(false);
   const sfx = useCallback((cue: Cue, gain = 1, pan = 0) => { audio.current?.play(cue, { gain, pan }); }, []);
 
@@ -427,10 +476,13 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
     soundsOn(arena.current?.view(), rr.battle.fighters(), rr.player, rr.paid, events);
   }, [soundsOn]);
 
-  /** The viewer's cosmetics as the arena draws them. */
+  /** The viewer's cosmetics as the arena draws them, and the most wanted head on the island. */
   const lookOf = useCallback((): ArenaLook => {
-    const sh = myShout.current;
-    return { aura: equippedRef.current.aura, title: equippedRef.current.title, shout: sh && Date.now() < sh.until ? sh.text : null };
+    const sh = myShout.current, rr = runner.current, w = rr && !rr.battle.isOver() ? wantedOf(rr) : { index: -1, head: 0n };
+    return {
+      aura: equippedRef.current.aura, title: equippedRef.current.title, shout: sh && Date.now() < sh.until ? sh.text : null,
+      wanted: w.index, wantedText: w.index >= 0 ? `WANTED ${formatRF(w.head, 1)} RF` : undefined,
+    };
   }, []);
   const artOf = useCallback((player: number) => (f: Readonly<Fighter>) => (f.index === player && me ? me.art : rosterArt(f.id.tokenId)), [me]);
 
@@ -452,7 +504,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
           r = runner.current = createRoundRunner(c.id, ROSTER_INITS, seat, practice);
           audio.current?.play("go");
           narrator.current = createNarrator(c.id, r.player, r.battle.map);
-          saves.current = 0; shoutSeen.current = 0; pin.current = -1; myShout.current = null; prevStanding.current = ROUND_SIZE;
+          saves.current = 0; shoutSeen.current = 0; pin.current = -1; myShout.current = null; prevStanding.current = ROUND_SIZE; wantedSeen.current = -1;
           focus.current = { index: r.player >= 0 ? r.player : 0, since: t };
           setFeed([]); setResults(null); setTarget(r.player >= 0 ? "you" : "camera");
           makeArena(r);
@@ -468,9 +520,18 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
           if (told.announcer) setAnnouncer(told.announcer);
           if (events.length <= 600) soundsFor(r, events);
           for (const e of events.length > 600 ? [] : events) {
-            if (e.kind === "out" && e.by === r.player && e.cause === "fight" && r.paid[r.player] && r.paid[e.who]) alert(`Knockout! +${formatRF(BOUNTY)} RF bounty from ${fighterName(r.battle.fighters()[e.who].id)}`);
+            if (e.kind === "out" && e.by === r.player && e.cause === "fight" && r.paid[r.player] && r.paid[e.who]) alert(`Knockout on ${fighterName(r.battle.fighters()[e.who].id)}! ${formatRF(r.bounties.cash[r.player])} RF collected, ${formatRF(r.bounties.head[r.player])} RF on your head`);
             if (e.kind === "sponsor" && e.who === r.player && e.by !== "You") { saves.current += 1; alert(`${e.by} sponsored you: ${SPONSOR_ITEMS[e.item].name}!`); }
             else if (e.kind === "sponsor" && e.by.startsWith("Fan") && e.item === "revive") alert(`${e.by} burned ${formatRF((revivePrice(r.battle.fighters()[e.who].revives - 1) ?? 0n) / 2n)} RF: second life for ${fighterName(r.battle.fighters()[e.who].id)}`);
+          }
+        }
+        // A new most-wanted Friend is announced.
+        const w = wantedOf(r);
+        if (w.index !== wantedSeen.current) {
+          wantedSeen.current = w.index;
+          if (w.index >= 0) {
+            setAnnouncer(`WANTED: ${w.index === r.player ? "your Friend" : fighterName(r.battle.fighters()[w.index].id)}, ${formatRF(w.head)} RF on the head!`);
+            audio.current?.play("bounty", { gain: 0.5 });
           }
         }
         // Fans' shouts go to the announcer.
@@ -816,7 +877,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
               <div className="rr-split"><i style={{ width: "60%" }} className="pool" /><i style={{ width: "20%" }} className="bounty" /><i style={{ width: "10%" }} className="burn" /><i style={{ width: "10%" }} className="rew" /></div>
               <p className="rr-legend"><span className="pool">0.6 ladder</span><span className="bounty">0.2 bounty</span><span className="burn">0.1 burn</span><span className="rew">0.1 rewards</span></p>
               <p className="rr-ladder" aria-label="Prize ladder">{FULL_LADDER.slice(0, 5).map((p, i) => <span key={i}><small>{ordinal(i + 1)}</small>{formatRF(p, 1)}</span>)}<span><small>6–10th</small>{formatRF(FULL_LADDER[5], 1)}</span></p>
-              <p className="rr-muted rr-small rr-bounty-note">+{formatRF(BOUNTY)} RF for every Friend you knock out</p>
+              <p className="rr-muted rr-small rr-bounty-note">Bounties grow: a knockout pays half the head, the rest joins yours</p>
               <div className="rr-odds" title={`From ${ODDS.rounds.toLocaleString("en-US")} simulated rounds (npm run balance)`}>
                 <p className="rr-muted rr-small">Your odds with {TACTIC_INFO[tactic].label}</p>
                 <p><b>{pct(odds.back)}</b><small>any RF back</small></p>
@@ -869,7 +930,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
                       <Sprite rows={(f.index === player ? mine.art : rosterArt(f.id.tokenId))?.idle[0] ?? null} size={18} />
                       <b>{f.index === player ? "You" : `#${f.id.tokenId}`}</b>
                       <i><b style={{ width: `${Math.max(0, f.hp / f.maxHp) * 100}%`, background: f.state === "downed" ? "var(--red)" : undefined }} /></i>
-                      <em>{f.state === "downed" ? "down" : f.state === "air" ? "air" : `${f.kos} KO`}</em>
+                      <em>{f.state === "downed" ? "down" : f.state === "air" ? "air" : `${f.kos} KO`}{r && r.bounties.head[f.index] > BOUNTY ? <u> {formatRF(r.bounties.head[f.index], 1)}</u> : null}</em>
                     </button>
                   ))}
                 </div>
@@ -896,7 +957,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
                 );
               })}
               <button className="rr-btn rr-buy shout" onClick={() => setShoutOpen(o => !o)} disabled={paused || !r || r.battle.isOver()} aria-expanded={shoutOpen}>Shout {formatRF(SHOUT_PRICE)} <kbd>Y</kbd></button>
-              <span className="rr-burned">{r ? `${formatRF(r.tally.burned, 1)} RF burned this round` : ""}</span>
+              {r && <Furnace burned={r.tally.burned} reduced={reducedMotion} />}
             </div>
             {shoutOpen && (
               <div className="rr-shouts" role="menu" aria-label="Pick a shout">
@@ -909,11 +970,11 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
                 <span>You</span>
                 <i><b className="hp" style={{ width: `${Math.max(0, myFighter.hp / myFighter.maxHp) * 100}%` }} /><b className="ar" style={{ width: `${(myFighter.armor / 50) * 100}%` }} /></i>
                 <em>{myFighter.state === "out" ? `Out · ${ordinal(myFighter.place)}` : myFighter.state === "downed" ? "Down!" : myFighter.state === "air" ? "In the air" : `${Math.max(0, Math.round(myFighter.hp))} HP${myFighter.armor ? ` · ${myFighter.armor} armour` : ""}`}</em>
-                <small><Icon id={myFighter.weapon} scale={1} /> {WEAPONS[myFighter.weapon].name}{myFighter.bandages ? ` · ${myFighter.bandages} bandages` : ""}{myFighter.kos ? ` · ${myFighter.kos} KO` : ""}{myFighter.kos && r?.paid[player] ? ` (+${formatRF(BOUNTY * BigInt(myFighter.kos), 1)} RF)` : ""} · {myFighter.mode}</small>
+                <small><Icon id={myFighter.weapon} scale={1} /> {WEAPONS[myFighter.weapon].name}{myFighter.bandages ? ` · ${myFighter.bandages} bandages` : ""}{myFighter.kos ? ` · ${myFighter.kos} KO` : ""}{r?.paid[player] && myFighter.state !== "out" ? ` · head ${formatRF(r.bounties.head[player], 1)} RF` : ""}{r?.paid[player] && r.bounties.cash[player] > 0n ? ` · +${formatRF(r.bounties.cash[player], 2)} RF` : ""} · {myFighter.mode}</small>
               </div>
             )}
             {!inRound && <p className="rr-spectating">Watching round {clock.id}. Enter the next one in the lobby.</p>}
-            {inRound && practice && <p className="rr-spectating">Practice round: no RF in or out.</p>}
+            {inRound && practice && <p className="rr-spectating rr-practice-live">Practice round: no RF in or out.</p>}
           </section>
         )}
 
@@ -958,7 +1019,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
             </div>
             <div className="rr-panel rr-burn">
               <p className="rr-muted">Burned this round</p>
-              <p className="rr-bebas rr-mid rr-amber">{rfText(results.tally.burned)}</p>
+              <p className="rr-bebas rr-mid rr-amber rr-embers"><CountUp value={results.tally.burned} reduced={reducedMotion} /> RF</p>
               <p className="rr-row"><span>Entries ({results.tally.paid} × 1 RF)</span><span>{rfText(results.tally.entries)}</span></p>
               <p className="rr-row"><span>Crowd sponsors (simulated)</span><span>{rfText(results.tally.crowd)}</span></p>
               <p className="rr-row"><span>Your sponsors</span><span>{rfText(results.tally.yours)}</span></p>

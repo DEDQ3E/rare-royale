@@ -1,7 +1,9 @@
 /** Simulated RF economy. Every RF amount is a bigint in base units (1 RF = 10n ** 18n), like the SDK.
  *
- * Entry: 1 RF. 60% goes to the round's placement ladder (top 10 paid entrants), 20% is the bounty on the entrant's
- * head (paid to whoever knocks them out, burned if the storm or a wild Friend does) and 20% is a gameplay payment.
+ * Entry: 1 RF. 60% goes to the round's placement ladder (top 10 paid entrants), 20% starts as the bounty on the
+ * entrant's head and 20% is a gameplay payment. Bounties are progressive: a knockout pays half the victim's bounty
+ * to the paid entrant who made it and adds the other half to that entrant's own head, so the best fighters become
+ * the most valuable targets. The winner keeps its whole head. The storm or a wild Friend burns the bounty.
  * Prizes are funded only by paid entries: seats nobody paid for are filled by wild Friends, who never take prizes.
  * Gameplay payments follow the Rare Friends protocol rule (rarefriends.com/docs/economy):
  * 50% is burned and 50% funds RF rewards for active Friends.
@@ -86,6 +88,26 @@ export function ladderPrizes(pool: bigint, paidEntries: number): readonly bigint
   return prizes;
 }
 
+/** Progressive bounties, applied one elimination at a time in the order they happen. */
+export type Bounties = { head: bigint[]; cash: bigint[]; won: number[]; burned: bigint; settled: boolean[] };
+export function startBounties(paid: readonly boolean[]): Bounties {
+  return { head: paid.map(p => (p ? BOUNTY : 0n)), cash: paid.map(() => 0n), won: paid.map(() => 0), burned: 0n, settled: paid.map(() => false) };
+}
+/** `victim` is out. `killer` is who knocked it out in a fight (-1 for the storm or the clock). */
+export function applyOut(b: Bounties, paid: readonly boolean[], victim: number, killer: number): void {
+  const h = b.head[victim];
+  b.head[victim] = 0n; b.settled[victim] = true;
+  if (!paid[victim] || h === 0n) return;
+  if (killer >= 0 && killer !== victim && paid[killer]) {
+    const cash = h / 2n, carried = h - cash;
+    b.cash[killer] += cash; b.won[killer] += 1;
+    // A killer that is already out cannot carry the other half: it burns.
+    if (b.settled[killer]) b.burned += carried; else b.head[killer] += carried;
+  } else b.burned += h;
+}
+/** The winner collects everything on its own head. */
+export function applyWin(b: Bounties, winner: number): void { b.cash[winner] += b.head[winner]; b.head[winner] = 0n; b.settled[winner] = true; }
+
 /** What one seat did in a finished round, as the settlement needs it. */
 export type SeatResult = Readonly<{ place: number; paid: boolean; koBy: number; koCause: "" | "fight" | "storm" }>;
 export type Payout = Readonly<{ place: bigint; bounties: bigint; bountiesWon: number; total: bigint; paidRank: number }>;
@@ -106,14 +128,15 @@ export function settleRound(seats: readonly SeatResult[]): Settlement {
   seats.map((s, i) => ({ s, i })).filter(x => x.s.paid).sort((a, b) => a.s.place - b.s.place).forEach(({ i }, j) => {
     rank[i] = j + 1; place[i] = ladder[j] ?? 0n;
   });
-  let bountyBurned = 0n;
-  seats.forEach((s, i) => {
-    if (!s.paid) return;
-    if (s.place === 1) { bounties[i] += BOUNTY; return; }
-    const killer = s.koCause === "fight" && s.koBy >= 0 && s.koBy !== i ? s.koBy : -1;
-    if (killer >= 0 && seats[killer]?.paid) { bounties[killer] += BOUNTY; won[killer] += 1; }
-    else bountyBurned += BOUNTY;
+  // Eliminations in the order they happened: the worst place went out first.
+  const paid = seats.map(s => s.paid), b = startBounties(paid);
+  seats.map((s, i) => ({ s, i })).filter(x => x.s.place > 1).sort((a, c) => c.s.place - a.s.place).forEach(({ s, i }) => {
+    applyOut(b, paid, i, s.koCause === "fight" && s.koBy >= 0 ? s.koBy : -1);
   });
+  const winner = seats.findIndex(s => s.place === 1);
+  if (winner >= 0) applyWin(b, winner);
+  const bountyBurned = b.burned;
+  b.cash.forEach((c, i) => { bounties[i] = c; won[i] = b.won[i]; });
   return {
     refunded: false, ladder, bountyBurned, paidEntries,
     payouts: seats.map((_, i) => ({ place: place[i], bounties: bounties[i], bountiesWon: won[i], total: place[i] + bounties[i], paidRank: rank[i] })),

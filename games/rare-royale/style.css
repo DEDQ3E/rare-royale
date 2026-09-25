@@ -66,7 +66,7 @@ kbd{font:400 10px/1 Silkscreen,monospace;border:1px solid currentColor;border-ra
 .rr-tabs button.on{color:var(--text);border-bottom-color:var(--coral)}
 .rr-tabs kbd{font-size:8px}
 .rr-fighters{height:258px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding-right:2px}
-.rr-frow{display:grid;grid-template-columns:20px 68px 1fr 44px;gap:6px;align-items:center;font:inherit;font-size:11px;color:var(--text);background:transparent;border:1px solid transparent;border-radius:5px;padding:2px 4px;cursor:pointer;text-align:left}
+.rr-frow{display:grid;grid-template-columns:20px 64px 1fr 66px;gap:6px;align-items:center;font:inherit;font-size:11px;color:var(--text);background:transparent;border:1px solid transparent;border-radius:5px;padding:2px 4px;cursor:pointer;text-align:left}
 .rr-frow:hover{border-color:var(--line2)}.rr-frow.on{border-color:var(--coral);background:#241B2E}.rr-frow.me b{color:var(--teal2)}
 .rr-frow>b{font-weight:500;overflow:hidden;white-space:nowrap}
 .rr-frow>i{height:4px;background:#2A2442;border-radius:2px;overflow:hidden}.rr-frow>i b{display:block;height:100%;background:var(--teal)}
@@ -172,6 +172,18 @@ kbd{font:400 10px/1 Silkscreen,monospace;border:1px solid currentColor;border-ra
 .rr-hot{animation:rr-pulse .5s ease-in-out infinite alternate;background:#412402}
 @keyframes rr-pulse{to{box-shadow:0 0 0 3px rgba(239,159,39,.45)}}
 .rr-burned{font-size:12px;color:var(--amber);margin-left:4px}
+.rr-furnace{position:relative;display:flex;align-items:center;gap:6px;margin-left:4px;font-size:12px;color:var(--amber);white-space:nowrap}
+.rr-flame{width:12px;height:16px;border-radius:50% 50% 45% 45%/60% 60% 40% 40%;background:radial-gradient(circle at 50% 70%,#FFF3C4 0,#FAC775 30%,#EF9F27 55%,#D85A30 80%);box-shadow:0 0 8px rgba(239,159,39,.7)}
+.rr-flame.lit{animation:rr-flicker .35s ease-in-out infinite alternate}
+@keyframes rr-flicker{from{transform:scale(1,1) translateY(0)}to{transform:scale(.9,1.12) translateY(-1px)}}
+.rr-furnace-bar{width:64px;height:6px;background:#2A2442;border-radius:3px;overflow:hidden}
+.rr-furnace-bar b{display:block;height:100%;background:linear-gradient(90deg,#D85A30,#EF9F27,#FAC775);transition:width .4s ease-out}
+.rr-furnace em{position:absolute;left:18px;top:-4px;font-style:normal;font:400 10px/1 Silkscreen,monospace;color:#FAC775;pointer-events:none;animation:rr-rise 1.3s ease-out forwards}
+@keyframes rr-rise{from{transform:translateY(0);opacity:1}to{transform:translateY(-22px);opacity:0}}
+.rr-embers{position:relative}
+.rr-embers::after{content:"";position:absolute;left:0;top:-6px;width:120px;height:30px;background:radial-gradient(circle,rgba(250,199,117,.9) 0 1.5px,transparent 2px) 0 0/14px 12px,radial-gradient(circle,rgba(239,159,39,.8) 0 1px,transparent 1.5px) 7px 5px/16px 14px;animation:rr-embers 2.2s linear infinite;pointer-events:none;opacity:.8}
+@keyframes rr-embers{from{background-position:0 30px,7px 35px;opacity:.9}to{background-position:0 -10px,7px -5px;opacity:0}}
+.rr-frow em u{text-decoration:none;color:var(--red);font-weight:600}
 .rr-dock-note{position:absolute;left:0;right:0;top:462px;text-align:center;font-size:11px;color:var(--muted);margin:0}
 .rr-mine{position:absolute;left:230px;right:230px;top:488px;display:grid;grid-template-columns:34px 1fr 150px;gap:8px;align-items:center;background:var(--panel);border:1px solid #1E2146;border-radius:8px;padding:6px 10px;font-size:12px}
 .rr-mine span{color:var(--teal2)}
@@ -192,10 +204,10 @@ kbd{font:400 10px/1 Silkscreen,monospace;border:1px solid currentColor;border-ra
 .rr-step p{margin:4px 0 0;font-size:12px}.rr-step .rr-prize{color:var(--teal2)}
 .rr-block{width:110px;display:flex;align-items:flex-start;justify-content:center;border-radius:4px 4px 0 0;font:400 28px/1.3 "Bebas Neue",Impact,sans-serif}
 .p1 .rr-block{height:92px;background:#BA7517;color:#FAEEDA}.p2 .rr-block{height:66px;background:#888780;color:#F1EFE8}.p3 .rr-block{height:48px;background:#993C1D;color:#FAECE7}
-.rr-yours{left:480px;top:56px;width:456px;height:180px}.rr-yours p{margin:0 0 6px;font-size:13px}
+.rr-yours{left:480px;top:56px;width:456px;height:172px}.rr-yours p{margin:0 0 6px;font-size:13px}
 .rr-yours .rr-huge{font-size:52px;line-height:1;color:var(--teal2);margin:0 0 8px}.rr-huge span{font-size:22px;color:var(--muted)}
 .rr-win{color:var(--amber)}
-.rr-burn{left:480px;top:244px;width:456px;height:232px}.rr-burn p{margin:0}
+.rr-burn{left:480px;top:236px;width:456px;height:244px}.rr-burn p{margin:0}
 .rr-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #22254A}
 .rr-next{position:absolute;left:0;right:0;top:494px;text-align:center;color:var(--coral);font-size:14px}
 .rr-next b{font:400 22px/1 "Bebas Neue",Impact,sans-serif}
@@ -287,3 +299,6 @@ kbd{font:400 10px/1 Silkscreen,monospace;border:1px solid currentColor;border-ra
 .rr-tall .rr-hall-body .rr-panel:last-child .rr-champ:nth-of-type(n+5){display:none}
 .rr-tall .rr-hall>.rr-muted{display:none}
 .rr-tall .rr-motion{right:auto;left:50%;transform:translateX(-50%);bottom:4px}
+
+.rr-spectating.rr-practice-live{top:546px}
+.rr-tall .rr-spectating.rr-practice-live{top:586px}

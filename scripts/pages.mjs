@@ -25,7 +25,7 @@ writeFileSync(`${to}/demo.html`, `<!doctype html>
 </style>
 </head>
 <body>
-<h1>Rare Royale · demo with sound (106 s)</h1>
+<h1>Rare Royale · demo with sound (107 s)</h1>
 <video controls playsinline preload="metadata" poster="media/battle.png" src="media/rare-royale.webm"></video>
 <p>Recorded from the real FriendSDK runtime with Sparkling Friend #66666 read live from Robinhood mainnet (only the wallet is mocked). All RF is simulated.</p>
 <p><a href="./">Play Rare Royale</a> · <a href="https://github.com/DEDQ3E/rare-royale">Source</a> · <a href="media/rare-royale.webm" download>Download the video</a></p>

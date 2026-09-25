@@ -2,8 +2,8 @@
  * simulated RF tally. The crowd is seeded by the round and tick, so every viewer sees the same fans. */
 
 import {
-  createBattle, createRng, hash32, lineUp, withPlayer, roundSeed, settleRound, splitPayment, revivePrice, ENTRY_PRICE, ROUND_SIZE, SHOUT_PRICE,
-  SHOUTS, SPONSOR_ITEMS, type Battle, type BattleEvent, type BattleSnapshot, type FighterInit, type Settlement, type SponsorItemId,
+  applyOut, applyWin, createBattle, createRng, hash32, lineUp, withPlayer, roundSeed, settleRound, startBounties, splitPayment, revivePrice, ENTRY_PRICE, ROUND_SIZE, SHOUT_PRICE,
+  SHOUTS, SPONSOR_ITEMS, type Battle, type Bounties, type BattleEvent, type BattleSnapshot, type FighterInit, type Settlement, type SponsorItemId,
 } from "./engine/index.ts";
 
 /** The round's simulated RF: entries in, sponsor payments, and where it all went. `bountyBurned` is part of `burned`. */
@@ -42,6 +42,8 @@ export type RoundRunner = Readonly<{
   /** Who sponsored each fighter. */
   backers: ReadonlyMap<number, ReadonlySet<string>>;
   log: Readonly<PlayerLog>;
+  /** Progressive bounties as they stand now: each head's value and the cash collected so far. */
+  bounties: Readonly<Bounties>;
 }>;
 
 /** A round's line-up and battle. With a player, their Friend takes a seat and can make decisions; a practice seat
@@ -63,6 +65,7 @@ export function createRoundRunner(id: number, roster: readonly FighterInit[], pl
   const shouts: Shout[] = [];
   const sponsors = new Map<string, bigint>(), backers = new Map<number, Set<string>>();
   const log: PlayerLog = { loots: 0, phaseReached: 0, fanSaves: 0 };
+  const bounties = startBounties(paid);
   const backed = (who: number, by: string, price: bigint) => {
     sponsors.set(by, (sponsors.get(by) ?? 0n) + price);
     const set = backers.get(who) ?? new Set<string>(); set.add(by); backers.set(who, set);
@@ -98,6 +101,10 @@ export function createRoundRunner(id: number, roster: readonly FighterInit[], pl
   function record(events: readonly BattleEvent[]) {
     const snap = battle.snapshot();
     frames.push({ snap, events });
+    for (const e of events) {
+      if (e.kind === "out") applyOut(bounties, paid, e.who, e.cause === "fight" ? e.by : -1);
+      else if (e.kind === "winner") applyWin(bounties, e.who);
+    }
     const me = seated.index;
     if (me < 0) return;
     for (const e of events) {
@@ -108,7 +115,7 @@ export function createRoundRunner(id: number, roster: readonly FighterInit[], pl
   }
 
   return {
-    id, battle, player: seated.index, lineup: seated.fighters, paid, tally, frames, shouts, sponsors, backers, log,
+    id, battle, player: seated.index, lineup: seated.fighters, paid, tally, frames, shouts, sponsors, backers, log, bounties,
     settlement: settle,
     advanceTo(tick) {
       const out: BattleEvent[] = [];

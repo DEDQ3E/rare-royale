@@ -2,32 +2,32 @@
   "rounds": 6000,
   "all": {
     "back": 0.452,
-    "profit": 0.206,
+    "profit": 0.201,
     "top10": 0.2,
     "win": 0.02,
-    "avg": 0.797
+    "avg": 0.79
   },
   "byTactic": {
     "fight": {
       "back": 0.535,
-      "profit": 0.182,
+      "profit": 0.168,
       "top10": 0.166,
       "win": 0.028,
-      "avg": 0.909
+      "avg": 0.887
     },
     "hide": {
       "back": 0.398,
       "profit": 0.266,
       "top10": 0.266,
       "win": 0.009,
-      "avg": 0.74
+      "avg": 0.734
     },
     "loot": {
       "back": 0.422,
-      "profit": 0.17,
+      "profit": 0.168,
       "top10": 0.167,
       "win": 0.023,
-      "avg": 0.743
+      "avg": 0.748
     }
   }
 }

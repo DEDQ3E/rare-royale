@@ -4,7 +4,7 @@
 
 🕹️ **Play: https://dedq3e.github.io/rare-royale/**
 
-🎬 **Demo with sound (106 s):** recorded from the real SDK runtime with Sparkling Friend #66666 read live from mainnet (only the wallet is mocked; `tests/video.mjs`): lobby, a Starfall aura from the Locker, the drop, a paid shout, following and sponsoring another Friend from the Fighters tab, results, the replay of the final and the hall of fame. **[▶ Watch the demo](https://dedq3e.github.io/rare-royale/demo.html)** (plays in the browser; [download the file](https://dedq3e.github.io/rare-royale/media/rare-royale.webm)).
+🎬 **Demo with sound (107 s):** recorded from the real SDK runtime with Sparkling Friend #66666 read live from mainnet (only the wallet is mocked; `tests/video.mjs`): lobby, a Starfall aura from the Locker, the drop, a paid shout, following and sponsoring another Friend from the Fighters tab, results, the replay of the final and the hall of fame. **[▶ Watch the demo](https://dedq3e.github.io/rare-royale/demo.html)** (plays in the browser; [download the file](https://dedq3e.github.io/rare-royale/media/rare-royale.webm)).
 
 ![The late game, sped up](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/rare-royale.gif)
 
@@ -27,6 +27,7 @@ A complete battle royale that runs itself, in rounds of about four and a half mi
 - **Lobby.** Your Friend on a lit pedestal with its stats and family ability; this round's island with seven places to drop on (and how many Friends plan to land at each); a tactic (Fight, Hide, Loot); the entry panel with the prize ladder and **your real odds for that tactic**; enter for 1 RF, practise for free, or just watch. A short *How to play* guide opens on the first visit and pauses the countdown.
 - **Drop.** An airship crosses the island and every Friend parachutes to its target.
 - **Battle.** Tiered loot (slingshot, hammer, bow, star wand, armour, bandages), six storm circles that shift and shrink, ranged fights with line of sight, cover inside buildings, knockdowns with a five-second window for a second life, and loot left behind. A broadcast camera follows your Friend (teal ring, YOU arrow, edge pointer, minimap marker), with a kill feed, an announcer and up to four quick decisions per round (fight or flee, open a crate, sprint out of the storm). Friends play with a plan: they head for places inside the coming circle, finish weakened rivals, join fights already under way, take cover in buildings and never chase into the storm. Every fight animates: lunges, recoil, knock-back on hits, wand sparks, knocked-down Friends lying with stars over their heads, a puff of smoke on elimination and a small camera shake for big hits. The storm eases in and out over six slow, shifting circles.
+- **Every payment is a moment.** A sponsor's shield, medkit or second life drops onto the Friend in a capsule under a little parachute, with the sponsor's name on it. A furnace in the dock fills with every RF burned this round and flashes each "+0.5", and the results count the round's burn up in embers.
 - **Crowd.** Anyone watching can sponsor your Friend or any other until 25 are left. The **Fighters** tab lists everyone still standing with HP and knockouts: tap one to follow it with the camera and sponsor it.
 - **Locker and shouts.** Auras (embers, frost, falling stars) and titles drawn on your Friend in the arena, and paid shouts in the announcer's ticker and a speech bubble. Looks only: they never change the fight.
 - **Challenges.** Three goals in the lobby at a time (finish top 10, two knockouts, sponsor another Friend, back the winner, win…). Each unlocks a free title, win or lose, so every round moves you forward.
@@ -46,7 +47,7 @@ Everything below is **simulated** in this preview and labelled on every screen. 
 
 | Payment | Price | Where it goes |
 |---|---|---|
-| Round entry | 1 RF | 0.6 RF to the round's top-10 ladder · 0.2 RF bounty on your head · **0.1 RF burned** · 0.1 RF to active Friend rewards |
+| Round entry | 1 RF | 0.6 RF to the round's top-10 ladder · 0.2 RF starting bounty on your head · **0.1 RF burned** · 0.1 RF to active Friend rewards |
 | Practice | free | Same battle, no RF in or out |
 | Shield (soaks the next 30 damage) | 1 RF | **50% burned** · 50% active Friend rewards |
 | Medkit (+45 HP) | 1 RF | **50% burned** · 50% active Friend rewards |
@@ -57,11 +58,11 @@ Everything below is **simulated** in this preview and labelled on every screen. 
 
 - The 50/50 split is the protocol's own rule for gameplay payments ([rarefriends.com/docs/economy](https://rarefriends.com/docs/economy)), so the game feeds both the burn and the rewards of every active Friend holder.
 - **Ladder:** with 50 paid entries, 30 RF: 8 · 5 · 4 · 3 · 2.5 RF for places 1–5 and 1.5 RF for places 6–10. Any top-10 place returns more than the entry.
-- **Bounties:** whoever knocks out a paid entrant collects its 0.2 RF; the winner keeps its own. If the storm or a wild Friend gets it, the bounty **burns**.
+- **Progressive bounties:** every head starts at 0.2 RF. A knockout pays the paid entrant who made it **half** the victim's bounty in RF and adds the other half to its own head, so the best fighters grow into the most valuable targets. The biggest head on the island is marked **WANTED** in the arena, the Fighters tab and the minimap. The winner keeps its whole head. If the storm or a wild Friend gets a Friend, its whole bounty **burns**.
 - **Backed prizes:** prizes come only from the same round's paid entries. Unpaid seats are filled by *wild* Friends that fight but never take RF, and the ladder ranks paid entrants only; with fewer than 5 paid entries a round is free and entries are refunded. In this preview the other 49 seats are simulated paid entrants.
 - **Sponsoring closes when 25 are left**, so nobody can buy the finish.
 
-**An average round** (300 rounds with the simulated crowd): 86.9 RF spent (50 RF entries + 36.9 RF sponsoring and shouts) → **23.6 RF burned (27%)**, 23.4 RF to active Friend rewards, 39.8 RF back to players. The viewer's cosmetics come on top: every aura, title and shout is a pure sink that cannot buy an advantage.
+**An average round** (300 rounds with the simulated crowd): 86.9 RF spent (50 RF entries + 36.9 RF sponsoring and shouts) → **24.1 RF burned (28%)**, 23.4 RF to active Friend rewards, 39.4 RF back to players. The storm alone burns 0.64 RF of bounties a round. The viewer's cosmetics come on top: every aura, title and shout is a pure sink that cannot buy an advantage.
 
 ### Why a player would actually play
 
@@ -69,19 +70,19 @@ A 1 RF entry pays something back almost every other round, and the lobby tells y
 
 | Tactic | Any RF back | 1 RF or more | Top 10 | Win | Average return |
 |---|---:|---:|---:|---:|---:|
-| All | 45.2% | 20.6% | 20.0% | 2.0% | 0.797 RF |
-| Fight | 53.5% | 18.2% | 16.6% | 2.8% | 0.909 RF |
-| Hide | 39.8% | 26.6% | 26.6% | 0.9% | 0.740 RF |
-| Loot | 42.2% | 17.0% | 16.7% | 2.3% | 0.743 RF |
+| All | 45.2% | 20.1% | 20.0% | 2.0% | 0.790 RF |
+| Fight | 53.5% | 16.8% | 16.6% | 2.8% | 0.887 RF |
+| Hide | 39.8% | 26.6% | 26.6% | 0.9% | 0.734 RF |
+| Loot | 42.2% | 16.8% | 16.7% | 2.3% | 0.748 RF |
 
-The average return stays at 0.8 RF per entry (the other 0.2 RF is the burn and the rewards), but it is spread over ten places and every knockout instead of three podium spots. Fight earns bounties, Hide reaches the top 10 most often.
+The average return is 0.79 RF per entry (0.8 RF goes back into the round; the storm burns a little of it), spread over ten places and every knockout instead of three podium spots. Fight earns bounties, Hide reaches the top 10 most often.
 
 ### Fair by construction, checked by simulation
 
 Stats, family abilities, tactics and sponsor items change the fight, within limits checked by `npm run balance`:
 
-- No Generation, family or tactic earns more than 1.2× the average return (highest: 1.14×, Colossus). No group averages 1 RF back per 1 RF entry (highest: 0.909 RF).
-- **No purchase pays for itself.** Each purchase is tested by playing the same seeded round twice, with and without it: a shield returns 0.30 RF per 1 RF, a medkit 0.18, a second life 0.08, and buying everything every time 0.12. Purchases made in the last moments before sponsoring closes return 0.34–0.42 RF per 1 RF.
+- No Generation, family or tactic earns more than 1.2× the average return (highest: 1.16×, Colossus). No group averages 1 RF back per 1 RF entry (highest: 0.916 RF).
+- **No purchase pays for itself.** Each purchase is tested by playing the same seeded round twice, with and without it: a shield returns 0.31 RF per 1 RF, a medkit 0.17, a second life 0.08, and buying everything every time 0.13. Purchases made in the last moments before sponsoring closes return 0.36–0.44 RF per 1 RF.
 
 ## How does it use Rare Friends?
 

@@ -133,12 +133,15 @@ test("settlement: prizes go to paid entrants only, bounties follow knockouts, ev
     const best = fs.filter(f => paid[f.index]).sort((x, y) => x.place - y.place)[0];
     assert.equal(st.payouts[best.index].paidRank, 1);
     assert.equal(st.payouts[best.index].place, st.ladder[0]);
-    // A paid entrant's bounty count matches its knockouts of paid entrants.
+    // Progressive bounties: every knockout of a paid entrant by a paid entrant pays at least half a starting bounty,
+    // and a paid winner collects at least its own starting bounty.
     for (const f of fs) if (paid[f.index]) {
       const kos = fs.filter(v => paid[v.index] && v.place !== 1 && v.koBy === f.index && v.koCause === "fight" && v.index !== f.index).length;
       assert.equal(st.payouts[f.index].bountiesWon, kos);
-      assert.equal(st.payouts[f.index].bounties, BOUNTY * BigInt(kos + (f.place === 1 ? 1 : 0)));
+      assert.ok(st.payouts[f.index].bounties >= BOUNTY / 2n * BigInt(kos) + (f.place === 1 ? BOUNTY : 0n));
     }
+    // Nobody wild ever collects.
+    fs.forEach((f, i) => { if (!paid[i]) assert.equal(st.payouts[i].bounties, 0n); });
   }
 });
 
@@ -193,6 +196,10 @@ test("runner: records every tick; crowd shouts and sponsors are paid gameplay pa
   const entries = split("entry", r.tally.entries);
   assert.equal(r.tally.burned, gameplay.burned + entries.burned + r.tally.bountyBurned);
   for (const [who, by] of r.backers) for (const name of by) assert.ok(r.sponsors.has(name) && who >= 0);
+  // The live bounty ledger ends where the settlement does.
+  const st = r.settlement()!;
+  r.battle.fighters().forEach((_, i) => assert.equal(r.bounties.cash[i], st.payouts[i].bounties));
+  assert.equal(r.bounties.burned, st.bountyBurned);
 });
 
 test("challenges: each unlocks its title once, from what the round shows", async () => {

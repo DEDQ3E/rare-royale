@@ -11,12 +11,14 @@ export const CAM_W = 600, CAM_H = 300;
 
 type Shot = { born: number; dur: number; fx: number; fy: number; tx: number; ty: number; weapon: WeaponId; hit: boolean; dmg: number; armor: number; blocked: string; to: number; from: number };
 type Pop = { born: number; x: number; y: number; text: string; color: string };
-type Effect = { born: number; kind: "down" | "revive" | "loot" | "heal" | "flash" | "land" | "poof"; who: number; item?: string; x: number; y: number };
+type Effect = { born: number; kind: "down" | "revive" | "loot" | "heal" | "flash" | "land" | "poof" | "capsule"; who: number; item?: string; by?: string; x: number; y: number };
+const CAPSULE_MS = 1500, CAPSULE_FALL = 900;
+const CAPSULE_COLOR: Readonly<Record<string, string>> = { shield: "#85B7EB", medkit: "#E24B4A", revive: "#FAC775" };
 /** A short body movement: a melee lunge, a shot's recoil or the knock-back of a hit (screen pixels, per sprite scale). */
 type Motion = { born: number; dur: number; who: number; dx: number; dy: number; amp: number };
 
 /** How the viewer's own Friend is dressed up: cosmetics only, never the fight. */
-export type ArenaLook = Readonly<{ aura: string | null; title: string | null; shout: string | null }>;
+export type ArenaLook = Readonly<{ aura: string | null; title: string | null; shout: string | null; wanted?: number; wantedText?: string }>;
 const NO_LOOK: ArenaLook = { aura: null, title: null, shout: null };
 
 export type ArenaView = Readonly<{
@@ -137,7 +139,7 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
         else if (e.kind === "out") { const f = snapshot.fighters[e.who], q = prev?.fighters[e.who] ?? f; effects.push({ born: now, kind: "poof", who: e.who, x: q.x, y: q.y }); }
         else if (e.kind === "revived") effects.push({ born: now, kind: "revive", who: e.who, x: 0, y: 0 });
         else if (e.kind === "loot") effects.push({ born: now + Math.random() * 400, kind: "loot", who: e.who, item: e.item, x: 0, y: 0 });
-        else if (e.kind === "sponsor" && e.item !== "revive") effects.push({ born: now, kind: "loot", who: e.who, item: e.item, x: 0, y: 0 });
+        else if (e.kind === "sponsor") effects.push({ born: now, kind: "capsule", who: e.who, item: e.item, by: e.by, x: 0, y: 0 });
         else if (e.kind === "heal") effects.push({ born: now, kind: "heal", who: e.who, x: 0, y: 0 });
         else if (e.kind === "land") effects.push({ born: now, kind: "land", who: e.who, x: 0, y: 0 });
         else if (e.kind === "storm_hit") { const f = snapshot.fighters[e.who]; pops.push({ born: now, x: f.x, y: f.y, text: `-${e.dmg}`, color: "#AFA9EC" }); }
@@ -200,6 +202,7 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
 
       // Friends on the ground, back to front.
       const spriteScale = Z >= 3 ? 2 : 1, size = 18 * spriteScale;
+      const lk = look();
       const standing = cur.fighters.filter(f => f.state === "alive" || f.state === "downed").map(f => ({ f, p: posOf(f.index, k) })).sort((a, b) => a.p.y - b.p.y);
       for (const { f, p } of standing) {
         const off = reducedMotion ? { dx: 0, dy: 0 } : offsetOf(f.index, now);
@@ -217,7 +220,13 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
           g.strokeStyle = "rgba(93,202,165,.35)"; g.lineWidth = 4;
           g.beginPath(); g.ellipse(x, y, (11 + pulse) * spriteScale, (4.5 + pulse / 2) * spriteScale, 0, 0, Math.PI * 2); g.stroke();
         }
-        const mine = f.index === player ? look() : NO_LOOK;
+        const mine = f.index === player ? lk : NO_LOOK;
+        if (f.index === lk.wanted && f.state === "alive") {
+          // The most valuable head on the island: a red ring under it.
+          const pulse = reducedMotion ? 0 : (Math.sin(now / 160) + 1) * 1.2;
+          g.strokeStyle = "rgba(226,75,74,.9)"; g.lineWidth = 2;
+          g.beginPath(); g.ellipse(x, y, (7 + pulse) * spriteScale, (2.6 + pulse / 2) * spriteScale, 0, 0, Math.PI * 2); g.stroke();
+        }
         if (mine.aura) drawAura(g, mine.aura, x, y, size, now, reducedMotion);
         if (f.state === "downed") g.globalAlpha = 0.5 + 0.3 * Math.sin(now / 110);
         if (rows && f.state === "downed") {
@@ -253,7 +262,14 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
           drawYou(g, x, y - size - 4, now, reducedMotion, spriteScale > 1 ? 1.25 : 1.6);
           if (mine.shout) drawBubble(g, mine.shout, x, y - size - 4 - (spriteScale > 1 ? 34 : 44));
         }
-        const labelled = f.index !== player && (f.index === focus || f.state === "downed" || f.kos >= 3);
+        if (f.index === lk.wanted && lk.wantedText && f.state === "alive") {
+          g.font = "8px Silkscreen, monospace";
+          const text = lk.wantedText, w = Math.ceil(g.measureText(text).width) + 8, ty = y - size - (f.index === player ? 52 : 24);
+          g.fillStyle = "#0E1020"; g.fillRect(x - w / 2 - 1, ty - 1, w + 2, 12);
+          g.fillStyle = "#E24B4A"; g.fillRect(x - w / 2, ty, w, 10);
+          g.fillStyle = "#FFF"; g.fillText(text, x - w / 2 + 4, ty + 8);
+        }
+        const labelled = f.index !== player && f.index !== lk.wanted && (f.index === focus || f.state === "downed" || f.kos >= 3);
         if (labelled && spriteScale > 1) {
           const label = f.kos >= 3 ? `#${f.id.tokenId} ${f.kos}KO` : `#${f.id.tokenId}`;
           g.font = "8px Silkscreen, monospace";
@@ -303,6 +319,29 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
       }
       for (const e of effects) {
         const age = now - e.born, f = cur.fighters[e.who];
+        if (e.kind === "capsule" && f && age >= 0 && age < CAPSULE_MS) {
+          // A sponsor's capsule under a little parachute drops onto the Friend, then pops.
+          const p = posOf(e.who, k), x = sx(p.x), ground = sy(p.y) - 30, sc = Z >= 3 ? 2 : 1, col = CAPSULE_COLOR[e.item ?? ""] ?? "#FAC775";
+          if (age < CAPSULE_FALL) {
+            const q = reducedMotion ? 1 : age / CAPSULE_FALL, cy = lerp(-16, ground, 1 - (1 - q) * (1 - q)), sway = reducedMotion ? 0 : Math.sin(age / 120) * 2;
+            g.fillStyle = "#E8E6F5"; g.beginPath(); g.arc(x + sway, cy - 12 * sc, 8 * sc, Math.PI, 0); g.fill();
+            g.strokeStyle = "#E8E6F5"; g.lineWidth = 1; g.beginPath(); g.moveTo(x + sway - 7 * sc, cy - 12 * sc); g.lineTo(x - 3 * sc, cy - 3 * sc); g.moveTo(x + sway + 7 * sc, cy - 12 * sc); g.lineTo(x + 3 * sc, cy - 3 * sc); g.stroke();
+            g.fillStyle = "#0E1020"; g.fillRect(x - 5 * sc - 1, cy - 4 * sc - 1, 10 * sc + 2, 9 * sc + 2);
+            g.fillStyle = col; g.fillRect(x - 5 * sc, cy - 4 * sc, 10 * sc, 9 * sc);
+            if (e.item) drawIcon(g, e.item, x - 4 * sc, cy - 3 * sc, sc);
+            if (e.by && sc > 1) {
+              g.font = "8px Silkscreen, monospace";
+              const w = Math.ceil(g.measureText(e.by).width) + 6;
+              g.fillStyle = "rgba(14,16,32,.85)"; g.fillRect(x - w / 2, cy - 32, w, 10);
+              g.fillStyle = col; g.fillText(e.by, x - w / 2 + 3, cy - 24);
+            }
+          } else {
+            const q = (age - CAPSULE_FALL) / (CAPSULE_MS - CAPSULE_FALL);
+            g.strokeStyle = `rgba(250,238,218,${1 - q})`; g.lineWidth = 2; g.beginPath(); g.arc(x, ground, 6 + q * 18, 0, Math.PI * 2); g.stroke();
+            if (e.item) drawIcon(g, e.item, x - 7, ground - 6 - q * 14, 2);
+          }
+          continue;
+        }
         if (age < 0 || age > 900 || !f) continue;
         if (e.kind === "poof") {
           const x = sx(e.x), y = sy(e.y) - 8, s = age / 900;
@@ -380,6 +419,8 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
         m.fillStyle = f.state === "downed" ? "#E24B4A" : FAMILY_COLOR[f.id.family];
         m.fillRect(Math.round(f.x * s) - 1, Math.round(f.y * s) - 1, 2, 2);
       }
+      const wanted = look().wanted ?? -1, wf = wanted >= 0 ? cur.fighters[wanted] : null;
+      if (wf && wf.state === "alive") { m.fillStyle = "#E24B4A"; m.fillRect(Math.round(wf.x * s) - 2, Math.round(wf.y * s) - 2, 5, 5); m.strokeStyle = "#FFF"; m.lineWidth = 1; m.strokeRect(Math.round(wf.x * s) - 2.5, Math.round(wf.y * s) - 2.5, 6, 6); }
       const me = cur.fighters[player];
       if (me && me.state !== "out" && !(me.state === "air" && cur.t < me.jumpAt)) {
         const mx = Math.round(me.x * s), my = Math.round(me.y * s), r = 5 + (Math.sin(now / 250) + 1) * 2;

@@ -27,7 +27,8 @@ Every round starts with a 1-minute lobby from the moment you arrive ("Start now"
 - **Fights:** ranged, with line of sight through woods and rocks, cover inside buildings, armour, knockdowns and loot drops.
   A knocked-down Friend has 5 seconds for someone to buy it a second life.
   Up to 4 free decisions per round: fight or flee, open a crate, sprint out of the storm.
-- **Sponsoring:** shield, medkit or second life for your Friend or the one on camera. Sponsoring closes when 25 are left.
+- **Sponsoring:** shield, medkit or second life for your Friend or the one on camera, dropped in a capsule with the
+  sponsor's name. A furnace in the dock fills with the round's burn. Sponsoring closes when 25 are left.
 - **Spectating:** the Fighters tab lists everyone still standing; pick one to follow it with the camera and sponsor it.
 - **Results:** the top 10 with their payouts, your place and what you won (ladder place plus bounties), damage,
   who knocked you out, the round's top sponsor and Kingmakers (who backed the winner), and what the round burned.
@@ -52,7 +53,7 @@ the bottom bar. Audio stops while the game is paused or hidden.
 
 | Payment | Price | Where it goes |
 |---|---|---|
-| Entry | 1 RF | 0.6 RF to the round's top-10 ladder, 0.2 RF bounty on your head, 0.1 RF burned, 0.1 RF to active Friend rewards |
+| Entry | 1 RF | 0.6 RF to the round's top-10 ladder, 0.2 RF starting bounty on your head, 0.1 RF burned, 0.1 RF to active Friend rewards |
 | Practice | free | Same battle, no RF in or out, no prizes |
 | Shield (soaks the next 30 damage) | 1 RF | 50% burned, 50% active Friend rewards |
 | Medkit (+45 HP) | 1 RF | 50% burned, 50% active Friend rewards |
@@ -63,8 +64,9 @@ the bottom bar. Audio stops while the game is paused or hidden.
 
 - **Ladder:** with 50 paid entries the ladder is 30 RF: 8, 5, 4, 3 and 2.5 RF for places 1 to 5 and 1.5 RF for places
   6 to 10. There is one paid place per five paid entries (at most ten), ranked among paid entrants only.
-- **Bounties:** whoever knocks out a paid entrant collects its 0.2 RF; the winner keeps its own. A bounty whose owner
-  falls to the storm or to a wild Friend is burned.
+- **Progressive bounties:** every head starts at 0.2 RF. A knockout pays the paid entrant who made it half the
+  victim's bounty and adds the other half to its own head; the biggest head is marked WANTED. The winner keeps its
+  whole head. A bounty whose owner falls to the storm or to a wild Friend is burned.
 - **Backing:** prizes come only from the same round's paid entries. Unpaid seats are wild Friends that fight but never
   take RF. With fewer than 5 paid entries the round is free and entries are refunded. In this preview all 49 other
   seats are simulated paid entrants, and the crowd of sponsors is simulated.
@@ -76,13 +78,13 @@ the bottom bar. Audio stops while the game is paused or hidden.
 
 | Tactic | Any RF back | 1 RF or more | Top 10 | Win | Average return |
 |---|---:|---:|---:|---:|---:|
-| All | 45.2% | 20.6% | 20.0% | 2.0% | 0.797 RF |
-| Fight | 53.5% | 18.2% | 16.6% | 2.8% | 0.909 RF |
-| Hide | 39.8% | 26.6% | 26.6% | 0.9% | 0.740 RF |
-| Loot | 42.2% | 17.0% | 16.7% | 2.3% | 0.743 RF |
+| All | 45.2% | 20.1% | 20.0% | 2.0% | 0.790 RF |
+| Fight | 53.5% | 16.8% | 16.6% | 2.8% | 0.887 RF |
+| Hide | 39.8% | 26.6% | 26.6% | 0.9% | 0.734 RF |
+| Loot | 42.2% | 16.8% | 16.7% | 2.3% | 0.748 RF |
 
 An average round moves 86.9 RF: 50 RF of entries and 36.9 RF of sponsoring and shouts from the simulated crowd.
-39.8 RF returns to players, 23.6 RF (27%) is burned and 23.4 RF funds active Friend rewards. The viewer's own
+39.4 RF returns to players, 24.1 RF (28%) is burned and 23.4 RF funds active Friend rewards. The viewer's own
 cosmetics come on top.
 
 Fairness is checked by `npm run balance`; the results are in `BALANCE.md` and the lobby odds in `engine/odds.json`.
