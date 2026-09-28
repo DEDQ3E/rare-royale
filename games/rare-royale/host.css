@@ -1,25 +1,89 @@
 /* Rare Royale: trusted runtime layout (FriendSDK host.css).
- * The standard 3:2 frame (up to 960 px) on a dark studio page; phones held upright get a 3:4 portrait frame,
- * and the game switches to its portrait layout. SDK controls keep their positions, in the broadcast palette. */
+ * Centres the standard 3:2 game frame (up to 960 px) on a night-stadium page: sky, two sweeping floodlights, a row of
+ * stadium lamps and the crowd's silhouettes, with the game inside a broadcast-monitor bezel. Phones held upright get
+ * a 3:4 portrait frame and the game switches to its portrait layout. SDK controls keep their positions, in the
+ * broadcast palette. Nothing but decoration lives outside the game container. */
 :root {
   --rf-game-aspect-ratio: 3 / 2;
-  --rf-game-max-width: min(960px, calc(100vw - 32px), calc((100vh - 40px) * 1.5));
+  /* the contest asks for the SDK's 960 × 640 container: never larger, smaller only on small screens */
+  --rf-game-max-width: min(960px, calc(100vw - 72px), calc((100vh - 88px) * 1.5));
+  --rr-ink: #07080F; --rr-panel: #151733; --rr-line: #3A3D63; --rr-coral: #F0997B; --rr-teal: #5DCAA5; --rr-amber: #FAC775;
 }
 @media (max-width: 640px) and (orientation: portrait) {
   :root {
     --rf-game-aspect-ratio: 3 / 4;
-    --rf-game-max-width: min(480px, calc(100vw - 8px), calc((100vh - 16px) * 0.75));
+    --rf-game-max-width: min(480px, calc(100vw - 20px), calc((100vh - 24px) * 0.75));
   }
 }
-html:root { min-height: 100%; background: #07080F; }
-html:root body { background: transparent; }
+html:root {
+  min-height: 100%;
+  background-color: #090A16;
+  background-image:
+    /* the crowd: rows of heads along the bottom, darkest in front */
+    radial-gradient(ellipse 15px 24px at 50% 100%, #04050A 0 100%, transparent 100%),
+    radial-gradient(ellipse 12px 20px at 50% 100%, #0C0D1D 0 100%, transparent 100%),
+    /* stadium lamps along the top */
+    radial-gradient(circle, rgba(255,244,214,.95) 0 2px, rgba(250,199,117,.35) 3px, transparent 9px),
+    /* two floodlight beams crossing from the top corners */
+    conic-gradient(from 128deg at 4% -4%, transparent 0deg, rgba(240,153,123,.2) 7deg, rgba(240,153,123,.07) 15deg, transparent 22deg),
+    conic-gradient(from 210deg at 96% -4%, transparent 0deg, rgba(93,202,165,.07) 7deg, rgba(93,202,165,.18) 15deg, transparent 22deg),
+    /* the glow of the pitch behind the screen */
+    radial-gradient(ellipse 55% 40% at 50% 62%, rgba(83,74,183,.28), rgba(83,74,183,0) 70%),
+    /* a faint broadcast grid */
+    repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, #06070F 0%, #10122A 45%, #1B1840 78%, #241C45 100%);
+  background-repeat: repeat-x, repeat-x, repeat-x, no-repeat, no-repeat, no-repeat, repeat, no-repeat;
+  background-size: 34px 44px, 26px 60px, 120px 26px, 100% 100%, 100% 100%, 100% 100%, auto, 100% 100%;
+  background-position: 0 100%, 13px calc(100% - 14px), 30px 14px, 0 0, 0 0, 0 0, 0 0, 0 0;
+  background-attachment: fixed;
+}
+html:root body {
+  min-height: 100vh; margin: 0; background: transparent;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px 16px; box-sizing: border-box;
+}
+/* the broadcast monitor around the game */
+html:root body #root {
+  position: relative; width: 100%;
+  max-width: calc(var(--rf-game-max-width) + 24px);
+  margin: 0 auto; padding: 10px;
+  background: linear-gradient(180deg, #1C1E3E 0%, #121430 100%);
+  border: 2px solid #2F3158; border-radius: 14px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08), 0 0 0 1px var(--rr-ink),
+    -18px 0 60px -30px rgba(240,153,123,.55), 18px 0 60px -30px rgba(93,202,165,.5), 0 24px 60px rgba(0,0,0,.55);
+}
+/* a thin coral-to-teal light strip along the monitor's bottom edge */
+html:root body #root::after {
+  content: ""; position: absolute; left: 24px; right: 24px; bottom: -2px; height: 2px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--rr-coral) 20%, var(--rr-amber) 50%, var(--rr-teal) 80%, transparent);
+  box-shadow: 0 0 12px rgba(250,199,117,.6);
+}
 html:root body .rf-game-frame { border-color: #2F3158; background: #0E1020; }
-html:root body .rf-frame-toolbar > * { background: rgba(21,23,51,.94); color: #E8E6F5; border: 1px solid #3A3D63; box-shadow: none; }
+/* SDK toolbar and menus in the broadcast palette (same controls, same positions) */
+html:root body .rf-frame-toolbar > * { background: rgba(21,23,51,.94); color: #E8E6F5; border: 1px solid var(--rr-line); box-shadow: none; }
 html:root body .rf-game-frame .rf-frame-toolbar button:hover:not(:disabled) { background: #1A1D36; }
-html:root body .rf-frame-menu { background: #151733; color: #E8E6F5; border: 1px solid #3A3D63; }
-html:root body .rf-frame-scrim button { background: #1A1D36; color: #E8E6F5; border: 1px solid #3A3D63; }
-html:root body .rf-frame-scrim .rf-frame-primary { background: #F0997B; color: #4A1B0C; }
-html:root body .rf-runtime-status { background: #151733; color: #E8E6F5; }
-@media (max-width: 640px) {
+html:root body .rf-frame-menu { background: var(--rr-panel); color: #E8E6F5; border: 1px solid var(--rr-line); }
+html:root body .rf-frame-scrim button { background: #1A1D36; color: #E8E6F5; border: 1px solid var(--rr-line); }
+html:root body .rf-frame-scrim .rf-frame-primary { background: var(--rr-coral); color: #4A1B0C; }
+html:root body .rf-runtime-status { background: var(--rr-panel); color: #E8E6F5; }
+/* two floodlight flares drifting slowly in the upper corners */
+html:root body::before, html:root body::after {
+  content: ""; position: fixed; top: -80px; width: 260px; height: 260px; border-radius: 50%; pointer-events: none; z-index: -1;
+  background: radial-gradient(circle, rgba(255,240,210,.22), rgba(255,240,210,0) 65%);
+  animation: rr-flare 12s ease-in-out infinite;
+}
+html:root body::before { left: -60px; }
+html:root body::after { right: -60px; animation-delay: -6s; }
+@keyframes rr-flare { 0%,100% { opacity: .55; transform: scale(1) } 50% { opacity: 1; transform: scale(1.12) } }
+@media (prefers-reduced-motion: reduce) { html:root body::before, html:root body::after { animation: none } }
+/* small or short screens: a thinner bezel; toolbar items size to their text */
+@media (max-width: 640px), (max-height: 560px) {
+  html:root body { padding: 6px; }
+  html:root body #root { padding: 4px; border-radius: 10px; max-width: calc(var(--rf-game-max-width) + 12px); }
+  html:root body #root::after { left: 12px; right: 12px; }
   html:root body .rf-frame-toolbar > *, html:root body .rf-game-frame .rf-frame-toolbar button { height: 26px; min-height: 26px; padding: 0 6px; font-size: 10px; }
+}
+@media (max-width: 640px) and (orientation: landscape) {
+  :root { --rf-game-max-width: min(960px, calc(100vw - 20px), calc((100vh - 24px) * 1.5)); }
 }
