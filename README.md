@@ -133,7 +133,7 @@ Portrait phones get their own 3:4 layout. Reduced motion, mute, loading and erro
 
 ![Phone layout](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/phone-lobby.png)
 
-**Source:** https://github.com/DEDQ3E/rare-royale · **FriendSDK v0.1.2** · React, TypeScript, Canvas 2D, Web Audio.
+**Source:** https://github.com/DEDQ3E/rare-royale · **FriendSDK v0.1.3** · React, TypeScript, Canvas 2D, Web Audio.
 
 ```sh
 git clone https://github.com/DEDQ3E/rare-royale && cd rare-royale
@@ -176,7 +176,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 - Matchmaking: one shared round every 5 minutes for all holders, a lobby that closes after a minute or at 50 paid entries, and wild Friends in the empty seats. Until 5 people enter, a round is free (entries are refunded) and burns only what is spent on sponsoring, shouts and cosmetics.
 - Sponsor payments recorded per round phase with the same 50/50 split, from a sponsor balance topped up before the round. A second life has a 5-second window, too short for a wallet prompt and a confirmation, so no purchase mid-battle should need one; what is left is withdrawn after.
 - The ladder pays one place per five paid entries (at most ten), so the lobby odds hold with any number of players and only the prize sizes scale: with 10 paid entries two places pay 3.69 and 2.3 RF from a 6 RF pool (30 RF with 50).
-- Persistence for sessions and the hall of fame (not in SDK v0.1.2).
+- Persistence for sessions and the hall of fame (not in SDK v0.1.3).
 
 ## Credits
 

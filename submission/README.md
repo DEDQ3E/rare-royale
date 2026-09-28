@@ -57,7 +57,7 @@ Live play would also need the reward-funding path from the Rare Friends team, ma
 The battle is deterministic from a round seed, so anyone can replay a round and check it. In the preview the seed is the round number, so everyone in the same minute gets the same island, line-up and base battle; your own Friend takes one seat, and your sponsoring and decisions change only your view. Live, the seed stays unknown until the final: it mixes a Dice result drawn when entries close with a game secret whose hash is published before entries open and which is revealed after the final. A Dice result alone is public on-chain, so a bot could simulate the rest of a battle mid-round and buy only the items that flip the result; with the secret nobody can, nobody can pick the seed, and every round can still be checked afterwards.
 
 **Source code**
-[GitHub repository](https://github.com/DEDQ3E/rare-royale) ([full rules and tables](https://github.com/DEDQ3E/rare-royale#readme)) · FriendSDK v0.1.2 · React, TypeScript, Canvas 2D, Web Audio.
+[GitHub repository](https://github.com/DEDQ3E/rare-royale) ([full rules and tables](https://github.com/DEDQ3E/rare-royale#readme)) · FriendSDK v0.1.3 · React, TypeScript, Canvas 2D, Web Audio.
 
 **Playable demo / how to run**
 **Play: https://dedq3e.github.io/rare-royale/** (GitHub Pages). You'll need a browser wallet on Robinhood mainnet (chain 4663) holding a hardwired Generations NFT (generation 1 or higher). No RF funding, signature or transaction is needed. To run it locally with Node.js 22+:

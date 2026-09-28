@@ -16,7 +16,7 @@
   "license": "Apache-2.0",
   "repository": "github:DEDQ3E/rare-royale",
   "dependencies": {
-    "@rarefriends/friendsdk": "file:vendor/rarefriends-friendsdk-0.1.2.tgz",
+    "@rarefriends/friendsdk": "file:vendor/rarefriends-friendsdk-0.1.3.tgz",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
