@@ -33,7 +33,9 @@ Every round starts with a 1-minute lobby from the moment you arrive ("Start now"
 - **Results:** the top 10 with their payouts, your place and what you won (ladder place plus bounties), damage,
   who knocked you out, the round's top sponsor and Kingmakers (who backed the winner), what the round burned and what
   your own payments burned this round and this session.
-  **Replay the final** plays the last 20 seconds again with the winner on camera.
+  **Replay the final** plays the last 20 seconds again with the winner on camera and names its Kingmakers.
+- **Hall of fame:** RF burned to date (live `totalSupply`), the burn of the last 12 rounds, and the latest champions with
+  each round's top sponsor.
 - **Locker and shouts:** auras and titles for your Friend, and paid shouts in the arena. Looks only, never the fight.
 - **Challenges:** three goals in the lobby at a time (top 10, two knockouts, sponsor another Friend, back the winner
   and more). Each unlocks a free title, win or lose. Progress lasts for the session.

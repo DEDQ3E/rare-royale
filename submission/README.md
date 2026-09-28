@@ -53,7 +53,7 @@ Nothing in this build: no contract or transaction code, as the SDK asks for prot
 Live play would also need the reward-funding path from the Rare Friends team, matchmaking, and saves (the SDK has no save API).
 
 **How does it use randomness?**
-The battle is deterministic from a round seed, so anyone can replay a round and check it. In the preview the seed is the round number, so everyone in the same minute gets the same island, line-up and battle. Live, one Dice request per round, made after entries close, would set the seed, so nobody could simulate a round before entering.
+The battle is deterministic from a round seed, so anyone can replay a round and check it. In the preview the seed is the round number, so everyone in the same minute gets the same island, line-up and base battle; your own Friend takes one seat, and your sponsoring and decisions change only your view. Live, one Dice request per round, made after entries close, would set the seed, so nobody could simulate a round before entering.
 
 **Source code**
 [GitHub repository](https://github.com/DEDQ3E/rare-royale) ([full rules and tables](https://github.com/DEDQ3E/rare-royale#readme)) · FriendSDK v0.1.2 · React, TypeScript, Canvas 2D, Web Audio.
@@ -75,7 +75,7 @@ Everything is simulated; you start with 20 RF.
 - **Entry, 1 RF:**
   - where it goes: 0.6 RF to the ladder, a 0.2 RF starting bounty on your head, 0.1 RF burned, 0.1 RF to rewards;
   - ladder with 50 paid entries: places 1–10 pay 8, 5, 4, 3, 2.5, then 1.5 RF each;
-  - bounties: a knockout pays half the victim's bounty and adds the other half to your own head, the biggest head is marked WANTED, and the winner keeps its own;
+  - bounties: a knockout pays half the victim's bounty and adds the other half to your own head, the biggest head (once worth 0.4 RF or more) is marked WANTED, and the winner keeps its own;
   - a round with fewer than 5 paid entries refunds every entry; practice is free.
 - **Sponsoring:** a shield (soaks the next 30 damage) or a medkit (+45 HP) costs 1 RF. A second life costs 2, then 4, then 8 RF, at most 3 per Friend per round. Sponsoring closes at 25 standing.
 - **Looks:** shouts cost 1 RF, auras 2–5 RF and titles 1–5 RF.

@@ -1,5 +1,5 @@
 /** One round from the viewer's side: the seeded battle, the simulated crowd of sponsors, and the round's
- * simulated RF tally. The crowd is seeded by the round and tick, so every viewer sees the same fans. */
+ * simulated RF tally. The crowd is seeded by the round and tick, so viewers who do not change the battle see the same fans. */
 
 import {
   applyOut, applyWin, createBattle, createRng, hash32, lineUp, withPlayer, roundSeed, settleRound, startBounties, splitPayment, revivePrice, ENTRY_PRICE, ROUND_SIZE, SHOUT_PRICE,
