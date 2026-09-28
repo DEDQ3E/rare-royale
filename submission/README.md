@@ -48,12 +48,13 @@ Nothing in this build: no contract or transaction code, as the SDK asks for prot
 - a 1 RF entry is held until settlement, then 0.1 RF goes through the RF token's `burn()`, 0.1 RF to active Friend rewards, and 0.8 RF is paid out as the ladder and bounties;
 - sponsor items, shouts and cosmetics burn 50% and fund 50% rewards at once;
 - the settlement pays out exactly the pool, and a round with fewer than 5 paid entries refunds every entry;
-- rounds run on one shared clock for all holders, one every 5 minutes, with wild Friends in empty seats. Until 5 people enter, a round is free and burns only what is spent on sponsoring, shouts and cosmetics.
+- sponsoring is paid from a balance topped up before the round (prepaid, like the SDK's consumables), so a second life's 5-second window needs no wallet prompt;
+- rounds run on one shared clock for all holders, one every 5 minutes, with wild Friends in empty seats. Until 5 people enter, a round is free and burns only what is spent on sponsoring, shouts and cosmetics. One ladder place per five paid entries keeps the odds at any player count; only the prizes scale.
 
 Live play would also need the reward-funding path from the Rare Friends team, matchmaking, and saves (the SDK has no save API).
 
 **How does it use randomness?**
-The battle is deterministic from a round seed, so anyone can replay a round and check it. In the preview the seed is the round number, so everyone in the same minute gets the same island, line-up and base battle; your own Friend takes one seat, and your sponsoring and decisions change only your view. Live, one Dice request per round, made after entries close, would set the seed, so nobody could simulate a round before entering.
+The battle is deterministic from a round seed, so anyone can replay a round and check it. In the preview the seed is the round number, so everyone in the same minute gets the same island, line-up and base battle; your own Friend takes one seat, and your sponsoring and decisions change only your view. Live, the seed stays secret until the round ends (its hash is published when entries close, the seed from a Dice request is revealed after the final), so every round can be checked but no bot can simulate the rest of a battle mid-round and buy only the items that flip the result.
 
 **Source code**
 [GitHub repository](https://github.com/DEDQ3E/rare-royale) ([full rules and tables](https://github.com/DEDQ3E/rare-royale#readme)) · FriendSDK v0.1.2 · React, TypeScript, Canvas 2D, Web Audio.
@@ -71,7 +72,7 @@ npm run dev
 Lobby: tap the map to pick a drop; **1–3** Fight, Hide or Loot, **E** enter for 1 RF, **P** practise, **L** Locker. Battle: **S** shield, **M** medkit, **R** second life (within 5 s of a knockdown), **T** your Friend or the one on camera, **1 / 2** quick decisions, **Y** shouts, **F** Fighters tab. Results: **V** replay the final. **H** hall of fame, **Esc** close. Everything also has a button for touch.
 
 **Costs and rewards**
-Everything is simulated; you start with 20 RF.
+Everything is simulated; you start with 20 RF. RF amounts are placeholder units: live prices are for the developers to set, and every split and ratio stays the same.
 - **Entry, 1 RF:**
   - where it goes: 0.6 RF to the ladder, a 0.2 RF starting bounty on your head, 0.1 RF burned, 0.1 RF to rewards;
   - ladder with 50 paid entries: places 1–10 pay 8, 5, 4, 3, 2.5, then 1.5 RF each;
