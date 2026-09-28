@@ -28,6 +28,8 @@ const START_BALANCE = rf("20");
 const HISTORY_ROUNDS = 12;
 /** How long results stay up before the next lobby opens (players can skip ahead). */
 const RESULTS_MS = 25_000;
+/** How often the React interface re-renders during play; the arena canvas has its own 60 fps draw. */
+const UI_FRAME_MS = 80;
 /** The placement ladder when every seat is a paid entry (the preview's simulated entrants all paid). */
 const FULL_LADDER = ladderPrizes(ENTRY_PRICE * BigInt(ROUND_SIZE) * ENTRY_POOL_BPS / BPS, ROUND_SIZE);
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -374,6 +376,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
   const mutedRef = useRef(muted); mutedRef.current = muted;
   const prevStanding = useRef(50), lastWarn = useRef(-1);
   const lastTick = useRef(0);
+  const lastRender = useRef(0);
   const lastBurn = useRef(0n);
   const wantedSeen = useRef(-1);
   const musicOffRef = useRef(false);
@@ -623,7 +626,9 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
         if (frozenRef.current === null && left !== lastTick.current && left <= 10 && left >= 1) audio.current?.play(left <= 3 ? "tick-hi" : "tick");
         lastTick.current = left;
       }
-      setNow(t);
+      // The arena canvas draws every frame; the React interface only needs about 12 updates a second
+      // (clocks, HP bars, the feed), and re-rendering it every frame was most of the game's CPU time.
+      if (t - lastRender.current >= UI_FRAME_MS || t < lastRender.current) { lastRender.current = t; setNow(t); }
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
