@@ -93,5 +93,28 @@
       "back": 1.66
     }
   ],
-  "sessionRounds": 2.3
+  "sessionRounds": 2.3,
+  "drops": [
+    {
+      "name": "Quietest place",
+      "landers": 2.4,
+      "top10": 0.256,
+      "win": 0.027,
+      "avg": 1.004
+    },
+    {
+      "name": "Tactic's own choice",
+      "landers": 4.8,
+      "top10": 0.203,
+      "win": 0.023,
+      "avg": 0.83
+    },
+    {
+      "name": "Busiest place",
+      "landers": 9.9,
+      "top10": 0.137,
+      "win": 0.015,
+      "avg": 0.592
+    }
+  ]
 }

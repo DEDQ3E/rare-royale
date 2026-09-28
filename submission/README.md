@@ -2,6 +2,22 @@
 
 🕹️ **Play: https://dedq3e.github.io/rare-royale/** · 🎬 **[Demo with sound (1 min)](https://dedq3e.github.io/rare-royale/demo.html)**
 
+🔥 **About 1,500 RF burned a day per 1,000 players**, if each plays one 10-minute session a day (2.3 rounds) as a careful player (entry, one shield, a medkit when hurt), with no crowd counted. If everyone only enters: 230 RF a day; if everyone buys every item that helps: about 7,300 RF. Placeholder units, simulated.
+
+✅ **Played with a real wallet:** the current public preview (FriendSDK v0.1.3) was played on Robinhood mainnet with a real wallet and a real Generations Friend.
+
+**What changes your chance of a top-10 place** (average 20%; the same simulated rounds with one thing changed):
+
+| Choice | Top 10 |
+|---|---:|
+| Drop: the quietest place / the tactic's choice / the busiest place | 26% / 20% / 14% |
+| Tactic: Hide / Loot / Fight | 27% / 18% / 16% |
+| A shield (1 RF), bought mid-battle | 28% → 34% |
+| A medkit (1 RF), bought below half HP | 7% → 11% |
+| A second life (2 RF), bought when knocked down | 0% → 5% |
+
+A smart drop takes RF from other entrants, never from the burn: the quietest place returns 1.00 RF per entry, the busiest 0.59 RF. The three tactics return within 5% of each other.
+
 **Project name**
 Rare Royale
 
@@ -83,10 +99,10 @@ Everything is simulated; you start with 20 RF. RF amounts are placeholder units:
 - **Odds per 1 RF entry** (6,000 simulated rounds):
   - any RF back 45.5%, 1 RF or more 20.1%, win 2.0%, average return 0.79 RF;
   - Fight, Hide and Loot each return within 5% of that average;
-  - no purchase pays for itself in RF (a shield returns 0.29 RF per 1 RF), but each raises the chance of a high place (a medkit when hurt: top 10 from 7% to 11%); the game shows this on each item.
+  - no purchase pays for itself in RF (a shield returns 0.29 RF per 1 RF), but each raises the chance of a high place (table above); the game shows this on each item.
 
 **What have you tested?**
-All pass: typecheck; 12 engine tests (map, stats, replay, sponsoring, decisions, economy, settlement, ledger, rounds, challenges); `friendsdk check` and `friendsdk test` at 960 and 390 px; `npm run balance` (four fairness targets over 6,000 rounds, plus the burn tables above); an automated browser run through every screen at 960 × 808 and 390 × 844, on into a second round; a one-minute recording from the real runtime with a Friend read live from mainnet. The builder played the public preview with a real wallet and Friend; later additions were checked in the SDK test runtime.
+All pass: typecheck; 12 engine tests (map, stats, replay, sponsoring, decisions, economy, settlement, ledger, rounds, challenges); `friendsdk check` and `friendsdk test` at 960 and 390 px; `npm run balance` (four fairness targets over 6,000 rounds, plus the burn tables above); an automated browser run through every screen at 960 × 808 and 390 × 844, on into a second round; a one-minute recording from the real runtime with a Friend read live from mainnet. The current public preview (FriendSDK v0.1.3) was played on Robinhood mainnet with a real wallet and a real Generations Friend.
 
 **Known limitations**
 - The economy, the other entrants and the viewers are simulated; balances reset on reload (no save API).

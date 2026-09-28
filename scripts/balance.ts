@@ -1,5 +1,6 @@
 /** Balance simulation: fairness of stats and tactics, the odds a player sees in the lobby, the rule that no
- * purchase pays for itself, where the burn comes from at each crowd level, and what one real player spends and burns.
+ * purchase pays for itself, where the burn comes from at each crowd level, what one real player spends and burns, and
+ * how much the drop changes a Friend's chances.
  * Returns include the placement ladder and knockout bounties (economy.ts settleRound).
  * Usage: node scripts/balance.ts [baselineRounds=10000] [pairedRoundsPerItem=4000] [--report]
  * With --report the results are written to BALANCE.md and the lobby odds to games/rare-royale/engine/odds.json. */
@@ -8,7 +9,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { createRoundRunner, CROWD } from "../games/rare-royale/runner.ts";
 import {
   createBattle, createRng, hash32, settleRound, ladderPrizes, FAMILIES, TACTICS, ENTRY_PRICE, ENTRY_POOL_BPS, BOUNTY, BPS, RF,
-  REVIVE_PRICES, SPONSOR_ITEMS, TUNING, ROUND_SIZE, LOBBY_MS, GAMEPLAY_BURN_BPS, splitPayment, type Battle, type FighterInit, type Rng, type SponsorItemId,
+  REVIVE_PRICES, SPONSOR_ITEMS, plannedDrops, TUNING, ROUND_SIZE, LOBBY_MS, GAMEPLAY_BURN_BPS, splitPayment, type Battle, type FighterInit, type Rng, type SponsorItemId,
 } from "../games/rare-royale/engine/index.ts";
 
 const [baselineRounds = 10000, pairedRounds = 4000] = process.argv.slice(2).filter(a => !a.startsWith("--")).map(Number);
@@ -232,6 +233,40 @@ out(`|---|---:|---:|---:|---:|---:|`);
 for (const p of playerProfiles)
   out(`| ${p.name} | ${p.spent.toFixed(2)} RF | ${p.burned.toFixed(2)} RF | ${(p.share * 100).toFixed(0)}% | ${p.back.toFixed(2)} RF | ${(p.spent * session).toFixed(1)} / ${(p.burned * session).toFixed(1)} RF |`);
 
+// ---------------------------------------------------------------- does the drop matter?
+out(); out(`## Where to drop`); out();
+out(`Each of ${pairedRounds.toLocaleString("en-US")} rounds is played three times for the same Friend with the same tactic, changing only the drop: ` +
+  `the place the fewest other Friends plan to land at (as the lobby's drop map shows), the tactic's own choice, and the busiest place.`);
+out();
+out(`| Drop | Other Friends landing at the same place (average) | Top 10 | Win | Average return |`);
+out(`|---|---:|---:|---:|---:|`);
+const drops: { name: string; landers: number; top10: number; win: number; avg: number }[] = [];
+{
+  const variants = ["Quietest place", "Tactic's own choice", "Busiest place"] as const;
+  const sums = variants.map(() => ({ landers: 0, top10: 0, win: 0, ret: 0 }));
+  for (let k = 0; k < pairedRounds; k++) {
+    const seed = hash32("drop", k), fighters = lineFor(hash32("drop-line", k)), me = 0;
+    const planned = plannedDrops(seed, fighters), count = new Map<string, number>();
+    for (const d of planned) if (d.index !== me && d.poi) count.set(d.poi, (count.get(d.poi) ?? 0) + 1);
+    const pois = [...new Set(planned.map(d => d.poi).filter((x): x is string => !!x))];
+    const by = (id: string) => count.get(id) ?? 0;
+    const quiet = pois.reduce((a, b) => (by(b) < by(a) ? b : a)), busy = pois.reduce((a, b) => (by(b) > by(a) ? b : a));
+    [quiet, undefined, busy].forEach((drop, v) => {
+      const b = createBattle({ seed, fighters: fighters.map((f, i) => (i === me ? { ...f, drop } : f)) }); b.run();
+      const f = b.fighters()[me], sum = sums[v];
+      sum.landers += f.dropPoi ? by(f.dropPoi) : 0;
+      if (f.place <= 10) sum.top10 += 1;
+      if (f.place === 1) sum.win += 1;
+      sum.ret += returnsOf(b)[me];
+    });
+  }
+  variants.forEach((name, v) => {
+    const sum = sums[v], n = pairedRounds;
+    drops.push({ name, landers: +(sum.landers / n).toFixed(1), top10: +(sum.top10 / n).toFixed(3), win: +(sum.win / n).toFixed(3), avg: +(sum.ret / n).toFixed(3) });
+    out(`| ${name} | ${(sum.landers / n).toFixed(1)} | ${pc(sum.top10, n)} | ${pc(sum.win, n)} | ${(sum.ret / n).toFixed(2)} RF |`);
+  });
+}
+
 out(); out(`## Targets`); out();
 out(`- No Generation, family or tactic earns more than 1.2x the average prize per entry (${avgEV.toFixed(2)} RF): ${worstRatio <= 1.2 ? "PASS" : "FAIL"} (highest ${worstRatio.toFixed(2)}x, ${worstName}).`);
 out(`- Every tactic returns within 5% of the average, so the round, not the choice, decides which was right: ${tacticLo >= 0.95 && tacticHi <= 1.05 ? "PASS" : "FAIL"} (${tacticLo.toFixed(2)}x to ${tacticHi.toFixed(2)}x).`);
@@ -241,5 +276,5 @@ out(); out(`Simulated in ${((Date.now() - t0) / 1000).toFixed(1)} s.`);
 
 if (writeReport) {
   writeFileSync(new URL("../BALANCE.md", import.meta.url), `${lines.join("\n")}\n`);
-  writeFileSync(new URL("../games/rare-royale/engine/odds.json", import.meta.url), `${JSON.stringify({ ...odds, purchases, crowdLevels, playerProfiles, sessionRounds: +session.toFixed(1) }, null, 2)}\n`);
+  writeFileSync(new URL("../games/rare-royale/engine/odds.json", import.meta.url), `${JSON.stringify({ ...odds, purchases, crowdLevels, playerProfiles, sessionRounds: +session.toFixed(1), drops }, null, 2)}\n`);
 }

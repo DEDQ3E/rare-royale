@@ -6,6 +6,22 @@
 
 🎬 **Demo with sound (1 min):** recorded from the real SDK runtime with Sparkling Friend #66666 read live from mainnet (only the wallet is mocked; `tests/video.mjs`). It opens on the drop: a shield with its effect on the odds and its capsule, a paid shout, following and sponsoring another Friend from the Fighters tab, the final circle, a win with the burn split by source, the replay of the final with its Kingmakers, the hall of fame and the next lobby with its odds. **[▶ Watch the demo](https://dedq3e.github.io/rare-royale/demo.html)** (plays in the browser; [download the file](https://dedq3e.github.io/rare-royale/media/rare-royale.webm)).
 
+🔥 **About 1,500 RF burned a day per 1,000 players**, if each plays one 10-minute session a day (2.3 rounds) as a careful player (entry, one shield, a medkit when hurt), with no crowd counted. If everyone only enters: 230 RF a day; if everyone buys every item that helps: about 7,300 RF. Placeholder units, simulated.
+
+✅ **Played with a real wallet:** the current public preview (FriendSDK v0.1.3) was played on Robinhood mainnet with a real wallet and a real Generations Friend.
+
+**What changes your chance of a top-10 place** (average 20%; the same simulated rounds with one thing changed):
+
+| Choice | Top 10 |
+|---|---:|
+| Drop: the quietest place / the tactic's choice / the busiest place | 26% / 20% / 14% |
+| Tactic: Hide / Loot / Fight | 27% / 18% / 16% |
+| A shield (1 RF), bought mid-battle | 28% → 34% |
+| A medkit (1 RF), bought below half HP | 7% → 11% |
+| A second life (2 RF), bought when knocked down | 0% → 5% |
+
+The drop matters most: the quietest place returns 1.00 RF per entry on average, the busiest 0.59 RF. That edge comes from the other entrants, never from the burn (the pool is fixed at 0.8 RF per entry), and live the map's counts would move as players choose. Fight reaches the top 10 least often but gets RF back most often, from bounties, so all three tactics return within 5% of the average.
+
 ![The late game, sped up](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/rare-royale.gif)
 
 **Project name**
@@ -109,6 +125,7 @@ Stats, family abilities, tactics and sponsor items change the fight, within limi
 
 - No Generation, family or tactic earns more than 1.2× the average return (highest: 1.15×, Colossus). **Every tactic returns within 5% of the average** (0.99× to 1.02×). No group averages 1 RF back per 1 RF entry (highest: 0.904 RF).
 - **No purchase pays for itself.** Each purchase is tested by playing the same seeded round twice, with and without it: a shield returns 0.29 RF per 1 RF, a medkit 0.19, a second life 0.10, and buying everything every time 0.15. Each still raises the chance of a high place: a shield lifts the top-10 chance from 28% to 34%, a medkit bought when hurt from 7% to 11%, and a second life gives a knocked-down Friend a 5% chance of the top 10 instead of none. The dock shows these numbers when you point at an item. Purchases made in the last moments before sponsoring closes return 0.12–0.38 RF per 1 RF.
+- **The drop is a real choice.** Each round is played three times for the same Friend and tactic, changing only the drop: the quietest place on the lobby's map gives a 26% chance of the top 10 and 1.00 RF per entry on average, the tactic's own choice 20% and 0.83 RF, the busiest place 14% and 0.59 RF. A good drop wins RF from the other entrants, not from the burn; in the simulation the other 49 do not react to the map, while live players would.
 
 ## How does it use Rare Friends?
 
@@ -157,7 +174,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 | Next round (`tests/next-round.ts`): a second round starts after the first, after waiting out the lobby and with Next round now | Pass |
 | Demo video (`tests/video.mjs`): real SDK runtime, Friend #66666 read live from mainnet, picture and sound checked after recording | Pass |
 | Audio (`Web Audio` in Chromium): starts on the first gesture, suspends on mute | Pass |
-| Real-wallet playtest with a real Generations Friend | Pass: the builder played the public preview with a real wallet; later additions were checked in the SDK test runtime and the live-mainnet recording |
+| Real-wallet playtest with a real Generations Friend | Pass: the current public preview (FriendSDK v0.1.3) played on Robinhood mainnet with a real wallet and Friend |
 
 ## Known issues and limits
 

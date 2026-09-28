@@ -79,6 +79,16 @@ What a single player spends and burns, with no crowd at all: 3,000 rounds per pr
 | Careful: entry, one shield, a medkit when below half HP | 2.13 RF | 0.66 RF | 31% | 1.06 RF | 4.9 / 1.5 RF |
 | All-in: every item whenever it helps | 7.16 RF | 3.18 RF | 44% | 1.66 RF | 16.6 / 7.4 RF |
 
+## Where to drop
+
+Each of 2,500 rounds is played three times for the same Friend with the same tactic, changing only the drop: the place the fewest other Friends plan to land at (as the lobby's drop map shows), the tactic's own choice, and the busiest place.
+
+| Drop | Other Friends landing at the same place (average) | Top 10 | Win | Average return |
+|---|---:|---:|---:|---:|
+| Quietest place | 2.4 | 25.6% | 2.7% | 1.00 RF |
+| Tactic's own choice | 4.8 | 20.3% | 2.3% | 0.83 RF |
+| Busiest place | 9.9 | 13.7% | 1.5% | 0.59 RF |
+
 ## Targets
 
 - No Generation, family or tactic earns more than 1.2x the average prize per entry (0.79 RF): PASS (highest 1.15x, By family: Colossus).
@@ -86,4 +96,4 @@ What a single player spends and burns, with no crowd at all: 3,000 rounds per pr
 - No group earns 1 RF or more per 1 RF entry: PASS (highest 0.904 RF).
 - No purchase's average gain reaches its cost, even at the top of the 95% interval, and no late purchase (100+ rounds) pays for itself: PASS.
 
-Simulated in 614.4 s.
+Simulated in 737.0 s.
