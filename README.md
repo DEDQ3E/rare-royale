@@ -22,18 +22,28 @@ A spectator-sponsored battle royale where your Generations Friend drops onto an 
 
 ## Token Activity at a glance
 
-| An average round (300 simulated rounds, `npm run balance`) | RF |
-|---|---:|
-| Spent | **87.1 RF**: 50 RF of entries + 37.1 RF of sponsoring and shouts |
-| **Burned** | **24.2 RF (28% of all spending)** |
-| To active Friend rewards | 23.6 RF |
-| Back to players (top-10 ladder and bounties) | 39.4 RF |
+Four ways to spend RF: the entry, sponsoring any Friend (a shield, a medkit, a second life for 2, then 4, then 8 RF), shouts and Locker cosmetics. Every payment except the entry burns 50% and funds 50% active Friend rewards (the protocol's own 50/50 rule). Both tables are reproduced by `npm run balance` ([BALANCE.md](BALANCE.md)).
 
-- **Four ways to spend RF, for players and for viewers:** the entry, sponsoring any Friend (a shield, a medkit, a second life for 2, then 4, then 8 RF), shouts and Locker cosmetics. Someone who is only watching still spends: they sponsor the Friend they back.
-- **Every gameplay payment burns 50%** under the protocol's own 50/50 rule. The entry burns 10% and keeps 80% in play for the players.
-- **Why the entry burns only 10%.** A game that keeps the whole entry gets played once. Here an entry returns 0.79 RF on average, 45% of entrants get RF back and every top-10 place pays more than the entry. That brings players back for the next round, and every round burns again: the burn comes from volume, not from taking the entry.
-- **The burn is on screen.** A furnace fills with every RF, sponsor capsules land with the sponsor's name, the results count the round's burn up and show what *your* payments burned this round and this session, and the hall of fame reads the RF token's real `totalSupply` on Robinhood mainnet.
-- **The crowd is simulated here.** 37.1 RF of the 87.1 RF comes from the simulated entrants and viewers. At launch they are real holders watching the same round. A single real player spends 1 RF per round plus whatever they choose to sponsor.
+**One real player, with no crowd at all** (3,000 simulated rounds per profile, the same rounds for each; a 10-minute session is about 2.3 rounds):
+
+| Player | Spent per round | Burned per round | Share burned | Back per round (average) | 10-minute session: spent / burned |
+|---|---:|---:|---:|---:|---:|
+| Entry only | 1.00 RF | 0.10 RF | 10% | 0.81 RF | 2.3 / 0.2 RF |
+| Careful: entry, one shield, a medkit when below half HP | 2.13 RF | 0.66 RF | 31% | 1.06 RF | 4.9 / 1.5 RF |
+| All-in: every item whenever it helps | 7.16 RF | 3.18 RF | 44% | 1.66 RF | 16.6 / 7.4 RF |
+
+**A whole round of 50 paid entrants**, by how much the simulated other entrants and viewers sponsor (300 rounds per level; the game plays 100%):
+
+| Crowd level | Sponsoring and shouts per entrant | Spent per round | Burned per round | From entries | From the crowd | Storm bounties |
+|---|---:|---:|---:|---:|---:|---:|
+| 0% | 0 | 50.0 RF | 5.6 RF (11%) | 5.0 RF | 0 | 0.64 RF |
+| 50% | 0.33 RF | 66.5 RF | 13.9 RF (21%) | 5.0 RF | 8.2 RF | 0.66 RF |
+| 100% | 0.74 RF | 87.1 RF | **24.2 RF (28%)** | 5.0 RF | 18.6 RF | 0.60 RF |
+
+- **The crowd model** is less than one shield per entrant per round. Every second while sponsoring is open, each downed Friend gets a second life with 6% chance, a random standing Friend a shield with 12%, a random Friend below 60% HP a medkit with 9%, and a fan buys a shout with 2%. Draws are seeded by round and second, so every viewer sees the same fans. In a live round most of this would be entrants protecting their own Friend, which has a clear reason: a shield lifts its top-10 chance from 28% to 34%, and a second life is the only way back from a knockdown.
+- **Pure spectators get status, not money:** their name on the capsule, under the replay of the final as a Kingmaker, and in the hall of fame as a round's top sponsor. Paying spectators for backing the winner would turn the game into a betting pool.
+- **Why the entry burns only 10%.** Each extra 10% of entry burn takes 0.1 RF off the average return: 0.79 RF now, 0.69 RF at 20%, about 0.4 RF at 50%. A game that keeps the whole entry gets played once. Here 45% of entrants get RF back and every top-10 place pays more than the entry, so players come back and every round burns again.
+- **The burn is on screen.** A furnace fills with every RF, sponsor capsules land with the sponsor's name, the results split the round's burn by source (entries, other entrants and viewers, you, the storm) and show what *your* payments burned this round and this session, and the hall of fame reads the RF token's real `totalSupply` on Robinhood mainnet.
 - **Ready for real RF.** Every payment already has its on-chain destination written down (see *What live play would need*): the RF token's `burn()` for every burned share, active Friend rewards for the other half, and the ladder and bounties held until settlement. As the SDK asks for prototypes, no contract or transaction code is included.
 
 ## What did you build?
@@ -78,7 +88,7 @@ Everything below is **simulated** in this preview and labelled on every screen. 
 - **Backed prizes:** prizes come only from the same round's paid entries. Unpaid seats are filled by *wild* Friends that fight but never take RF, and the ladder ranks paid entrants only; with fewer than 5 paid entries a round is free and entries are refunded. In this preview the other 49 seats are simulated paid entrants.
 - **Sponsoring closes when 25 are left**, so nobody can buy the finish.
 
-**An average round** (300 rounds with the simulated crowd): 87.1 RF spent (50 RF entries + 37.1 RF sponsoring and shouts) → **24.2 RF burned (28%)**, 23.6 RF to active Friend rewards, 39.4 RF back to players. The storm alone burns 0.60 RF of bounties a round. The viewer's cosmetics come on top: every aura, title and shout is a pure sink that cannot buy an advantage.
+**An average round** with the game's simulated crowd: 87.1 RF spent (50 RF entries + 37.1 RF sponsoring and shouts) → **24.2 RF burned (28%)**, 23.6 RF to active Friend rewards, 39.4 RF back to players. Without any crowd it is 50 RF spent and 5.6 RF burned (11%); see *Token Activity at a glance*. The viewer's cosmetics come on top: every aura, title and shout is a pure sink that cannot buy an advantage.
 
 ### Why a player would actually play
 
@@ -151,7 +161,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 
 ## Known issues and limits
 
-- **Simulated economy.** No RF moves. The 49 other entrants and the sponsoring crowd are simulated; balances reset when the game is reloaded (the SDK has no save API).
+- **Simulated economy.** No RF moves. The 49 other entrants and the sponsoring viewers are simulated (the crowd model is above); balances reset when the game is reloaded (the SDK has no save API).
 - **Shared rounds without a server.** Rounds are named after the minute of their drop, so viewers who drop in the same minute see the same island, line-up and base battle, but each viewer's own sponsoring and decisions change only their own view.
 - **Hall of fame supply read** uses the public Robinhood RPC; if it is unreachable, the tile shows "unavailable".
 - **The chance-game definition in `game.json` is a required reference only**; the game does not call buy, play or settle.
@@ -163,7 +173,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 
 - A round contract, built with the Rare Friends team in the on-chain phase: entries and every other payment from the Friend's canonical NFT wallet; each 1 RF entry held until settlement, then 0.1 RF burned with the RF token's `burn()`, 0.1 RF to active Friend rewards (the reward-funding path needs the Rare Friends team) and 0.8 RF paid out as the ladder and bounties to the winners' NFT wallets; sponsor items, shouts and cosmetics split 50% `burn()` and 50% rewards at once; fewer than 5 paid entries refund every entry.
 - One Dice request per round, made after entries close, for the battle seed, so nobody can simulate a round before entering. The battle is deterministic from that seed, so anyone can replay a round and verify places and knockouts; the settlement pays out exactly the pool by `settleRound` from the posted result, and a disputed result is checked by replay.
-- Matchmaking: a lobby that closes after a minute or at 50 paid entries, with wild Friends in the empty seats.
+- Matchmaking: one shared round every 5 minutes for all holders, a lobby that closes after a minute or at 50 paid entries, and wild Friends in the empty seats. Until 5 people enter, a round is free (entries are refunded) and burns only what is spent on sponsoring, shouts and cosmetics.
 - Sponsor payments recorded per round phase with the same 50/50 split.
 - Persistence for sessions and the hall of fame (not in SDK v0.1.2).
 

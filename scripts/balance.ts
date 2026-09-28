@@ -1,12 +1,14 @@
-/** Balance simulation: fairness of stats and tactics, the odds a player sees in the lobby, and the rule that no
- * purchase pays for itself. Returns include the placement ladder and knockout bounties (economy.ts settleRound).
+/** Balance simulation: fairness of stats and tactics, the odds a player sees in the lobby, the rule that no
+ * purchase pays for itself, where the burn comes from at each crowd level, and what one real player spends and burns.
+ * Returns include the placement ladder and knockout bounties (economy.ts settleRound).
  * Usage: node scripts/balance.ts [baselineRounds=10000] [pairedRoundsPerItem=4000] [--report]
  * With --report the results are written to BALANCE.md and the lobby odds to games/rare-royale/engine/odds.json. */
 
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+import { createRoundRunner, CROWD } from "../games/rare-royale/runner.ts";
 import {
   createBattle, createRng, hash32, settleRound, ladderPrizes, FAMILIES, TACTICS, ENTRY_PRICE, ENTRY_POOL_BPS, BOUNTY, BPS, RF,
-  REVIVE_PRICES, SPONSOR_ITEMS, TUNING, ROUND_SIZE, type Battle, type FighterInit, type Rng, type SponsorItemId,
+  REVIVE_PRICES, SPONSOR_ITEMS, TUNING, ROUND_SIZE, LOBBY_MS, GAMEPLAY_BURN_BPS, splitPayment, type Battle, type FighterInit, type Rng, type SponsorItemId,
 } from "../games/rare-royale/engine/index.ts";
 
 const [baselineRounds = 10000, pairedRounds = 4000] = process.argv.slice(2).filter(a => !a.startsWith("--")).map(Number);
@@ -159,6 +161,77 @@ for (const policy of policies) {
     `${(mean / avgCost).toFixed(3)} RF | ${pc(topBase, n)} → ${pc(topBuy, n)} | ${lateN ? `${(lateGain / lateN).toFixed(2)} / ${(lateCost / lateN).toFixed(2)} RF (${lateN} rounds)` : "none"} |`);
 }
 
+// ---------------------------------------------------------------- where the burn comes from
+const ROSTER: FighterInit[] = JSON.parse(readFileSync(new URL("../games/rare-royale/roster.json", import.meta.url), "utf8")).friends
+  .filter((f: { family: string }) => (FAMILIES as readonly string[]).includes(f.family))
+  .map((f: { id: string; family: FighterInit["family"]; gen: number; seed: number }) => ({ tokenId: BigInt(f.id), family: f.family, generation: f.gen, seed: f.seed }));
+const CROWD_ROUNDS = 300;
+out(); out(`## Where the burn comes from`); out();
+out(`The same ${CROWD_ROUNDS} rounds (the game's roster, round ids 8000 to ${8000 + CROWD_ROUNDS - 1}, 50 paid entries) at three levels of the simulated ` +
+  `other entrants and viewers; 100% is what the game plays. The crowd model: every second while sponsoring is open, each downed Friend gets a ` +
+  `second life with ${CROWD.revive * 100}% chance, a random standing Friend a shield with ${CROWD.shield * 100}%, a random Friend below ` +
+  `${CROWD.hurtBelow * 100}% HP a medkit with ${CROWD.medkit * 100}%, and a fan buys a shout with ${CROWD.shout * 100}%. The level scales all four chances.`);
+out();
+out(`| Crowd level | Sponsoring and shouts per entrant per round | Spent per round | Burned per round | Share burned | From entries | From the crowd | Storm bounties |`);
+out(`|---|---:|---:|---:|---:|---:|---:|---:|`);
+const crowdLevels: { level: number; perEntrant: number; spent: number; burned: number; share: number }[] = [];
+for (const level of [0, 0.5, 1]) {
+  let entries = 0, crowdRF = 0, burned = 0, crowdBurned = 0, storm = 0;
+  for (let i = 0; i < CROWD_ROUNDS; i++) {
+    const r = createRoundRunner(8000 + i, ROSTER, undefined, false, level);
+    r.advanceTo(Number.MAX_SAFE_INTEGER);
+    entries += toRF(r.tally.entries); crowdRF += toRF(r.tally.crowd); burned += toRF(r.tally.burned);
+    crowdBurned += toRF(r.tally.crowdBurned); storm += toRF(r.tally.bountyBurned);
+  }
+  const n = CROWD_ROUNDS, spent = (entries + crowdRF) / n, b = burned / n;
+  crowdLevels.push({ level, perEntrant: +(crowdRF / n / ROUND_SIZE).toFixed(2), spent: +spent.toFixed(1), burned: +b.toFixed(1), share: +(b / spent).toFixed(3) });
+  out(`| ${level * 100}% | ${(crowdRF / n / ROUND_SIZE).toFixed(2)} RF | ${spent.toFixed(1)} RF | ${b.toFixed(1)} RF | ${(b / spent * 100).toFixed(0)}% | ` +
+    `${((burned - crowdBurned - storm) / n).toFixed(1)} RF | ${(crowdBurned / n).toFixed(1)} RF | ${(storm / n).toFixed(2)} RF |`);
+}
+
+// ---------------------------------------------------------------- one real player, no crowd needed
+const PLAYER_ROUNDS = 3000;
+type Profile = Readonly<{ name: string; act(b: Battle, me: number, spent: { rf: number; bought: number; standing: number }): void }>;
+const profiles: readonly Profile[] = [
+  { name: "Entry only", act: () => {} },
+  { name: "Careful: entry, one shield, a medkit when below half HP", act: (() => {
+    let at = -1, shield = false, medkit = false;
+    return (b: Battle, me: number, spent: { rf: number; bought: number; standing: number }) => {
+      const t = b.snapshot().t, f = b.fighters()[me];
+      if (t === 0) { at = 20 + createRng(hash32("careful-at", f.id.seed)).int(80); shield = medkit = false; }
+      if (!shield && t >= at && buy(b, me, "shield", spent)) shield = true;
+      if (!medkit && f.state === "alive" && f.hp < f.maxHp * 0.5 && buy(b, me, "medkit", spent)) medkit = true;
+    };
+  })() },
+  { name: "All-in: every item whenever it helps", act: policies[policies.length - 1].act },
+];
+out(); out(`## One real player`); out();
+const playerProfiles: { name: string; spent: number; burned: number; share: number; back: number }[] = [];
+let playerTicks = 0, battles = 0;
+for (const profile of profiles) {
+  let spentRF = 0, burnedRF = 0, back = 0;
+  for (let k = 0; k < PLAYER_ROUNDS; k++) {
+    // Every profile plays the same rounds, so the rows compare like with like.
+    const b = createBattle({ seed: hash32("player", k), fighters: lineFor(hash32("player-line", k)) }), me = 0;
+    const spent = { rf: 0, bought: 0, standing: 0 };
+    while (!b.isOver()) { profile.act(b, me, spent); b.step(); }
+    playerTicks += b.snapshot().t; battles += 1;
+    spentRF += toRF(ENTRY_PRICE) + spent.rf;
+    burnedRF += toRF(splitPayment("entry", ENTRY_PRICE).burned) + spent.rf * Number(GAMEPLAY_BURN_BPS) / Number(BPS);
+    back += returnsOf(b)[me];
+  }
+  const n = PLAYER_ROUNDS;
+  playerProfiles.push({ name: profile.name, spent: +(spentRF / n).toFixed(2), burned: +(burnedRF / n).toFixed(2), share: +(burnedRF / spentRF).toFixed(3), back: +(back / n).toFixed(2) });
+}
+const roundSeconds = LOBBY_MS / 1000 + playerTicks / battles + 25, session = 600 / roundSeconds;
+out(`What a single player spends and burns, with no crowd at all: ${PLAYER_ROUNDS.toLocaleString("en-US")} rounds per profile, random line-ups, ` +
+  `the player's own purchases only. A session of 10 minutes holds about ${session.toFixed(1)} rounds (60 s lobby, the battle, 25 s of results).`);
+out();
+out(`| Player | Spent per round | Burned per round | Share burned | Back per round (average) | 10-minute session: spent / burned |`);
+out(`|---|---:|---:|---:|---:|---:|`);
+for (const p of playerProfiles)
+  out(`| ${p.name} | ${p.spent.toFixed(2)} RF | ${p.burned.toFixed(2)} RF | ${(p.share * 100).toFixed(0)}% | ${p.back.toFixed(2)} RF | ${(p.spent * session).toFixed(1)} / ${(p.burned * session).toFixed(1)} RF |`);
+
 out(); out(`## Targets`); out();
 out(`- No Generation, family or tactic earns more than 1.2x the average prize per entry (${avgEV.toFixed(2)} RF): ${worstRatio <= 1.2 ? "PASS" : "FAIL"} (highest ${worstRatio.toFixed(2)}x, ${worstName}).`);
 out(`- Every tactic returns within 5% of the average, so the round, not the choice, decides which was right: ${tacticLo >= 0.95 && tacticHi <= 1.05 ? "PASS" : "FAIL"} (${tacticLo.toFixed(2)}x to ${tacticHi.toFixed(2)}x).`);
@@ -168,5 +241,5 @@ out(); out(`Simulated in ${((Date.now() - t0) / 1000).toFixed(1)} s.`);
 
 if (writeReport) {
   writeFileSync(new URL("../BALANCE.md", import.meta.url), `${lines.join("\n")}\n`);
-  writeFileSync(new URL("../games/rare-royale/engine/odds.json", import.meta.url), `${JSON.stringify({ ...odds, purchases }, null, 2)}\n`);
+  writeFileSync(new URL("../games/rare-royale/engine/odds.json", import.meta.url), `${JSON.stringify({ ...odds, purchases, crowdLevels, playerProfiles, sessionRounds: +session.toFixed(1) }, null, 2)}\n`);
 }

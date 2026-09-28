@@ -84,7 +84,10 @@ the bottom bar. Audio stops while the game is paused or hidden.
 | Hide | 41.5% | 27.0% | 27.0% | 1.3% | 0.784 RF |
 | Loot | 43.1% | 17.5% | 17.5% | 2.6% | 0.804 RF |
 
-An average round moves 87.1 RF: 50 RF of entries and 37.1 RF of sponsoring and shouts from the simulated crowd.
+An average round moves 87.1 RF: 50 RF of entries and 37.1 RF of sponsoring and shouts from the simulated other entrants and
+viewers (0.74 RF each per round). Without that crowd a round spends 50 RF and burns 5.6 RF (11%); at half of it, 66.5 RF and
+13.9 RF (21%). One real player alone burns 10% of what they spend with the entry only, 31% as a careful player (a shield and a
+medkit when hurt) and 44% buying every item. `BALANCE.md` has the tables and the crowd model.
 39.4 RF returns to players, 24.2 RF (28%) is burned and 23.6 RF funds active Friend rewards. The viewer's own
 cosmetics come on top.
 

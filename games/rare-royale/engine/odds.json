@@ -46,5 +46,52 @@
       "top10Without": 0,
       "top10With": 0.053
     }
-  }
+  },
+  "crowdLevels": [
+    {
+      "level": 0,
+      "perEntrant": 0,
+      "spent": 50,
+      "burned": 5.6,
+      "share": 0.113
+    },
+    {
+      "level": 0.5,
+      "perEntrant": 0.33,
+      "spent": 66.5,
+      "burned": 13.9,
+      "share": 0.209
+    },
+    {
+      "level": 1,
+      "perEntrant": 0.74,
+      "spent": 87.1,
+      "burned": 24.2,
+      "share": 0.277
+    }
+  ],
+  "playerProfiles": [
+    {
+      "name": "Entry only",
+      "spent": 1,
+      "burned": 0.1,
+      "share": 0.1,
+      "back": 0.81
+    },
+    {
+      "name": "Careful: entry, one shield, a medkit when below half HP",
+      "spent": 2.13,
+      "burned": 0.66,
+      "share": 0.312,
+      "back": 1.06
+    },
+    {
+      "name": "All-in: every item whenever it helps",
+      "spent": 7.16,
+      "burned": 3.18,
+      "share": 0.444,
+      "back": 1.66
+    }
+  ],
+  "sessionRounds": 2.3
 }

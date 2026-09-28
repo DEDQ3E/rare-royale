@@ -6,9 +6,19 @@ import {
   SHOUTS, SPONSOR_ITEMS, type Battle, type Bounties, type BattleEvent, type BattleSnapshot, type FighterInit, type Settlement, type SponsorItemId,
 } from "./engine/index.ts";
 
-/** The round's simulated RF: entries in, sponsor payments, and where it all went. `bountyBurned` is part of `burned`. */
-export type Tally = { entries: bigint; paid: number; crowd: bigint; yours: bigint; pool: bigint; bounty: bigint; burned: bigint; bountyBurned: bigint; rewards: bigint };
-export const emptyTally = (): Tally => ({ entries: 0n, paid: 0, crowd: 0n, yours: 0n, pool: 0n, bounty: 0n, burned: 0n, bountyBurned: 0n, rewards: 0n });
+/** The round's simulated RF: entries in, sponsor payments, and where it all went. `bountyBurned`, `crowdBurned` and
+ * `yoursBurned` are parts of `burned` (the rest is the entries' 10%). */
+export type Tally = {
+  entries: bigint; paid: number; crowd: bigint; yours: bigint; pool: bigint; bounty: bigint;
+  burned: bigint; bountyBurned: bigint; crowdBurned: bigint; yoursBurned: bigint; rewards: bigint;
+};
+export const emptyTally = (): Tally => ({ entries: 0n, paid: 0, crowd: 0n, yours: 0n, pool: 0n, bounty: 0n, burned: 0n, bountyBurned: 0n, crowdBurned: 0n, yoursBurned: 0n, rewards: 0n });
+
+/** The simulated other entrants and viewers: every second while sponsoring is open, each downed Friend gets a second
+ * life with `revive` chance, a random standing Friend a shield with `shield` chance, a random Friend below
+ * `hurtBelow` of its HP a medkit with `medkit` chance, and a fan buys a shout with `shout` chance. The round's
+ * crowd level scales all four chances (1 in the game). */
+export const CROWD = { revive: 0.06, shield: 0.12, medkit: 0.09, shout: 0.02, hurtBelow: 0.6 } as const;
 
 /** One recorded tick, for replays. Snapshots are copies, so the record never changes. */
 export type Frame = Readonly<{ snap: BattleSnapshot; events: readonly BattleEvent[] }>;
@@ -47,8 +57,8 @@ export type RoundRunner = Readonly<{
 }>;
 
 /** A round's line-up and battle. With a player, their Friend takes a seat and can make decisions; a practice seat
- * pays nothing and, like a wild Friend, can take no prize. */
-export function createRoundRunner(id: number, roster: readonly FighterInit[], player?: FighterInit, practice = false): RoundRunner {
+ * pays nothing and, like a wild Friend, can take no prize. `crowdLevel` scales the simulated crowd (0 turns it off). */
+export function createRoundRunner(id: number, roster: readonly FighterInit[], player?: FighterInit, practice = false, crowdLevel = 1): RoundRunner {
   const line = lineUp(roster, id);
   const seated = player ? withPlayer(line, player, id) : { fighters: line, index: -1 };
   const paid = seated.fighters.map((_, i) => !(practice && i === seated.index));
@@ -57,6 +67,7 @@ export function createRoundRunner(id: number, roster: readonly FighterInit[], pl
   const pay = (kind: "entry" | SponsorItemId | "cosmetic", amount: bigint) => {
     const s = splitPayment(kind, amount);
     tally.pool += s.pool; tally.bounty += s.bounty; tally.burned += s.burned; tally.rewards += s.rewards;
+    return s.burned;
   };
   // Every paid seat put in its 1 RF entry (the simulated entrants' seats and, if entered for RF, the player's).
   for (let i = 0; i < ROUND_SIZE; i++) if (paid[i]) { tally.entries += ENTRY_PRICE; tally.paid += 1; pay("entry", ENTRY_PRICE); }
@@ -79,8 +90,8 @@ export function createRoundRunner(id: number, roster: readonly FighterInit[], pl
 
   function crowd() {
     const snap = battle.snapshot();
-    if (!snap.windowOpen || snap.over) return;
-    const rng = createRng(hash32(roundSeed(id), "crowd", snap.t));
+    if (!snap.windowOpen || snap.over || crowdLevel <= 0) return;
+    const rng = createRng(hash32(roundSeed(id), "crowd", snap.t)), k = crowdLevel;
     const fan = () => `Fan #${1000 + rng.int(9000)}`;
     const buy = (who: number, item: SponsorItemId) => {
       const f = snap.fighters[who];
@@ -88,15 +99,15 @@ export function createRoundRunner(id: number, roster: readonly FighterInit[], pl
       if (price === null || !battle.canSponsor(who, item).ok) return;
       const by = fan();
       battle.sponsor(who, item, by);
-      tally.crowd += price; pay(item, price); backed(who, by, price);
+      tally.crowd += price; tally.crowdBurned += pay(item, price); backed(who, by, price);
     };
-    for (const f of snap.fighters) if (f.state === "downed" && rng.chance(0.06)) buy(f.index, "revive");
+    for (const f of snap.fighters) if (f.state === "downed" && rng.chance(CROWD.revive * k)) buy(f.index, "revive");
     const up = snap.fighters.filter(f => f.state === "alive");
-    if (up.length && rng.chance(0.12)) buy(rng.pick(up).index, "shield");
-    const hurt = up.filter(f => f.hp < f.maxHp * 0.6);
-    if (hurt.length && rng.chance(0.09)) buy(rng.pick(hurt).index, "medkit");
+    if (up.length && rng.chance(CROWD.shield * k)) buy(rng.pick(up).index, "shield");
+    const hurt = up.filter(f => f.hp < f.maxHp * CROWD.hurtBelow);
+    if (hurt.length && rng.chance(CROWD.medkit * k)) buy(rng.pick(hurt).index, "medkit");
     // Now and then a fan pays for a shout. Drawn last, so it never changes the draws above.
-    if (rng.chance(0.02)) { tally.crowd += SHOUT_PRICE; pay("cosmetic", SHOUT_PRICE); shouts.push({ t: snap.t, by: fan(), text: rng.pick(SHOUTS) }); }
+    if (rng.chance(CROWD.shout * k)) { tally.crowd += SHOUT_PRICE; tally.crowdBurned += pay("cosmetic", SHOUT_PRICE); shouts.push({ t: snap.t, by: fan(), text: rng.pick(SHOUTS) }); }
   }
   function record(events: readonly BattleEvent[]) {
     const snap = battle.snapshot();
@@ -127,18 +138,26 @@ export function createRoundRunner(id: number, roster: readonly FighterInit[], pl
       settle();
       return out;
     },
-    recordYours(kind, amount, who) { tally.yours += amount; pay(kind, amount); backed(who, "You", amount); },
-    shout(text) { tally.yours += SHOUT_PRICE; pay("cosmetic", SHOUT_PRICE); shouts.push({ t: battle.snapshot().t, by: "You", text }); },
+    recordYours(kind, amount, who) { tally.yours += amount; tally.yoursBurned += pay(kind, amount); backed(who, "You", amount); },
+    shout(text) { tally.yours += SHOUT_PRICE; tally.yoursBurned += pay("cosmetic", SHOUT_PRICE); shouts.push({ t: battle.snapshot().t, by: "You", text }); },
   };
 }
 
 /** Finished past rounds for the hall of fame: the same for every viewer. */
-export type PastRound = Readonly<{ id: number; winner: FighterInit; winnerKos: number; winnerPrize: bigint; burned: bigint; spent: bigint; topKo: { init: FighterInit; kos: number } }>;
+export type PastRound = Readonly<{
+  id: number; winner: FighterInit; winnerKos: number; winnerPrize: bigint; burned: bigint; spent: bigint; topKo: { init: FighterInit; kos: number };
+  /** The round's biggest sponsor, by RF spent. */
+  topSponsor: { by: string; rf: bigint } | null;
+}>;
 export function replayRound(id: number, roster: readonly FighterInit[]): PastRound {
   const r = createRoundRunner(id, roster);
   r.advanceTo(Number.MAX_SAFE_INTEGER);
   const fighters = r.battle.fighters();
   const win = fighters.find(f => f.place === 1) ?? fighters[0];
   const top = [...fighters].sort((a, b) => b.kos - a.kos)[0];
-  return { id, winner: win.id, winnerKos: win.kos, winnerPrize: r.settlement()?.payouts[win.index].total ?? 0n, burned: r.tally.burned, spent: r.tally.entries + r.tally.crowd, topKo: { init: top.id, kos: top.kos } };
+  const sponsor = [...r.sponsors.entries()].sort((a, b) => (b[1] > a[1] ? 1 : b[1] < a[1] ? -1 : 0))[0];
+  return {
+    id, winner: win.id, winnerKos: win.kos, winnerPrize: r.settlement()?.payouts[win.index].total ?? 0n, burned: r.tally.burned,
+    spent: r.tally.entries + r.tally.crowd, topKo: { init: top.id, kos: top.kos }, topSponsor: sponsor ? { by: sponsor[0], rf: sponsor[1] } : null,
+  };
 }

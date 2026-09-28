@@ -104,6 +104,7 @@ const TUTORIAL: readonly { icon: string; title: string; lines: readonly string[]
     "Challenges in the lobby unlock free titles, win or lose. After a round, replay the final 20 seconds."] },
 ];
 const rfText = (v: bigint) => `${formatRF(v)} RF`;
+const spentBurned = (spent: bigint, burned: bigint) => `${formatRF(spent)} RF → ${formatRF(burned)} burned`;
 /** What a sponsor item does for its Friend, measured by paired rounds in `npm run balance` (engine/odds.json). */
 const ITEM_VALUE: Readonly<Record<SponsorItemId, string>> = (() => {
   const p = ODDS.purchases;
@@ -233,9 +234,11 @@ function CountUp({ value, reduced }: { value: bigint; reduced: boolean }) {
 }
 
 /** The last 20 seconds of a finished round, replayed from the recorded ticks with the winner on camera. */
-function ReplayFinal({ frames, map, player, paid, artOf, look, reduced, paused, winner, onSounds, onClose }: {
+function ReplayFinal({ frames, map, player, paid, artOf, look, reduced, paused, winner, kingmakers, onSounds, onClose }: {
   frames: readonly Frame[]; map: RoundRunner["battle"]["map"]; player: number; paid: readonly boolean[];
   artOf: (f: Readonly<Fighter>) => FriendArt | null; look: () => ArenaLook; reduced: boolean; paused: boolean; winner: string;
+  /** Everyone who sponsored the winner this round: their names go under the final. */
+  kingmakers: readonly string[];
   onSounds: (view: ReturnType<ArenaView["view"]>, fs: readonly Readonly<Fighter>[], me: number, paid: readonly boolean[], events: readonly BattleEvent[]) => void;
   onClose: () => void;
 }) {
@@ -270,6 +273,9 @@ function ReplayFinal({ frames, map, player, paid, artOf, look, reduced, paused, 
       <div className="rr-panel rr-replay">
         <div className="rr-locker-head"><h3><span className="rr-live">Replay</span> The final 20 seconds</h3><span className="rr-muted rr-small">{done ? `${winner} wins` : `${left} s to the end`}</span></div>
         <canvas ref={ref} width={CAM_W} height={CAM_H} className="rr-cam-canvas" aria-label="Replay camera" />
+        <p className="rr-replay-kings">{kingmakers.length
+          ? <>Kingmakers: <b>{kingmakers.slice(0, 4).join(", ")}{kingmakers.length > 4 ? ` +${kingmakers.length - 4}` : ""}</b> backed {winner}.</>
+          : <>Nobody sponsored {winner}: it won on its own.</>}</p>
         <div className="rr-row-btns">
           <button className="rr-btn" onClick={() => setRun(n => n + 1)}>Replay again</button>
           <button className="rr-btn rr-primary" onClick={onClose}>Close <kbd>Esc</kbd></button>
@@ -1056,11 +1062,11 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
               {results.unlocked.length > 0 && <p className="rr-unlocked">Title{results.unlocked.length > 1 ? "s" : ""} unlocked: {results.unlocked.join(", ")}. Put {results.unlocked.length > 1 ? "them" : "it"} on in the Locker.</p>}
             </div>
             <div className="rr-panel rr-burn">
-              <p className="rr-muted">Burned this round</p>
+              <p className="rr-muted">Burned this round <small>· spent → burned, by source</small></p>
               <p className="rr-bebas rr-mid rr-amber rr-embers"><CountUp value={results.tally.burned} reduced={reducedMotion} /> RF</p>
-              <p className="rr-row"><span>Entries ({results.tally.paid} × 1 RF)</span><span>{rfText(results.tally.entries)}</span></p>
-              <p className="rr-row"><span>Crowd sponsors (simulated)</span><span>{rfText(results.tally.crowd)}</span></p>
-              <p className="rr-row rr-row-yours"><span>Your sponsors</span><span>{rfText(results.tally.yours)}</span></p>
+              <p className="rr-row"><span>Entries ({results.tally.paid} × 1 RF)</span><span>{spentBurned(results.tally.entries, results.tally.burned - results.tally.bountyBurned - results.tally.crowdBurned - results.tally.yoursBurned)}</span></p>
+              <p className="rr-row"><span>Other entrants and viewers (simulated)</span><span>{spentBurned(results.tally.crowd, results.tally.crowdBurned)}</span></p>
+              <p className="rr-row rr-row-yours"><span>Your sponsors and shouts</span><span>{spentBurned(results.tally.yours, results.tally.yoursBurned)}</span></p>
               {results.myBurn.session > 0n && <p className="rr-row rr-row-mine"><span>You burned (all your payments)</span><span>{rfText(results.myBurn.round)} · {rfText(results.myBurn.session)} this session</span></p>}
               <p className="rr-row"><span>Bounties burned by the storm</span><span>{rfText(results.tally.bountyBurned)}</span></p>
               <p className="rr-row"><span>To Friend rewards</span><span>{rfText(results.tally.rewards)}</span></p>
@@ -1088,11 +1094,12 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
                 </div>
               </div>
               <div className="rr-panel">
-                <h3>Champions · last {HISTORY_ROUNDS} rounds</h3>
-                {history.slice(0, 7).map(h => (
+                <h3>Latest champions and their top sponsors</h3>
+                {history.slice(0, 5).map(h => (
                   <p key={h.id} className="rr-champ">
                     <Sprite rows={rosterArt(h.winner.tokenId)?.idle[0] ?? null} size={24} />
                     <span>Round {h.id}</span><b style={{ color: FAMILY_COLOR[h.winner.family] }}>{fighterName(h.winner)}</b><em>{h.winnerKos} KO · +{formatRF(h.winnerPrize, 1)}</em>
+                    <small>{h.topSponsor ? `Top sponsor: ${h.topSponsor.by} · ${formatRF(h.topSponsor.rf, 1)} RF` : "No sponsors"}</small>
                   </p>
                 ))}
               </div>
@@ -1157,7 +1164,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
         )}
         {replay && r && (
           <ReplayFinal frames={r.frames} map={r.battle.map} player={r.player} paid={r.paid} artOf={artOf(r.player)} look={lookOf}
-            reduced={reducedMotion} paused={paused} winner={results?.winner ?? ""} onSounds={soundsOn} onClose={closeReplay} />
+            reduced={reducedMotion} paused={paused} winner={results?.winner ?? ""} kingmakers={results?.kingmakers ?? []} onSounds={soundsOn} onClose={closeReplay} />
         )}
         {askConfirm && (
           <div className="rr-scrim" role="dialog" aria-label="Simulated RF">

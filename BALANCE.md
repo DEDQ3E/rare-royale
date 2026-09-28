@@ -59,6 +59,26 @@ Each pair plays the same seeded round twice for the same Friend: once without th
 | Shield, bought as late as possible (30 or fewer standing) | 1322 | 1.00 RF | 0.382 RF | 0.285 to 0.479 | 0.382 RF | 37.0% → 45.5% | 0.38 / 1.00 RF (1322 rounds) |
 | Everything, every time (max spender) | 2500 | 6.02 RF | 0.908 RF | 0.807 to 1.008 | 0.151 RF | 20.6% → 39.6% | none |
 
+## Where the burn comes from
+
+The same 300 rounds (the game's roster, round ids 8000 to 8299, 50 paid entries) at three levels of the simulated other entrants and viewers; 100% is what the game plays. The crowd model: every second while sponsoring is open, each downed Friend gets a second life with 6% chance, a random standing Friend a shield with 12%, a random Friend below 60% HP a medkit with 9%, and a fan buys a shout with 2%. The level scales all four chances.
+
+| Crowd level | Sponsoring and shouts per entrant per round | Spent per round | Burned per round | Share burned | From entries | From the crowd | Storm bounties |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 0% | 0.00 RF | 50.0 RF | 5.6 RF | 11% | 5.0 RF | 0.0 RF | 0.64 RF |
+| 50% | 0.33 RF | 66.5 RF | 13.9 RF | 21% | 5.0 RF | 8.2 RF | 0.66 RF |
+| 100% | 0.74 RF | 87.1 RF | 24.2 RF | 28% | 5.0 RF | 18.6 RF | 0.60 RF |
+
+## One real player
+
+What a single player spends and burns, with no crowd at all: 3,000 rounds per profile, random line-ups, the player's own purchases only. A session of 10 minutes holds about 2.3 rounds (60 s lobby, the battle, 25 s of results).
+
+| Player | Spent per round | Burned per round | Share burned | Back per round (average) | 10-minute session: spent / burned |
+|---|---:|---:|---:|---:|---:|
+| Entry only | 1.00 RF | 0.10 RF | 10% | 0.81 RF | 2.3 / 0.2 RF |
+| Careful: entry, one shield, a medkit when below half HP | 2.13 RF | 0.66 RF | 31% | 1.06 RF | 4.9 / 1.5 RF |
+| All-in: every item whenever it helps | 7.16 RF | 3.18 RF | 44% | 1.66 RF | 16.6 / 7.4 RF |
+
 ## Targets
 
 - No Generation, family or tactic earns more than 1.2x the average prize per entry (0.79 RF): PASS (highest 1.15x, By family: Colossus).
@@ -66,4 +86,4 @@ Each pair plays the same seeded round twice for the same Friend: once without th
 - No group earns 1 RF or more per 1 RF entry: PASS (highest 0.904 RF).
 - No purchase's average gain reaches its cost, even at the top of the 95% interval, and no late purchase (100+ rounds) pays for itself: PASS.
 
-Simulated in 478.8 s.
+Simulated in 614.4 s.
