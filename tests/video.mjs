@@ -1,15 +1,13 @@
-// A demo video WITH SOUND of the real game: the real SDK runtime and a real Friend read live from mainnet
+// A one-minute demo video WITH SOUND of the real game: the real SDK runtime and a real Friend read live from mainnet
 // (tests/live.mjs: only the wallet and ownership answers are mocked), recorded as the tab plays, picture and sound
-// together (tab capture in headless Microsoft Edge, cropped to the game frame). A fake clock skips the quiet parts of
-// the round, so each jump is a hard cut. Also writes a short silent GIF of the battle for the README.
-// Needs (not in package.json): npm install --no-save gifenc pngjs fix-webm-duration; Microsoft Edge installed.
-// Run: node tests/video.mjs [tokenId] → media/rare-royale.webm, media/rare-royale.gif
+// together (tab capture in headless Microsoft Edge, cropped to the game frame). It opens on the drop and cuts
+// straight through the main features; a fake clock skips the quiet parts of the round, so each jump is a hard cut.
+// The lobby set-up (tactic, a Starfall aura, the drop, the entry) happens before recording starts.
+// Needs (not in package.json): npm install --no-save fix-webm-duration; Microsoft Edge installed.
+// Run: node tests/video.mjs [tokenId] → media/rare-royale.webm
 import { readFileSync, writeFileSync } from "node:fs";
-import gifenc from "gifenc";
-import { PNG } from "pngjs";
 import { liveRuntime } from "./live.mjs";
 
-const { GIFEncoder, quantize, applyPalette } = gifenc;
 const id = BigInt(process.argv[2] ?? 66666);
 const rt = await liveRuntime({ launch: { channel: "msedge", ignoreDefaultArgs: ["--mute-audio"], args: ["--auto-accept-this-tab-capture", "--autoplay-policy=no-user-gesture-required"] } });
 try {
@@ -17,6 +15,19 @@ try {
   await page.clock.install({ time: Date.now() }); await page.clock.resume();
   const wait = ms => page.waitForTimeout(ms);
   const gotIt = () => game.getByRole("button", { name: /Got it/ }).click({ timeout: 1500 }).catch(() => {});
+  const at = async (t0, ms, hold) => { await page.clock.setSystemTime(t0 + ms); await wait(hold); };
+
+  // Off camera: skip the guide, pick Hide, buy a Starfall aura, land at the quietest place and enter for 1 RF.
+  await game.getByRole("dialog", { name: "How to play" }).waitFor({ timeout: 60_000 });
+  await game.getByRole("button", { name: "Skip" }).click();
+  await game.getByRole("button", { name: /^Hide/ }).click();
+  await game.getByRole("button", { name: /^Locker/ }).click();
+  await game.getByRole("dialog", { name: "Locker" }).getByRole("button", { name: /^5 RF/ }).first().click(); await gotIt();
+  await game.getByRole("dialog", { name: "Locker" }).getByRole("button", { name: /^Close/ }).click();
+  const pins = await game.getByRole("button", { name: /^Drop at/ }).evaluateAll(els => els.map(e => Number(/: (\d+) Friends/.exec(e.getAttribute("aria-label") ?? "")?.[1] ?? 99)));
+  await game.getByRole("button", { name: /^Drop at/ }).nth(pins.indexOf(Math.min(...pins))).click();
+  await game.getByRole("button", { name: /Enter round/ }).click(); await gotIt();
+  await wait(1500);
 
   // A recorder button outside the game (tab capture needs a real click); it hides itself once recording.
   await page.evaluate(() => {
@@ -36,67 +47,43 @@ try {
   await page.click("#rec"); await page.waitForFunction(() => !!window.__stop);
   const rec0 = Date.now();
 
-  // The guide, then the lobby: tactic, a Starfall aura from the Locker, a drop, the entry.
-  await wait(2500);
-  await game.getByRole("button", { name: /^Next/ }).click(); await wait(1600);
-  await game.getByRole("button", { name: "Skip" }).click(); await wait(1500);
-  await game.getByRole("button", { name: /^Hide/ }).click(); await wait(900);
-  await game.getByRole("button", { name: /^Locker/ }).click(); await wait(1400);
-  await game.getByRole("dialog", { name: "Locker" }).getByRole("button", { name: /^5 RF/ }).first().click(); await gotIt(); await wait(1600);
-  await game.getByRole("dialog", { name: "Locker" }).getByRole("button", { name: /^Close/ }).click(); await wait(600);
-  // The quietest place to land.
-  const pins = await game.getByRole("button", { name: /^Drop at/ }).evaluateAll(els => els.map(e => Number(/: (\d+) Friends/.exec(e.getAttribute("aria-label") ?? "")?.[1] ?? 99)));
-  await game.getByRole("button", { name: /^Drop at/ }).nth(pins.indexOf(Math.min(...pins))).click(); await wait(900);
-  await game.getByRole("button", { name: /Enter round/ }).click(); await gotIt(); await wait(2200);
-
-  // The drop, in real time.
+  // 1. The drop: the airship crosses the island and every Friend parachutes down.
   await game.getByRole("button", { name: "Start now" }).click();
   const t0 = await game.locator("body").evaluate(() => Date.now());
-  await wait(15000);
-  // Landed and looting: a paid shout.
-  await page.clock.setSystemTime(t0 + 24_000); await wait(2500);
-  await game.locator("body").press("s"); await wait(2500);
-  await page.clock.setSystemTime(t0 + 42_000); await wait(3000);
-  await game.getByRole("button", { name: /^Shout/ }).click(); await wait(500);
-  await game.getByRole("menuitem").first().click(); await wait(5000);
-  // The fights: follow another Friend from the Fighters tab and send it a shield.
-  await page.clock.setSystemTime(t0 + 62_000); await wait(3000);
-  await game.getByRole("tab", { name: /Fighters/ }).click(); await wait(900);
-  await game.getByRole("listitem").nth(1).click(); await wait(1800);
-  await game.locator("body").press("s"); await wait(3500);
+  await wait(6500);
+  // 2. Landed: point at the shield to see what it does for the odds, then buy it. The capsule lands, the furnace burns.
+  await at(t0, 26_000, 1800);
+  await game.locator(".rr-buy-wrap").first().hover(); await wait(2200);
+  await game.locator("body").press("s"); await wait(2800);
+  // 3. A paid shout over the arena.
+  await game.getByRole("button", { name: /^Shout/ }).click(); await wait(400);
+  await game.getByRole("menuitem").first().click(); await wait(2800);
+  // 4. The fights: follow another Friend from the Fighters tab and sponsor it.
+  await at(t0, 64_000, 1800);
+  await game.getByRole("tab", { name: /Fighters/ }).click(); await wait(1000);
+  await game.getByRole("listitem").nth(1).click(); await wait(1400);
+  await game.locator("body").press("s"); await wait(2800);
   await game.getByRole("tab", { name: /Feed/ }).click();
-  // The late game.
-  await page.clock.setSystemTime(t0 + 120_000); await wait(3000);
-
-  // A GIF of the late game from the broadcast (silent, 480 × 320, a palette per frame).
-  const frameBox = page.locator(".rf-game-frame"), gif = GIFEncoder();
-  const g0 = Date.now();
-  for (let n = 0; n < 26; n++) {
-    const png = PNG.sync.read(await frameBox.screenshot({ scale: "css" }));
-    const w = 480, h = 320, data = new Uint8Array(w * h * 4);
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      const sx = Math.floor(x * png.width / w), sy = Math.floor(y * png.height / h), si = (sy * png.width + sx) * 4, di = (y * w + x) * 4;
-      data[di] = png.data[si]; data[di + 1] = png.data[si + 1]; data[di + 2] = png.data[si + 2]; data[di + 3] = 255;
-    }
-    const palette = quantize(data, 256);
-    gif.writeFrame(applyPalette(data, palette), w, h, { palette, delay: 250 });
-    await wait(40);
-  }
-  gif.finish();
-  console.log("gif seconds", ((Date.now() - g0) / 1000).toFixed(1));
-  writeFileSync("media/rare-royale.gif", gif.bytes());
-
-  // Results, the replay of the final and the hall of fame.
+  // 5. The late game in a small circle.
+  await at(t0, 140_000, 5000);
+  // 6. Results: payouts and the burn split by source; the replay of the final with its Kingmakers.
   await page.clock.setSystemTime(t0 + 300_000);
   await game.getByText("Next lobby opens in").waitFor({ timeout: 30_000 });
-  console.log("place:", await game.locator(".rr-yours .rr-huge").textContent(), "|", await game.locator(".rr-yours .rr-win, .rr-yours .rr-muted").first().textContent());
-  await wait(3500);
-  await game.getByRole("button", { name: /Replay the final/ }).click(); await wait(13000);
-  await game.getByRole("dialog", { name: "Replay of the final" }).getByRole("button", { name: /^Close/ }).click(); await wait(1500);
+  console.log("place:", await game.locator(".rr-yours .rr-huge").textContent());
+  await wait(6500);
+  await game.getByRole("button", { name: /Replay the final/ }).click(); await wait(7000);
+  await game.getByRole("dialog", { name: "Replay of the final" }).getByRole("button", { name: /^Close/ }).click(); await wait(500);
+  // 7. The hall of fame: the live RF supply, the burn per round, champions and their top sponsors.
   await game.getByRole("button", { name: "Hall of fame (H)" }).click(); await wait(4500);
+  await game.getByRole("dialog", { name: "Hall of fame" }).getByRole("button", { name: /^Close/ }).click();
+  // 8. The next lobby: the island, the tactics and the real odds before entering.
+  await game.getByRole("button", { name: "Next round now" }).click(); await wait(5500);
+  // The recorder hands over its last second late; keep rolling so the lobby is fully on the tape.
+  await wait(1500);
 
-  const bytes = await page.evaluate(ms => window.__stop(ms), Date.now() - rec0);
+  const ms = Date.now() - rec0;
+  const bytes = await page.evaluate(d => window.__stop(d), ms);
   writeFileSync("media/rare-royale.webm", Buffer.from(bytes));
-  console.log("media/rare-royale.webm", (bytes.length / 1e6).toFixed(1), "MB", errors.length ? "ERRORS " + errors.join("; ") : "");
+  console.log("media/rare-royale.webm", (ms / 1000).toFixed(1), "s", (bytes.length / 1e6).toFixed(1), "MB", errors.length ? "ERRORS " + errors.join("; ") : "");
   await close();
 } finally { await rt.close(); }

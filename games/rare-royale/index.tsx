@@ -1059,7 +1059,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
                 </>
               ) : <p className="rr-muted">You watched this round. Enter the next one in the lobby.</p>}
               {results.kingmakers.includes("You") && <p className="rr-king">Kingmaker! You sponsored {results.winner}.</p>}
-              {results.unlocked.length > 0 && <p className="rr-unlocked">Title{results.unlocked.length > 1 ? "s" : ""} unlocked: {results.unlocked.join(", ")}. Put {results.unlocked.length > 1 ? "them" : "it"} on in the Locker.</p>}
+              {results.unlocked.length > 0 && <p className="rr-unlocked" title={results.unlocked.join(", ")}>{results.unlocked.length > 1 ? `${results.unlocked.length} titles` : "Title"} unlocked: {results.unlocked.slice(0, 3).join(", ")}{results.unlocked.length > 3 ? ` +${results.unlocked.length - 3}` : ""}. Wear {results.unlocked.length > 1 ? "them" : "it"} from the Locker.</p>}
             </div>
             <div className="rr-panel rr-burn">
               <p className="rr-muted">Burned this round <small>· spent → burned, by source</small></p>

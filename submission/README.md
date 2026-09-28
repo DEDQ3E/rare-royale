@@ -1,6 +1,6 @@
 ![A live round: Friends fight inside the storm circle while the crowd sponsors them](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/battle.png)
 
-🕹️ **Play: https://dedq3e.github.io/rare-royale/** · 🎬 **[Demo with sound (106 s)](https://dedq3e.github.io/rare-royale/demo.html)**
+🕹️ **Play: https://dedq3e.github.io/rare-royale/** · 🎬 **[Demo with sound (1 min)](https://dedq3e.github.io/rare-royale/demo.html)**
 
 **Project name**
 Rare Royale
@@ -85,13 +85,12 @@ Everything is simulated; you start with 20 RF.
   - no purchase pays for itself in RF (a shield returns 0.29 RF per 1 RF), but each raises the chance of a high place (a medkit when hurt: top 10 from 7% to 11%); the game shows this on each item.
 
 **What have you tested?**
-All pass: typecheck; 12 engine tests (map, stats, replay, sponsoring, decisions, economy, settlement, ledger, rounds, challenges); `friendsdk check` and `friendsdk test` at 960 and 390 px; `npm run balance` (four fairness targets over 6,000 rounds, plus the burn tables above); an automated browser run through every screen at 960 × 808 and 390 × 844, on into a second round; a 106 s recording from the real runtime with a Friend read live from mainnet. The builder played the public preview with a real wallet and Friend; later additions were checked in the SDK test runtime.
+All pass: typecheck; 12 engine tests (map, stats, replay, sponsoring, decisions, economy, settlement, ledger, rounds, challenges); `friendsdk check` and `friendsdk test` at 960 and 390 px; `npm run balance` (four fairness targets over 6,000 rounds, plus the burn tables above); an automated browser run through every screen at 960 × 808 and 390 × 844, on into a second round; a one-minute recording from the real runtime with a Friend read live from mainnet. The builder played the public preview with a real wallet and Friend; later additions were checked in the SDK test runtime.
 
 **Known limitations**
 - The economy, the other entrants and the viewers are simulated; balances reset on reload (no save API).
 - Rounds are shared by time, not by a server: your sponsoring and decisions change only your own view.
 - The hall's supply read uses the public Robinhood RPC and shows "unavailable" if it fails.
-- The demo video was recorded before the final balance pass.
 - Sound was checked by measurement, not on physical devices.
 
 **Credits**
