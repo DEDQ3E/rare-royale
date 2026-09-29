@@ -1,7 +1,7 @@
 # Rare Royale
 
 A live battle royale: your Rare Friend against 49 real Generations Friends. The top 10 are paid, every knockout pays a
-bounty, and everyone watching can spend RF to sponsor any Friend at the right moment. Built with FriendSDK v0.1.3.
+bounty, and everyone watching can spend RF to sponsor any Friend at the right moment. Built with FriendSDK v0.1.4.
 **Every balance, entry, prize and burn is simulated.**
 
 ## Run

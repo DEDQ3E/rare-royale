@@ -8,7 +8,7 @@
 
 🔥 **About 1,500 RF burned a day per 1,000 players**, if each plays one 10-minute session a day (2.3 rounds) as a careful player (entry, one shield, a medkit when hurt), with no crowd counted. If everyone only enters: 230 RF a day; if everyone buys every item that helps: about 7,300 RF. Simulated.
 
-✅ **Tested with a real wallet:** the whole current preview (FriendSDK v0.1.3) was played on Robinhood mainnet with a real wallet and a real Generations Friend: connecting, the ownership gate, the lobby, entering, sponsoring, shouts, the Locker, results, the replay, the hall of fame and the next round. RF itself stays simulated.
+✅ **Tested with a real wallet:** the whole preview was played on Robinhood mainnet with a real wallet and a real Generations Friend: connecting, the ownership gate, the lobby, entering, sponsoring, shouts, the Locker, results, the replay, the hall of fame and the next round (on FriendSDK v0.1.3). FriendSDK v0.1.4 only strips unused transaction code from preview builds; the rebuilt preview passes every check again and runs in the real SDK runtime with a Friend read live from mainnet. RF itself stays simulated.
 
 💰 **The RF prices are examples.** A 1 RF entry, a 1 RF shield and the rest are sample prices. If the live game needs higher prices, multiply every price by the same number (×5, ×10…): the splits, the burn share and every chance in this document stay the same, and only the RF amounts scale.
 
@@ -152,7 +152,7 @@ Portrait phones get their own 3:4 layout. Reduced motion, mute, loading and erro
 
 ![Phone layout](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/phone-lobby.png)
 
-**Source:** https://github.com/DEDQ3E/rare-royale · **FriendSDK v0.1.3** · React, TypeScript, Canvas 2D, Web Audio.
+**Source:** https://github.com/DEDQ3E/rare-royale · **FriendSDK v0.1.4** · React, TypeScript, Canvas 2D, Web Audio.
 
 ```sh
 git clone https://github.com/DEDQ3E/rare-royale && cd rare-royale
@@ -177,7 +177,8 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 | Demo video (`tests/video.mjs`): real SDK runtime, Friend #66666 read live from mainnet, picture and sound checked after recording | Pass |
 | Audio (`Web Audio` in Chromium): starts on the first gesture, suspends on mute | Pass |
 | Fresh clone: `git clone`, `npm ci`, typecheck, engine tests, `friendsdk check`, `npm run build` | Pass; the build reproduces the published `docs/` exactly (line endings aside) |
-| Real-wallet playtest with a real Generations Friend | Pass: the whole current preview (FriendSDK v0.1.3), every screen and feature, played on Robinhood mainnet with a real wallet and Friend |
+| Real-wallet playtest with a real Generations Friend | Pass: every screen and feature played on Robinhood mainnet with a real wallet and Friend (FriendSDK v0.1.3; v0.1.4 changes only the preview's transaction code) |
+| FriendSDK v0.1.4 preview build: no transaction, approval or signing calls left in `runtime.js`; real SDK runtime with Friend #66666 read live from mainnet reaches the battle with no errors | Pass |
 
 ## Known issues and limits
 
@@ -186,7 +187,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 - **Hall of fame supply read** uses the public Robinhood RPC; if it is unreachable, the tile shows "unavailable".
 - **The chance-game definition in `game.json` is a required reference only**; the game does not call buy, play or settle.
 - **Sound** is synthesized in the browser and was checked by measurement in Chromium and Edge (every cue's level, no clipping) and by ear in a desktop browser, not yet on a physical phone.
-- **No risk to wallets or funds in this preview.** The game never asks for a signature, an approval or a transaction; the wallet is only read to check ownership. Live mode has never run against a deployed contract.
+- **No risk to wallets or funds in this preview.** The game never asks for a signature, an approval or a transaction, and the FriendSDK v0.1.4 preview build no longer contains that code at all; the wallet is only read to check ownership. Live mode has never run against a deployed contract.
 - **The runtime's `paused` state** stops input, sound and the round itself (lobby countdown and battle) until the runtime's menus close.
 - **A failed read** of the Friend's artwork or generation from Robinhood Chain shows an error with a retry; the game never guesses a generation.
 
@@ -197,7 +198,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 - Matchmaking: one shared round every 5 minutes for all holders, a lobby that closes after a minute or at 50 paid entries, and wild Friends in the empty seats. Until 5 people enter, a round is free (entries are refunded) and burns only what is spent on sponsoring, shouts and cosmetics.
 - Sponsor payments recorded per round phase with the same 50/50 split, from a sponsor balance topped up before the round. A second life has a 5-second window, too short for a wallet prompt and a confirmation, so no purchase mid-battle should need one; what is left is withdrawn after.
 - The ladder pays one place per five paid entries (at most ten), so the lobby odds hold with any number of players and only the prize sizes scale: with 10 paid entries two places pay 3.69 and 2.3 RF from a 6 RF pool (30 RF with 50).
-- Persistence for sessions and the hall of fame (not in SDK v0.1.3).
+- Persistence for sessions and the hall of fame (not in SDK v0.1.4).
 
 ## Credits
 

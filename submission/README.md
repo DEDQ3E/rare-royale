@@ -4,7 +4,7 @@
 
 🔥 **About 1,500 RF burned a day per 1,000 players**, if each plays one 10-minute session a day (2.3 rounds) as a careful player (entry, one shield, a medkit when hurt), with no crowd counted. If everyone only enters: 230 RF a day; if everyone buys every item that helps: about 7,300 RF. Simulated.
 
-✅ **Tested with a real wallet:** the whole current preview (FriendSDK v0.1.3) was played on Robinhood mainnet with a real wallet and a real Generations Friend: connecting, the ownership gate, the lobby, entering, sponsoring, shouts, the Locker, results, the replay, the hall of fame and the next round. RF itself stays simulated.
+✅ **Tested with a real wallet:** the whole preview was played on Robinhood mainnet with a real wallet and a real Generations Friend: connecting, the ownership gate, the lobby, entering, sponsoring, shouts, the Locker, results, the replay, the hall of fame and the next round (on FriendSDK v0.1.3). FriendSDK v0.1.4 only strips unused transaction code from preview builds; the rebuilt preview passes every check again and runs in the real SDK runtime with a Friend read live from mainnet. RF itself stays simulated.
 
 💰 **The RF prices are examples.** A 1 RF entry, a 1 RF shield and the rest are sample prices. If the live game needs higher prices, multiply every price by the same number (×5, ×10…): the splits, the burn share and every chance in this document stay the same, and only the RF amounts scale.
 
@@ -73,7 +73,7 @@ Live play would also need the reward-funding path from the Rare Friends team, ma
 The battle is deterministic from a round seed, so anyone can replay a round and check it. In the preview the seed is the round number, so everyone in the same minute gets the same island, line-up and base battle. Live, the seed stays unknown until the final: it mixes a Dice result drawn when entries close with a game secret whose hash is published before entries open and which is revealed after the final. A Dice result alone is public on-chain, so a bot could simulate the rest of a battle mid-round and buy only the items that flip the result; with the secret nobody can, nobody can pick the seed, and every round can still be checked afterwards.
 
 **Source code**
-[GitHub repository](https://github.com/DEDQ3E/rare-royale/tree/537602132e52d3c07e75d0e3db573d0b3994f296) ([full rules and tables](https://github.com/DEDQ3E/rare-royale/blob/537602132e52d3c07e75d0e3db573d0b3994f296/README.md)) · FriendSDK v0.1.3 · React, TypeScript, Canvas 2D, Web Audio.
+[GitHub repository](https://github.com/DEDQ3E/rare-royale/tree/537602132e52d3c07e75d0e3db573d0b3994f296) ([full rules and tables](https://github.com/DEDQ3E/rare-royale/blob/537602132e52d3c07e75d0e3db573d0b3994f296/README.md)) · FriendSDK v0.1.4 · React, TypeScript, Canvas 2D, Web Audio.
 
 **Playable demo / how to run**
 **Play: https://dedq3e.github.io/rare-royale/** (GitHub Pages, built with `friendsdk build`). You'll need a browser wallet on Robinhood mainnet (chain 4663) holding a hardwired Generations NFT (generation 1 or higher). No RF funding, signature or transaction is needed. To run it locally with Node.js 22+:
@@ -111,7 +111,7 @@ All pass, including from a fresh clone with `npm ci` (the build reproduces the p
 - Rounds are shared by time, not by a server: your sponsoring and decisions change only your own view.
 - The hall's supply read uses the public Robinhood RPC and shows "unavailable" if it fails.
 - Sound was checked by measurement and by ear in a desktop browser, not yet on a physical phone.
-- No risk to wallets or funds: the preview never asks for a signature, approval or transaction, and live mode has never run against a deployed contract.
+- No risk to wallets or funds: the preview never asks for a signature, approval or transaction (the FriendSDK v0.1.4 preview build contains no such code), and live mode has never run against a deployed contract.
 
 **Credits**
 Friends are drawn from their canonical on-chain sprites through FriendSDK. All other art and every sound are generated in code, with no samples or image files. Fonts: Bebas Neue and Silkscreen (SIL Open Font License 1.1). Built with Claude Code.
