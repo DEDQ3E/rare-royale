@@ -39,7 +39,7 @@ Rounds of about four and a half minutes: a one-minute lobby (pick a drop and a t
 Your ownership-verified Friend fights as itself, drawn from its canonical sprite, with Might, Speed and Wits from its family, generation and sprite seed, and a signature ability for each of the nine families. The other 49 are real Generations Friends from a roster of 300 (public reads only). The hall of fame reads the RF token's live `totalSupply`. The SDK handles the wallet, Friend selection and the ownership gate.
 
 **How RF is spent and burned**
-Four ways to spend: the entry, sponsoring any Friend, shouts and Locker cosmetics. Every payment except the entry burns 50% and funds 50% active Friend rewards (the protocol's 50/50 rule). Both tables are reproduced by `npm run balance` ([BALANCE.md](https://github.com/DEDQ3E/rare-royale/blob/main/BALANCE.md)).
+Four ways to spend: the entry, sponsoring any Friend, shouts and Locker cosmetics. Every payment except the entry burns 50% and funds 50% active Friend rewards (the protocol's 50/50 rule). Both tables are reproduced by `npm run balance` ([BALANCE.md](https://github.com/DEDQ3E/rare-royale/blob/537602132e52d3c07e75d0e3db573d0b3994f296/BALANCE.md)).
 
 **One real player, with no crowd at all** (3,000 simulated rounds per profile; a 10-minute session is about 2.3 rounds):
 
@@ -75,14 +75,16 @@ Live play would also need the reward-funding path from the Rare Friends team, ma
 The battle is deterministic from a round seed, so anyone can replay a round and check it. In the preview the seed is the round number, so everyone in the same minute gets the same island, line-up and base battle; your own Friend takes one seat, and your sponsoring and decisions change only your view. Live, the seed stays unknown until the final: it mixes a Dice result drawn when entries close with a game secret whose hash is published before entries open and which is revealed after the final. A Dice result alone is public on-chain, so a bot could simulate the rest of a battle mid-round and buy only the items that flip the result; with the secret nobody can, nobody can pick the seed, and every round can still be checked afterwards.
 
 **Source code**
-[GitHub repository](https://github.com/DEDQ3E/rare-royale) ([full rules and tables](https://github.com/DEDQ3E/rare-royale#readme)) · FriendSDK v0.1.3 · React, TypeScript, Canvas 2D, Web Audio.
+[GitHub repository](https://github.com/DEDQ3E/rare-royale/tree/537602132e52d3c07e75d0e3db573d0b3994f296) ([full rules and tables](https://github.com/DEDQ3E/rare-royale/blob/537602132e52d3c07e75d0e3db573d0b3994f296/README.md)) · FriendSDK v0.1.3 · React, TypeScript, Canvas 2D, Web Audio.
 
 **Playable demo / how to run**
-**Play: https://dedq3e.github.io/rare-royale/** (GitHub Pages). You'll need a browser wallet on Robinhood mainnet (chain 4663) holding a hardwired Generations NFT (generation 1 or higher). No RF funding, signature or transaction is needed. To run it locally with Node.js 22+:
+**Play: https://dedq3e.github.io/rare-royale/** (GitHub Pages, built with `friendsdk build`). You'll need a browser wallet on Robinhood mainnet (chain 4663) holding a hardwired Generations NFT (generation 1 or higher). No RF funding, signature or transaction is needed. To run it locally with Node.js 22+:
 
 ```sh
-git clone https://github.com/DEDQ3E/rare-royale && cd rare-royale
-npm install
+git clone https://github.com/DEDQ3E/rare-royale.git
+cd rare-royale
+git checkout 537602132e52d3c07e75d0e3db573d0b3994f296
+npm ci
 npm run dev
 ```
 
@@ -98,19 +100,21 @@ Everything is simulated; you start with 20 RF. The prices are examples: multiply
   - a round with fewer than 5 paid entries refunds every entry; practice is free.
 - **Sponsoring:** a shield (soaks the next 30 damage) or a medkit (+45 HP) costs 1 RF. A second life costs 2, then 4, then 8 RF, at most 3 per Friend per round. Sponsoring closes at 25 standing.
 - **Looks:** shouts cost 1 RF, auras 2–5 RF and titles 1–5 RF.
+- **Nothing is kept or redeemed:** sponsor items, shouts and looks act at once, so there are no consumables, backing or redemption rules.
 - **Odds per 1 RF entry** (6,000 simulated rounds):
   - any RF back 45.5%, 1 RF or more 20.1%, win 2.0%, average return 0.79 RF;
   - Fight, Hide and Loot each return within 5% of that average;
   - no purchase pays for itself in RF (a shield returns 0.29 RF per 1 RF), but each raises the chance of a high place (table above); the game shows this on each item.
 
 **What have you tested?**
-All pass: typecheck; 12 engine tests (map, stats, replay, sponsoring, decisions, economy, settlement, ledger, rounds, challenges); `friendsdk check` and `friendsdk test` at 960 and 390 px; `npm run balance` (four fairness targets over 6,000 rounds, plus the burn tables above); an automated browser run through every screen at 960 × 808 and 390 × 844, on into a second round; a one-minute recording from the real runtime with a Friend read live from mainnet. The whole current preview (FriendSDK v0.1.3), every screen and feature, was played on Robinhood mainnet with a real wallet and a real Generations Friend.
+All pass, including from a fresh clone with `npm ci` (the build reproduces the published preview): typecheck; 12 engine tests (map, stats, replay, sponsoring, decisions, economy, settlement, ledger, rounds, challenges); `friendsdk check` and `friendsdk test` at 960 and 390 px; `npm run balance` (four fairness targets over 6,000 rounds, plus the burn tables above); an automated browser run through every screen at 960 × 808 and 390 × 844, on into a second round (the SDK's test RPC refuses the hall's live RF supply read, so that one tile shows "unavailable" there); a one-minute recording from the real runtime with a Friend read live from mainnet. The whole current preview (FriendSDK v0.1.3), every screen and feature, was played on Robinhood mainnet with a real wallet and a real Generations Friend.
 
 **Known limitations**
 - The economy, the other entrants and the viewers are simulated; balances reset on reload (no save API).
 - Rounds are shared by time, not by a server: your sponsoring and decisions change only your own view.
 - The hall's supply read uses the public Robinhood RPC and shows "unavailable" if it fails.
-- Sound was checked by measurement, not on physical devices.
+- Sound was checked by measurement and by ear in a desktop browser, not yet on a physical phone.
+- No risk to wallets or funds: the preview never asks for a signature, approval or transaction, and live mode has never run against a deployed contract.
 
 **Credits**
 Friends are drawn from their canonical on-chain sprites through FriendSDK. All other art and every sound are generated in code, with no samples or image files. Fonts: Bebas Neue and Silkscreen (SIL Open Font License 1.1). Built with Claude Code.
