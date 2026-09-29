@@ -7,7 +7,7 @@ bounty, and everyone watching can spend RF to sponsor any Friend at the right mo
 ## Run
 
 ```sh
-npm install
+npm ci
 npm run dev        # http://localhost:4173
 ```
 

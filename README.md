@@ -156,7 +156,7 @@ Portrait phones get their own 3:4 layout. Reduced motion, mute, loading and erro
 
 ```sh
 git clone https://github.com/DEDQ3E/rare-royale && cd rare-royale
-npm install
+npm ci
 npm run dev            # http://localhost:4173
 npm run build          # static build in docs/ (the GitHub Pages preview)
 ```
@@ -176,6 +176,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 | Next round (`tests/next-round.ts`): a second round starts after the first, after waiting out the lobby and with Next round now | Pass |
 | Demo video (`tests/video.mjs`): real SDK runtime, Friend #66666 read live from mainnet, picture and sound checked after recording | Pass |
 | Audio (`Web Audio` in Chromium): starts on the first gesture, suspends on mute | Pass |
+| Fresh clone: `git clone`, `npm ci`, typecheck, engine tests, `friendsdk check`, `npm run build` | Pass; the build reproduces the published `docs/` exactly (line endings aside) |
 | Real-wallet playtest with a real Generations Friend | Pass: the whole current preview (FriendSDK v0.1.3), every screen and feature, played on Robinhood mainnet with a real wallet and Friend |
 
 ## Known issues and limits
@@ -184,7 +185,8 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 - **Shared rounds without a server.** Rounds are named after the minute of their drop, so viewers who drop in the same minute see the same island, line-up and base battle, but each viewer's own sponsoring and decisions change only their own view.
 - **Hall of fame supply read** uses the public Robinhood RPC; if it is unreachable, the tile shows "unavailable".
 - **The chance-game definition in `game.json` is a required reference only**; the game does not call buy, play or settle.
-- **Sound** is synthesized in the browser and was checked by measurement in Chromium and Edge (every cue's level, no clipping), not by ear on physical devices.
+- **Sound** is synthesized in the browser and was checked by measurement in Chromium and Edge (every cue's level, no clipping) and by ear in a desktop browser, not yet on a physical phone.
+- **No risk to wallets or funds in this preview.** The game never asks for a signature, an approval or a transaction; the wallet is only read to check ownership. Live mode has never run against a deployed contract.
 - **The runtime's `paused` state** stops input, sound and the round itself (lobby countdown and battle) until the runtime's menus close.
 - **A failed read** of the Friend's artwork or generation from Robinhood Chain shows an error with a retry; the game never guesses a generation.
 
