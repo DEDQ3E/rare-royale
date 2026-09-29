@@ -56,23 +56,21 @@ Four ways to spend: the entry, sponsoring any Friend, shouts and Locker cosmetic
 | Spent per round | 50 RF | 66.5 RF | 87.1 RF |
 | Burned per round | 5.6 RF (11%) | 13.9 RF (21%) | **24.2 RF (28%)** |
 
-- **The crowd model is modest:** less than one shield per entrant per round. Every second while sponsoring is open, a downed Friend gets a second life with 6% chance, a random Friend a shield with 12%, a hurt one a medkit with 9%, and a fan buys a shout with 2%. Most of that spending would be entrants protecting their own Friend, since a shield lifts its top-10 chance from 28% to 34%. Pure spectators get status, not money: their name on the capsule, under the replay of the final as a Kingmaker, and in the hall of fame as a round's top sponsor.
+- **The crowd model is modest:** less than one shield per entrant per round. Every second while sponsoring is open, a downed Friend gets a second life with 6% chance, a random Friend a shield with 12%, a hurt one a medkit with 9%, and a fan buys a shout with 2%. Most of that spending would be entrants protecting their own Friend, which lifts its top-10 chance (table above). Pure spectators get status, not money: their name on the capsule, under the replay of the final as a Kingmaker, and in the hall of fame as a round's top sponsor.
 - **Why the entry burns only 10%:** each extra 10% of entry burn would take 0.1 RF off the average return (0.79 RF now, 0.69 RF at 20%). A game that keeps the entry gets played once; here the burn grows with every round played.
-- **The burn is on screen:** the furnace, the capsules, and results that split the round's burn by source (entries, other entrants and viewers, you, the storm), plus what your own payments burned this round and this session.
+- **The burn is on screen:** besides the furnace and the capsules, the results split the round's burn by source (entries, other entrants and viewers, you, the storm), plus what your own payments burned this round and this session.
 
 **What would be on-chain?**
 Nothing in this build: no contract or transaction code, as the SDK asks for prototypes. The on-chain phase with the Rare Friends team would add a round contract where:
 - every payment comes from the Friend's canonical NFT wallet;
-- a 1 RF entry is held until settlement, then 0.1 RF goes through the RF token's `burn()`, 0.1 RF to active Friend rewards, and 0.8 RF is paid out as the ladder and bounties;
-- sponsor items, shouts and cosmetics burn 50% and fund 50% rewards at once;
-- the settlement pays out exactly the pool, and a round with fewer than 5 paid entries refunds every entry;
+- the entry is held until settlement, which burns its share through the RF token's `burn()`, funds rewards and pays out exactly the pool; every other payment is split at once;
 - sponsoring is paid from a balance topped up before the round, so a second life's 5-second window needs no wallet prompt;
-- rounds run on one shared clock for all holders, one every 5 minutes, with wild Friends in empty seats. Until 5 people enter, a round is free and burns only what is spent on sponsoring, shouts and cosmetics. One ladder place per five paid entries keeps the odds at any player count; only the prizes scale.
+- rounds run on one shared clock for all holders, one every 5 minutes, with wild Friends in empty seats. One ladder place per five paid entries keeps the odds at any player count; only the prizes scale.
 
 Live play would also need the reward-funding path from the Rare Friends team, matchmaking, and saves (the SDK has no save API).
 
 **How does it use randomness?**
-The battle is deterministic from a round seed, so anyone can replay a round and check it. In the preview the seed is the round number, so everyone in the same minute gets the same island, line-up and base battle; your own Friend takes one seat, and your sponsoring and decisions change only your view. Live, the seed stays unknown until the final: it mixes a Dice result drawn when entries close with a game secret whose hash is published before entries open and which is revealed after the final. A Dice result alone is public on-chain, so a bot could simulate the rest of a battle mid-round and buy only the items that flip the result; with the secret nobody can, nobody can pick the seed, and every round can still be checked afterwards.
+The battle is deterministic from a round seed, so anyone can replay a round and check it. In the preview the seed is the round number, so everyone in the same minute gets the same island, line-up and base battle. Live, the seed stays unknown until the final: it mixes a Dice result drawn when entries close with a game secret whose hash is published before entries open and which is revealed after the final. A Dice result alone is public on-chain, so a bot could simulate the rest of a battle mid-round and buy only the items that flip the result; with the secret nobody can, nobody can pick the seed, and every round can still be checked afterwards.
 
 **Source code**
 [GitHub repository](https://github.com/DEDQ3E/rare-royale/tree/537602132e52d3c07e75d0e3db573d0b3994f296) ([full rules and tables](https://github.com/DEDQ3E/rare-royale/blob/537602132e52d3c07e75d0e3db573d0b3994f296/README.md)) · FriendSDK v0.1.3 · React, TypeScript, Canvas 2D, Web Audio.
@@ -92,7 +90,7 @@ npm run dev
 Lobby: tap the map to pick a drop; **1–3** Fight, Hide or Loot, **E** enter for 1 RF, **P** practise, **L** Locker. Battle: **S** shield, **M** medkit, **R** second life (within 5 s of a knockdown), **T** your Friend or the one on camera, **1 / 2** quick decisions, **Y** shouts, **F** Fighters tab. Results: **V** replay the final. **H** hall of fame, **Esc** close. Everything also has a button for touch.
 
 **Costs and rewards**
-Everything is simulated; you start with 20 RF. The prices are examples: multiply them all by the same number for higher stakes, and every split, ratio and chance stays the same.
+Everything is simulated; you start with 20 RF. The prices are examples that scale together (see the top).
 - **Entry, 1 RF:**
   - where it goes: 0.6 RF to the ladder, a 0.2 RF starting bounty on your head, 0.1 RF burned, 0.1 RF to rewards;
   - ladder with 50 paid entries: places 1–10 pay 8, 5, 4, 3, 2.5, then 1.5 RF each;
@@ -103,11 +101,10 @@ Everything is simulated; you start with 20 RF. The prices are examples: multiply
 - **Nothing is kept or redeemed:** sponsor items, shouts and looks act at once, so there are no consumables, backing or redemption rules.
 - **Odds per 1 RF entry** (6,000 simulated rounds):
   - any RF back 45.5%, 1 RF or more 20.1%, win 2.0%, average return 0.79 RF;
-  - Fight, Hide and Loot each return within 5% of that average;
-  - no purchase pays for itself in RF (a shield returns 0.29 RF per 1 RF), but each raises the chance of a high place (table above); the game shows this on each item.
+  - no purchase pays for itself in RF (a shield returns 0.29 RF per 1 RF); the game shows each item's return and top-10 lift.
 
 **What have you tested?**
-All pass, including from a fresh clone with `npm ci` (the build reproduces the published preview): typecheck; 12 engine tests (map, stats, replay, sponsoring, decisions, economy, settlement, ledger, rounds, challenges); `friendsdk check` and `friendsdk test` at 960 and 390 px; `npm run balance` (four fairness targets over 6,000 rounds, plus the burn tables above); an automated browser run through every screen at 960 × 808 and 390 × 844, on into a second round (the SDK's test RPC refuses the hall's live RF supply read, so that one tile shows "unavailable" there); a one-minute recording from the real runtime with a Friend read live from mainnet. The whole current preview (FriendSDK v0.1.3), every screen and feature, was played on Robinhood mainnet with a real wallet and a real Generations Friend.
+All pass, including from a fresh clone with `npm ci` (the build reproduces the published preview): typecheck; 12 engine tests (map, stats, replay, sponsoring, decisions, economy, settlement, ledger, rounds, challenges); `friendsdk check` and `friendsdk test` at 960 and 390 px; `npm run balance` (four fairness targets over 6,000 rounds, plus the burn tables above); an automated browser run through every screen at 960 × 808 and 390 × 844, on into a second round (the SDK's test RPC refuses the hall's live RF supply read, so that one tile shows "unavailable" there); a one-minute recording from the real runtime with a Friend read live from mainnet. Played through on Robinhood mainnet with a real wallet and Friend (see the top).
 
 **Known limitations**
 - The economy, the other entrants and the viewers are simulated; balances reset on reload (no save API).
