@@ -4,11 +4,13 @@
 
 🕹️ **Play: https://dedq3e.github.io/rare-royale/**
 
-🎬 **Demo with sound (1 min):** recorded from the real SDK runtime with Sparkling Friend #66666 read live from mainnet (only the wallet is mocked; `tests/video.mjs`). It opens on the drop: a shield with its effect on the odds and its capsule, a paid shout, following and sponsoring another Friend from the Fighters tab, the final circle, a win with the burn split by source, the replay of the final with its Kingmakers, the hall of fame and the next lobby with its odds. **[▶ Watch the demo](https://dedq3e.github.io/rare-royale/demo.html)** (plays in the browser; [download the file](https://dedq3e.github.io/rare-royale/media/rare-royale.webm)).
+🎬 **Demo with sound (1 min):** recorded from the real SDK runtime with Sparkling Friend #66666 read live from mainnet (only the wallet is mocked; `tests/video.mjs`). It opens on the drop: a shield with its effect on the odds and its capsule, a paid shout, following and sponsoring another Friend from the Fighters tab, the final circle, a 3rd place (4 RF) with the round's burn split by source, the replay of the final, the hall of fame with the RF token's real supply read from mainnet, and the next lobby with its odds. **[▶ Watch the demo](https://dedq3e.github.io/rare-royale/demo.html)** (plays in the browser; [download the file](https://dedq3e.github.io/rare-royale/media/rare-royale.webm)).
 
-🔥 **About 1,500 RF burned a day per 1,000 players**, if each plays one 10-minute session a day (2.3 rounds) as a careful player (entry, one shield, a medkit when hurt), with no crowd counted. If everyone only enters: 230 RF a day; if everyone buys every item that helps: about 7,300 RF. Placeholder units, simulated.
+🔥 **About 1,500 RF burned a day per 1,000 players**, if each plays one 10-minute session a day (2.3 rounds) as a careful player (entry, one shield, a medkit when hurt), with no crowd counted. If everyone only enters: 230 RF a day; if everyone buys every item that helps: about 7,300 RF. Simulated.
 
-✅ **Played with a real wallet:** the current public preview (FriendSDK v0.1.3) was played on Robinhood mainnet with a real wallet and a real Generations Friend.
+✅ **Tested with a real wallet:** the whole current preview (FriendSDK v0.1.3) was played on Robinhood mainnet with a real wallet and a real Generations Friend: connecting, the ownership gate, the lobby, entering, sponsoring, shouts, the Locker, results, the replay, the hall of fame and the next round. RF itself stays simulated.
+
+💰 **The RF prices are examples.** A 1 RF entry, a 1 RF shield and the rest are sample prices. If the live game needs higher prices, multiply every price by the same number (×5, ×10…): the splits, the burn share and every chance in this document stay the same, and only the RF amounts scale.
 
 **What changes your chance of a top-10 place** (average 20%; the same simulated rounds with one thing changed):
 
@@ -85,7 +87,7 @@ A complete battle royale that runs itself, in rounds of about four and a half mi
 
 ## How does it spend and burn $RAREFRIENDS?
 
-Everything below is **simulated** in this preview and labelled on every screen. RF amounts are bigint base units (`1 RF = 10n ** 18n`). The prices are placeholder units: live prices are for the developers to set, and every split and ratio below stays the same.
+Everything below is **simulated** in this preview and labelled on every screen. RF amounts are bigint base units (`1 RF = 10n ** 18n`). The prices are examples: for higher prices, multiply them all by the same number, and every split, ratio and chance below stays the same.
 
 | Payment | Price | Where it goes |
 |---|---|---|
@@ -174,7 +176,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 | Next round (`tests/next-round.ts`): a second round starts after the first, after waiting out the lobby and with Next round now | Pass |
 | Demo video (`tests/video.mjs`): real SDK runtime, Friend #66666 read live from mainnet, picture and sound checked after recording | Pass |
 | Audio (`Web Audio` in Chromium): starts on the first gesture, suspends on mute | Pass |
-| Real-wallet playtest with a real Generations Friend | Pass: the current public preview (FriendSDK v0.1.3) played on Robinhood mainnet with a real wallet and Friend |
+| Real-wallet playtest with a real Generations Friend | Pass: the whole current preview (FriendSDK v0.1.3), every screen and feature, played on Robinhood mainnet with a real wallet and Friend |
 
 ## Known issues and limits
 

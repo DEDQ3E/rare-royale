@@ -54,6 +54,8 @@ the bottom bar. Audio stops while the game is paused or hidden.
 
 ## Economy (simulated)
 
+The prices are examples. For higher prices, multiply them all by the same number: every split, ratio and chance stays the same.
+
 | Payment | Price | Where it goes |
 |---|---|---|
 | Entry | 1 RF | 0.6 RF to the round's top-10 ladder, 0.2 RF starting bounty on your head, 0.1 RF burned, 0.1 RF to active Friend rewards |

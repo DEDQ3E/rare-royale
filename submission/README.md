@@ -2,9 +2,11 @@
 
 🕹️ **Play: https://dedq3e.github.io/rare-royale/** · 🎬 **[Demo with sound (1 min)](https://dedq3e.github.io/rare-royale/demo.html)**
 
-🔥 **About 1,500 RF burned a day per 1,000 players**, if each plays one 10-minute session a day (2.3 rounds) as a careful player (entry, one shield, a medkit when hurt), with no crowd counted. If everyone only enters: 230 RF a day; if everyone buys every item that helps: about 7,300 RF. Placeholder units, simulated.
+🔥 **About 1,500 RF burned a day per 1,000 players**, if each plays one 10-minute session a day (2.3 rounds) as a careful player (entry, one shield, a medkit when hurt), with no crowd counted. If everyone only enters: 230 RF a day; if everyone buys every item that helps: about 7,300 RF. Simulated.
 
-✅ **Played with a real wallet:** the current public preview (FriendSDK v0.1.3) was played on Robinhood mainnet with a real wallet and a real Generations Friend.
+✅ **Tested with a real wallet:** the whole current preview (FriendSDK v0.1.3) was played on Robinhood mainnet with a real wallet and a real Generations Friend: connecting, the ownership gate, the lobby, entering, sponsoring, shouts, the Locker, results, the replay, the hall of fame and the next round. RF itself stays simulated.
+
+💰 **The RF prices are examples.** A 1 RF entry, a 1 RF shield and the rest are sample prices. If the live game needs higher prices, multiply every price by the same number (×5, ×10…): the splits, the burn share and every chance in this document stay the same, and only the RF amounts scale.
 
 **What changes your chance of a top-10 place** (average 20%; the same simulated rounds with one thing changed):
 
@@ -88,7 +90,7 @@ npm run dev
 Lobby: tap the map to pick a drop; **1–3** Fight, Hide or Loot, **E** enter for 1 RF, **P** practise, **L** Locker. Battle: **S** shield, **M** medkit, **R** second life (within 5 s of a knockdown), **T** your Friend or the one on camera, **1 / 2** quick decisions, **Y** shouts, **F** Fighters tab. Results: **V** replay the final. **H** hall of fame, **Esc** close. Everything also has a button for touch.
 
 **Costs and rewards**
-Everything is simulated; you start with 20 RF. RF amounts are placeholder units: live prices are for the developers to set, and every split and ratio stays the same.
+Everything is simulated; you start with 20 RF. The prices are examples: multiply them all by the same number for higher stakes, and every split, ratio and chance stays the same.
 - **Entry, 1 RF:**
   - where it goes: 0.6 RF to the ladder, a 0.2 RF starting bounty on your head, 0.1 RF burned, 0.1 RF to rewards;
   - ladder with 50 paid entries: places 1–10 pay 8, 5, 4, 3, 2.5, then 1.5 RF each;
@@ -102,7 +104,7 @@ Everything is simulated; you start with 20 RF. RF amounts are placeholder units:
   - no purchase pays for itself in RF (a shield returns 0.29 RF per 1 RF), but each raises the chance of a high place (table above); the game shows this on each item.
 
 **What have you tested?**
-All pass: typecheck; 12 engine tests (map, stats, replay, sponsoring, decisions, economy, settlement, ledger, rounds, challenges); `friendsdk check` and `friendsdk test` at 960 and 390 px; `npm run balance` (four fairness targets over 6,000 rounds, plus the burn tables above); an automated browser run through every screen at 960 × 808 and 390 × 844, on into a second round; a one-minute recording from the real runtime with a Friend read live from mainnet. The current public preview (FriendSDK v0.1.3) was played on Robinhood mainnet with a real wallet and a real Generations Friend.
+All pass: typecheck; 12 engine tests (map, stats, replay, sponsoring, decisions, economy, settlement, ledger, rounds, challenges); `friendsdk check` and `friendsdk test` at 960 and 390 px; `npm run balance` (four fairness targets over 6,000 rounds, plus the burn tables above); an automated browser run through every screen at 960 × 808 and 390 × 844, on into a second round; a one-minute recording from the real runtime with a Friend read live from mainnet. The whole current preview (FriendSDK v0.1.3), every screen and feature, was played on Robinhood mainnet with a real wallet and a real Generations Friend.
 
 **Known limitations**
 - The economy, the other entrants and the viewers are simulated; balances reset on reload (no save API).
