@@ -8,7 +8,7 @@
 
 🔥 **About 1,500 RF burned a day per 1,000 players**, if each plays one 10-minute session a day (2.3 rounds) as a careful player (entry, one shield, a medkit when hurt), with no crowd counted. If everyone only enters: 230 RF a day; if everyone buys every item that helps: about 7,300 RF. Simulated.
 
-✅ **Tested with a real wallet:** the whole preview was played on Robinhood mainnet with a real wallet and a real Generations Friend: connecting, the ownership gate, the lobby, entering, sponsoring, shouts, the Locker, results, the replay, the hall of fame and the next round. Built on FriendSDK v0.1.4, whose preview build carries no transaction code. RF itself stays simulated.
+✅ **Tested with a real wallet:** the whole current preview (FriendSDK v0.1.4) was played on Robinhood mainnet with a real wallet and a real Generations Friend: connecting, the ownership gate, the lobby, entering, sponsoring, shouts, the Locker, results, the replay, the hall of fame and the next round. The v0.1.4 preview build carries no transaction code, and RF itself stays simulated.
 
 💰 **The RF prices are examples.** A 1 RF entry, a 1 RF shield and the rest are sample prices. If the live game needs higher prices, multiply every price by the same number (×5, ×10…): the splits, the burn share and every chance in this document stay the same, and only the RF amounts scale.
 
@@ -177,7 +177,7 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 | Demo video (`tests/video.mjs`): real SDK runtime, Friend #66666 read live from mainnet, picture and sound checked after recording | Pass |
 | Audio (`Web Audio` in Chromium): starts on the first gesture, suspends on mute | Pass |
 | Fresh clone: `git clone`, `npm ci`, typecheck, engine tests, `friendsdk check`, `npm run build` | Pass; the build reproduces the published `docs/` exactly (line endings aside) |
-| Real-wallet playtest with a real Generations Friend | Pass: every screen and feature played on Robinhood mainnet with a real wallet and Friend |
+| Real-wallet playtest with a real Generations Friend | Pass: every screen and feature of the FriendSDK v0.1.4 build played on Robinhood mainnet with a real wallet and Friend |
 | FriendSDK v0.1.4 preview build: no transaction, approval or signing calls left in `runtime.js`; real SDK runtime with Friend #66666 read live from mainnet reaches the battle with no errors | Pass |
 
 ## Known issues and limits
