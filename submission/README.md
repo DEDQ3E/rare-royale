@@ -39,7 +39,7 @@ Rounds of about four and a half minutes: a one-minute lobby (pick a drop and a t
 Your ownership-verified Friend fights as itself, drawn from its canonical sprite, with Might, Speed and Wits from its family, generation and sprite seed, and a signature ability for each of the nine families. The other 49 are real Generations Friends from a roster of 300 (public reads only). The hall of fame reads the RF token's live `totalSupply`. The SDK handles the wallet, Friend selection and the ownership gate.
 
 **How RF is spent and burned**
-Four ways to spend: the entry, sponsoring any Friend, shouts and Locker cosmetics. Every payment except the entry burns 50% and funds 50% active Friend rewards (the protocol's 50/50 rule). Both tables are reproduced by `npm run balance` ([BALANCE.md](https://github.com/DEDQ3E/rare-royale/blob/5ba557323783f8e1f4ab73f68115eb04ab2de85b/BALANCE.md)).
+Four ways to spend: the entry, sponsoring any Friend, shouts and Locker cosmetics. Every payment except the entry burns 50% and funds 50% active Friend rewards (the protocol's 50/50 rule). Both tables are reproduced by `npm run balance` ([BALANCE.md](https://github.com/DEDQ3E/rare-royale/blob/1c0cc12382e8a1a5b9d91b34617bf84fa9d8ec1b/BALANCE.md)).
 
 **One real player, with no crowd at all** (3,000 simulated rounds per profile; a 10-minute session is about 2.3 rounds):
 
@@ -73,7 +73,7 @@ Live play would also need the reward-funding path from the Rare Friends team, ma
 The battle is deterministic from a round seed, so anyone can replay a round and check it. In the preview the seed is the round number, so everyone in the same minute gets the same island, line-up and base battle. Live, the seed stays unknown until the final: it mixes a Dice result drawn when entries close with a game secret whose hash is published before entries open and which is revealed after the final. A Dice result alone is public on-chain, so a bot could simulate the rest of a battle mid-round and buy only the items that flip the result; with the secret nobody can, nobody can pick the seed, and every round can still be checked afterwards.
 
 **Source code**
-[GitHub repository](https://github.com/DEDQ3E/rare-royale/tree/5ba557323783f8e1f4ab73f68115eb04ab2de85b) ([full rules and tables](https://github.com/DEDQ3E/rare-royale/blob/5ba557323783f8e1f4ab73f68115eb04ab2de85b/README.md)) · FriendSDK v0.1.4 · React, TypeScript, Canvas 2D, Web Audio.
+[GitHub repository](https://github.com/DEDQ3E/rare-royale/tree/1c0cc12382e8a1a5b9d91b34617bf84fa9d8ec1b) ([full rules and tables](https://github.com/DEDQ3E/rare-royale/blob/1c0cc12382e8a1a5b9d91b34617bf84fa9d8ec1b/README.md)) · FriendSDK v0.1.4 · React, TypeScript, Canvas 2D, Web Audio.
 
 **Playable demo / how to run**
 **Play: https://dedq3e.github.io/rare-royale/** (GitHub Pages, built with `friendsdk build`). You'll need a browser wallet on Robinhood mainnet (chain 4663) holding a hardwired Generations NFT (generation 1 or higher). No RF funding, signature or transaction is needed. To run it locally with Node.js 22+:
@@ -81,7 +81,7 @@ The battle is deterministic from a round seed, so anyone can replay a round and 
 ```sh
 git clone https://github.com/DEDQ3E/rare-royale.git
 cd rare-royale
-git checkout 5ba557323783f8e1f4ab73f68115eb04ab2de85b
+git checkout 1c0cc12382e8a1a5b9d91b34617bf84fa9d8ec1b
 npm ci
 npm run dev
 ```
