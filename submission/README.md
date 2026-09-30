@@ -1,3 +1,5 @@
+https://github.com/user-attachments/assets/9022a669-b284-4b0b-99eb-2ad3cc4deb1c
+
 ![A live round: Friends fight inside the storm circle while the crowd sponsors them](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/battle.png)
 
 🕹️ **Play: https://dedq3e.github.io/rare-royale/** · 🎬 **[Demo with sound (1 min)](https://dedq3e.github.io/rare-royale/demo.html)**
