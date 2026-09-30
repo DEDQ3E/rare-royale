@@ -45,7 +45,7 @@ Rounds of about four and a half minutes: a one-minute lobby (pick a drop and a t
 Your ownership-verified Friend fights as itself, drawn from its canonical sprite, with Might, Speed and Wits from its family, generation and sprite seed, and a signature ability for each of the nine families. The other 49 are real Generations Friends from a roster of 300 (public reads only). The hall of fame reads the RF token's live `totalSupply`. The SDK handles the wallet, Friend selection and the ownership gate.
 
 **How RF is spent and burned**
-Five ways to spend: the entry, sponsoring any Friend, paid calls in your Friend's quick decisions, shouts and Locker cosmetics. **Up to 4 moments per round where burning is your tactical call:** each quick decision has two free options and a paid third on key 3 (Smoke, Pry or Boost, 1 RF). Every payment except the entry burns 50% and funds 50% active Friend rewards (the protocol's 50/50 rule). Both tables are reproduced by `npm run balance` ([BALANCE.md](https://github.com/DEDQ3E/rare-royale/blob/1f80e74058b7cc941e1160eb1c652821913f95d7/BALANCE.md)).
+Five ways to spend: the entry, sponsoring any Friend, paid calls (Smoke, Pry, Boost), shouts and Locker cosmetics. **Up to 4 moments per round where burning is your tactical call.** Every payment except the entry burns 50% and funds 50% active Friend rewards (the protocol's 50/50 rule). Both tables are reproduced by `npm run balance` ([BALANCE.md](https://github.com/DEDQ3E/rare-royale/blob/a58880205f7123d885e14eb3fe0fc1b9fe9a336c/BALANCE.md)).
 
 **One real player, with no crowd at all** (3,000 simulated rounds per profile; a 10-minute session is about 2.3 rounds):
 
@@ -71,7 +71,7 @@ Five ways to spend: the entry, sponsoring any Friend, paid calls in your Friend'
 Nothing in this build: no contract or transaction code, as the SDK asks for prototypes. The on-chain phase with the Rare Friends team would add a round contract where:
 - every payment comes from the Friend's canonical NFT wallet;
 - the entry is held until settlement, which burns its share through the RF token's `burn()`, funds rewards and pays out exactly the pool; every other payment is split at once;
-- sponsoring is paid from a balance topped up before the round, so a second life's 5-second window needs no wallet prompt;
+- sponsoring and paid calls are paid from a balance topped up before the round, so the 5-second window of a second life or a quick decision needs no wallet prompt;
 - rounds run on one shared clock for all holders, one every 5 minutes, with wild Friends in empty seats. One ladder place per five paid entries keeps the odds at any player count; only the prizes scale.
 
 Live play would also need the reward-funding path from the Rare Friends team, matchmaking, and saves (the SDK has no save API).
@@ -80,7 +80,7 @@ Live play would also need the reward-funding path from the Rare Friends team, ma
 The battle is deterministic from a round seed, so anyone can replay a round and check it. In the preview the seed is the round number, so everyone in the same minute gets the same island, line-up and base battle. Live, the seed stays unknown until the final: it mixes a Dice result drawn when entries close with a game secret whose hash is published before entries open and which is revealed after the final. A Dice result alone is public on-chain, so a bot could simulate the rest of a battle mid-round and buy only the items that flip the result; with the secret nobody can, nobody can pick the seed, and every round can still be checked afterwards.
 
 **Source code**
-[GitHub repository](https://github.com/DEDQ3E/rare-royale/tree/1f80e74058b7cc941e1160eb1c652821913f95d7) ([full rules and tables](https://github.com/DEDQ3E/rare-royale/blob/1f80e74058b7cc941e1160eb1c652821913f95d7/README.md)) · FriendSDK v0.1.4 · React, TypeScript, Canvas 2D, Web Audio.
+[GitHub repository](https://github.com/DEDQ3E/rare-royale/tree/a58880205f7123d885e14eb3fe0fc1b9fe9a336c) ([full rules and tables](https://github.com/DEDQ3E/rare-royale/blob/a58880205f7123d885e14eb3fe0fc1b9fe9a336c/README.md)) · FriendSDK v0.1.4 · React, TypeScript, Canvas 2D, Web Audio.
 
 **Playable demo / how to run**
 **Play: https://dedq3e.github.io/rare-royale/** (GitHub Pages, built with `friendsdk build`). You'll need a browser wallet on Robinhood mainnet (chain 4663) holding a hardwired Generations NFT (generation 1 or higher). No RF funding, signature or transaction is needed. To run it locally with Node.js 22+:
@@ -88,7 +88,7 @@ The battle is deterministic from a round seed, so anyone can replay a round and 
 ```sh
 git clone https://github.com/DEDQ3E/rare-royale.git
 cd rare-royale
-git checkout 1f80e74058b7cc941e1160eb1c652821913f95d7
+git checkout a58880205f7123d885e14eb3fe0fc1b9fe9a336c
 npm ci
 npm run dev
 ```
@@ -106,10 +106,10 @@ Everything is simulated; you start with 20 RF. The prices are examples that scal
 - **Paid calls:** Smoke, Pry or Boost, 1 RF each, only when a quick decision is open (up to 4 a round).
 - **Sponsoring:** a shield (soaks the next 30 damage) or a medkit (+45 HP) costs 1 RF. A second life (within 5 s of a knockdown, back with 50% HP) costs 2, then 4, then 8 RF, at most 3 per Friend per round. Sponsoring closes at 25 standing.
 - **Looks:** a shout costs 1 RF; auras Ember and Frost 2 RF, Starfall 5 RF; titles Underdog 1, Showrunner 3, High Roller 5 RF (each once per session; challenge titles are free).
-- **Nothing is kept or redeemed:** sponsor items, shouts and looks act at once, so there are no consumables, backing or redemption rules.
+- **Nothing is kept or redeemed:** sponsor items, paid calls, shouts and looks act at once or within the same round (Pry on the next crate), so there are no consumables, backing or redemption rules.
 - **Odds per 1 RF entry** (6,000 simulated rounds):
   - any RF back 45.5%, 1 RF or more 20.1%, win 2.0%, average return 0.79 RF;
-  - no purchase pays for itself in RF (a shield returns 0.29 RF per 1 RF, a paid call 0.16–0.20 RF); the game shows each item's and each call's return and top-10 lift.
+  - no purchase pays for itself in RF (a shield returns 0.29 RF per 1 RF, a paid call 0.16–0.20 RF); the dock shows each item's return and top-10 lift, and a paid call's button shows its own on hover.
 
 **What have you tested?**
 All pass, including from a fresh clone with `npm ci` (the build reproduces the published preview): typecheck; 13 engine tests (map, stats, replay, sponsoring, decisions, paid calls: 1 RF split 50/50, recorded as events, the round replays identically, economy, settlement, ledger, rounds, challenges); `friendsdk check` and `friendsdk test` at 960 and 390 px; `npm run balance` (four fairness targets over 6,000 rounds, plus the burn tables above); an automated browser run through every screen at 960 × 808 and 390 × 844, including a paid call, on into a second round (the SDK's test RPC refuses the hall's live RF supply read, so that one tile shows "unavailable" there); a one-minute recording from the real runtime with a Friend read live from mainnet. Played through on Robinhood mainnet with a real wallet and Friend (see the top).
