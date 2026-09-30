@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   createBattle, createLedger, createRng, generateMap, zoneSchedule, hash32, lineUp, withPlayer, ladderPrizes, settleRound, splitPayment, statsFor, genPoints, roundAt,
   FAMILIES, PROFILES, TACTICS, TUNING, ENTRY_PRICE, BOUNTY, REVIVE_PRICES, ROUND_SIZE, RF, rf, EPOCH_MS, ROUND_MS, LOBBY_MS,
-  type FighterInit,
+  DECISION_OPTIONS, DECISION_PRICE, PAID_OPTION, type BattleEvent, type DecisionKind, type FighterInit,
 } from "../games/rare-royale/engine/index.ts";
 
 const line = (seed: number, size = ROUND_SIZE): FighterInit[] => {
@@ -91,6 +91,60 @@ test("decisions: offered only to deciders and only with valid options", () => {
     }
   }
   assert.ok(offered >= 1 && offered <= TUNING.maxDecisions);
+});
+
+test("paid calls: each costs 1 RF split 50/50, takes effect, is recorded, and the round replays identically", async () => {
+  const { createRoundRunner } = await import("../games/rare-royale/runner.ts");
+  for (const kind of Object.keys(PAID_OPTION) as DecisionKind[]) {
+    assert.equal(DECISION_OPTIONS[kind].length, 3);
+    assert.equal(DECISION_OPTIONS[kind][2], PAID_OPTION[kind], "the paid call is always the third option (key 3)");
+  }
+  assert.deepEqual(splitPayment("decision", DECISION_PRICE), { pool: 0n, bounty: 0n, burned: rf("0.5"), rewards: rf("0.5") });
+  const ledger = createLedger(rf("20"));
+  ledger.spend("decision", DECISION_PRICE);
+  assert.equal(ledger.balance(), rf("19"));
+  assert.equal(ledger.receipt().burned, rf("0.5"));
+  assert.equal(ledger.receipt().rewards, rf("0.5"));
+  assert.equal(ledger.receipt().count.decision, 1);
+
+  const seen = new Set<DecisionKind>();
+  const roster = line(3, 300);
+  for (let id = 100; id < 200 && seen.size < 3; id++) {
+    // Live: the viewer pays through the round's tally and answers with the paid option whenever one is offered.
+    const player: FighterInit = { tokenId: 777_777n, family: "Hoverer", generation: 2, seed: 99, tactic: TACTICS[id % 3] };
+    const r = createRoundRunner(id, roster, player, false, 0), me = r.player, calls: { t: number; option: string }[] = [];
+    while (!r.battle.isOver()) {
+      const d = r.battle.pendingDecision(me);
+      if (d) {
+        const t = r.battle.snapshot().t, option = PAID_OPTION[d.kind];
+        r.recordYours("decision", DECISION_PRICE, me);
+        assert.equal(r.battle.decide(me, option), true);
+        const f = r.battle.fighters()[me];
+        if (option === "smoke") assert.ok(f.smokeUntil > t && f.invulnUntil > t && r.battle.fighters().every(o => o.target !== me));
+        if (option === "boost") assert.ok(f.boostUntil > t && f.hp > 0);
+        if (option === "pry") assert.equal(f.pry, true);
+        calls.push({ t, option }); seen.add(d.kind);
+      }
+      r.advanceTo(r.battle.snapshot().t + 1);
+    }
+    if (!calls.length) continue;
+    // Every call is in the round's events, paid, at the tick it changed.
+    const decided = r.frames.flatMap(fr => fr.events).filter((e): e is Extract<BattleEvent, { kind: "decided" }> => e.kind === "decided");
+    assert.deepEqual(decided.map(e => ({ t: e.t, option: e.option })), calls);
+    assert.ok(decided.every(e => e.paid && e.who === me));
+    assert.equal(r.tally.yours, DECISION_PRICE * BigInt(calls.length));
+    assert.equal(r.tally.yoursBurned, rf("0.5") * BigInt(calls.length));
+    assert.equal(r.backers.get(me)?.has("You") ?? false, false, "a call is not sponsoring");
+    // Replay: the same seed, line-up and calls at the same ticks give the same battle, event for event.
+    const again = createRoundRunner(id, roster, player, false, 0), queue = [...calls];
+    while (!again.battle.isOver()) {
+      while (queue.length && queue[0].t === again.battle.snapshot().t) assert.equal(again.battle.decide(me, queue.shift()!.option), true);
+      again.advanceTo(again.battle.snapshot().t + 1);
+    }
+    assert.deepEqual(again.frames.flatMap(fr => fr.events), r.frames.flatMap(fr => fr.events));
+    assert.deepEqual(again.battle.places(), r.battle.places());
+  }
+  assert.equal(seen.size, 3, "Smoke, Pry and Boost were all offered and played");
 });
 
 test("economy: entry is 60% ladder, 20% bounty, 10% burned, 10% rewards; gameplay payments are 50/50", () => {
@@ -208,7 +262,7 @@ test("runner: records every tick; crowd shouts and sponsors are paid gameplay pa
 test("challenges: each unlocks its title once, from what the round shows", async () => {
   const { CHALLENGES, activeChallenges, completedBy } = await import("../games/rare-royale/challenges.ts");
   const done = new Set<string>();
-  const base = { entered: true, place: 30, kos: 0, tactic: "fight" as const, loots: 0, fanSaves: 0, phaseReached: 0, sponsoredOthers: 0, won: false, kingmaker: false };
+  const base = { entered: true, place: 30, kos: 0, tactic: "fight" as const, loots: 0, fanSaves: 0, phaseReached: 0, sponsoredOthers: 0, won: false, kingmaker: false, smokeEscapes: 0, sessionBurned: 0 };
   assert.deepEqual(completedBy(base, done), []);
   const good = { ...base, place: 1, kos: 3, loots: 6, phaseReached: 5, won: true };
   const got = completedBy(good, done).map(c => c.id);
@@ -217,5 +271,9 @@ test("challenges: each unlocks its title once, from what the round shows", async
   assert.deepEqual(completedBy(good, done), []);
   assert.equal(activeChallenges(done).length, 3);
   assert.ok(completedBy({ ...base, entered: false, kingmaker: true, sponsoredOthers: 1 }, done).every(c => c.id === "kingmaker" || c.id === "patron"));
+  // Spending challenges: 5 RF burned in a session (entries, sponsors, calls, shouts, looks) and one escape with Smoke.
+  assert.deepEqual(completedBy({ ...base, sessionBurned: 4.9 }, done).map(c => c.id), []);
+  assert.deepEqual(completedBy({ ...base, sessionBurned: 5, smokeEscapes: 1 }, done).map(c => c.title).sort(), ["Smoke Artist", "Stoker"]);
+  assert.deepEqual(completedBy({ ...base, entered: false, smokeEscapes: 1 }, done).map(c => c.id), []);
   assert.equal(new Set(CHALLENGES.map(c => c.title)).size, CHALLENGES.length);
 });

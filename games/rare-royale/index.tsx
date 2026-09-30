@@ -7,12 +7,12 @@ import { GENERATION_ELIGIBILITY_ABI } from "@rarefriends/friendsdk/identity";
 import { createFriendPublicClient } from "@rarefriends/friendsdk/wallet";
 import { parseAbi } from "viem";
 import {
-  createLedger, formatRF, generateMap, plannedDrops, ladderPrizes, revivePrice, roundSeed, settleRound, slotId, lineUp, rf, signatureOf, statsFor, splitPayment,
-  BOUNTY, COSMETICS, DECISION_OPTIONS, ENTRY_POOL_BPS, BPS, ENTRY_PRICE, FAMILIES, LOBBY_MS, PROFILES, ROUND_SIZE, SHOUT_PRICE, SHOUTS, SPONSOR_ITEMS, TACTICS, TICK_MS, TUNING, WEAPONS, WORLD,
+  createLedger, formatRF, RF, generateMap, plannedDrops, ladderPrizes, revivePrice, roundSeed, settleRound, slotId, lineUp, rf, signatureOf, statsFor, splitPayment,
+  BOUNTY, COSMETICS, DECISION_OPTIONS, DECISION_PRICE, PAID_OPTION, ENTRY_POOL_BPS, BPS, ENTRY_PRICE, FAMILIES, LOBBY_MS, PROFILES, ROUND_SIZE, SHOUT_PRICE, SHOUTS, SPONSOR_ITEMS, TACTICS, TICK_MS, TUNING, WEAPONS, WORLD,
   type BattleEvent, type Cosmetic, type Family, type Fighter, type FighterInit, type Ledger, type SponsorItemId, type Tactic, type DecisionKind,
 } from "./engine/index.ts";
 import { ROSTER, ROSTER_INITS, FAMILY_COLOR, fighterName, rosterArt, type FriendArt, type SpriteRows } from "./roster.ts";
-import { createRoundRunner, replayRound, type Frame, type PastRound, type RoundRunner, type Tally } from "./runner.ts";
+import { createRoundRunner, replayRound, FURNACE_LIT, type Frame, type PastRound, type RoundRunner, type Tally } from "./runner.ts";
 import { CHALLENGES, activeChallenges, completedBy } from "./challenges.ts";
 import { createNarrator, ordinal, type FeedLine, type Narrator } from "./narrate.ts";
 import { createArenaView, CAM_W, CAM_H, type ArenaLook, type ArenaView } from "./arena.ts";
@@ -68,11 +68,18 @@ const TACTIC_INFO: Readonly<Record<Tactic, { label: string; text: string; key: s
   hide: { label: "Hide", text: "Holds buildings, ambushes. Most top-10s.", key: "2" },
   loot: { label: "Loot", text: "Clears crates first. Best gear.", key: "3" },
 };
-const DECISION_TEXT: Readonly<Record<DecisionKind, { title: string; a: string; b: string }>> = {
-  engage: { title: "Enemy spotted", a: "Fight", b: "Flee" },
-  crate: { title: "Crate nearby", a: "Open it", b: "Skip" },
-  storm: { title: "You're in the storm!", a: "Sprint (-6 HP)", b: "Steady" },
+/** The two free options and the paid third one (1 RF: 50% burned, 50% Friend rewards). */
+const DECISION_TEXT: Readonly<Record<DecisionKind, { title: string; a: string; b: string; c: string; does: string }>> = {
+  engage: { title: "Enemy spotted", a: "Fight", b: "Flee", c: "Smoke", does: "Smoke: nobody sees your Friend for 4 s, whoever aimed at it loses it, no damage for 2 s." },
+  crate: { title: "Crate nearby", a: "Open it", b: "Skip", c: "Pry", does: "Pry: the crate gives loot one tier better; a top crate gives a star wand or 50 armour." },
+  storm: { title: "The storm is on you!", a: "Sprint (-6 HP)", b: "Steady", c: "Boost", does: "Boost: runs 70% faster for 5 s, with no HP cost." },
 };
+/** What each paid call does for the Friend, measured by paired rounds in `npm run balance` (engine/odds.json). */
+const CALL_VALUE: Readonly<Record<DecisionKind, string>> = (() => {
+  const d = ODDS.decisions;
+  const line = (k: DecisionKind) => `returns ${d[k].perRF} RF per 1 RF on average · top 10 ${pct(d[k].top10Without)} → ${pct(d[k].top10With)}`;
+  return { engage: line("engage"), crate: line("crate"), storm: line("storm") };
+})();
 const TUTORIAL: readonly { icon: string; title: string; lines: readonly string[] }[] = [
   { icon: "wand", title: "Welcome to Rare Royale", lines: [
     "Your Friend drops onto an island with 49 real Rare Friends. The top 10 are paid, and every knockout pays a bounty.",
@@ -99,7 +106,8 @@ const TUTORIAL: readonly { icon: string; title: string; lines: readonly string[]
     "Every sponsor payment burns 50% and funds 50% Friend rewards. Sponsoring closes when 25 are left, so nobody can buy the finish.",
     "The Fighters tab lists everyone still standing: tap one to follow and sponsor it. Back the winner and you are a Kingmaker."] },
   { icon: "shield", title: "Your calls, your Friend", lines: [
-    "Up to 4 quick decisions per round: fight or flee, open a crate, sprint out of the storm. Keys 1 and 2.",
+    "Up to 4 quick decisions per round: fight or flee, open a crate, sprint out of the storm. Keys 1 and 2 are free.",
+    "Key 3 is the paid call, 1 RF: Smoke to vanish from a fight, Pry for better loot, Boost out of the storm. Up to 4 moments per round where burning is your tactical call: 50% burned, 50% to Friend rewards.",
     "Your Friend has a teal ring, a YOU arrow and a white marker on the minimap."] },
   { icon: "armor35", title: "Locker, shouts and challenges", lines: [
     "The Locker (L) sells auras and titles for your Friend, and a shout (Y) puts your line in the arena. They never change the fight: 50% burned, 50% to Friend rewards.",
@@ -206,10 +214,10 @@ function Furnace({ burned, reduced }: { burned: bigint; reduced: boolean }) {
     const id = window.setTimeout(() => setPops(p => p.filter(x => x.key !== key)), 1300);
     return () => window.clearTimeout(id);
   }, [burned, reduced]);
-  // Full at 30 RF, a bit above an average round.
-  const fill = Math.min(100, Number(burned * 100n / rf("30")));
+  // Full, and lit, at 30 RF: a bit above an average round.
+  const fill = Math.min(100, Number(burned * 100n / FURNACE_LIT)), lit = burned >= FURNACE_LIT;
   return (
-    <div className="rr-furnace" role="status" aria-label={`${formatRF(burned, 1)} RF burned this round`}>
+    <div className={`rr-furnace ${lit ? "full" : ""}`} role="status" aria-label={`${formatRF(burned, 1)} RF burned this round${lit ? ", furnace lit" : ""}`}>
       <i className={`rr-flame ${reduced ? "" : "lit"}`} aria-hidden="true" />
       <div className="rr-furnace-bar" aria-hidden="true"><b style={{ width: `${fill}%` }} /></div>
       <span>{formatRF(burned, 1)} RF burned</span>
@@ -379,6 +387,8 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
   const lastRender = useRef(0);
   const lastBurn = useRef(0n);
   const wantedSeen = useRef(-1);
+  /** The round whose furnace was lit last, so the flare fires once per round. */
+  const litRound = useRef(-1);
   const musicOffRef = useRef(false);
   const sfx = useCallback((cue: Cue, gain = 1, pan = 0) => { audio.current?.play(cue, { gain, pan }); }, []);
 
@@ -434,6 +444,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
     const facts = {
       entered: !!pf, place: pf?.place ?? 99, kos: pf?.kos ?? 0, tactic: pf?.tactic ?? null, loots: r.log.loots,
       fanSaves: r.log.fanSaves, phaseReached: r.log.phaseReached, sponsoredOthers, won: pf?.place === 1, kingmaker: youKingmaker,
+      smokeEscapes: r.log.smokeEscapes, sessionBurned: Number(ledger.current.receipt().burned * 100n / RF) / 100,
     };
     const unlocked = completedBy(facts, session.current.done).map(c => { session.current.done.add(c.id); return c.title; });
     if (r.player >= 0) {
@@ -495,6 +506,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
       else if (e.kind === "loot" && mine) a.play(e.item === "wand" || e.item === "armor50" ? "pickup-gold" : e.item.startsWith("armor") ? "pickup-armor" : e.item === "bandages" ? "pickup-bandage" : "pickup-weapon", { gain: 0.8 });
       else if (e.kind === "heal" && mine) a.play("heal", { gain: 0.7 });
       else if (e.kind === "decision" && mine) a.play("decision");
+      else if (e.kind === "decided" && mine && e.paid) a.play(e.option === "smoke" ? "smoke" : e.option === "boost" ? "jump" : "pickup-weapon", { gain: 0.8 });
       else if (e.kind === "out" && e.by === me && e.cause === "fight" && paid[me] && paid[e.who]) a.play("bounty");
       else if (e.kind === "sponsor" && e.by !== "You" && (mine || near(e.who))) { if (mine) a.play("airdrop"); a.play(e.item === "shield" ? "shield" : e.item === "medkit" ? "heal" : "revive", { gain: mine ? 1 : 0.5, far: mine ? 0 : near(e.who)?.far }); }
       else if ((e.kind === "downed" || e.kind === "out") && loud < 1) {
@@ -568,6 +580,14 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
             if (e.kind === "sponsor" && e.who === r.player && e.by !== "You") { saves.current += 1; alert(`${e.by} sponsored you: ${SPONSOR_ITEMS[e.item].name}!`); }
             else if (e.kind === "sponsor" && e.by.startsWith("Fan") && e.item === "revive") alert(`${e.by} burned ${formatRF((revivePrice(r.battle.fighters()[e.who].revives - 1) ?? 0n) / 2n)} RF: second life for ${fighterName(r.battle.fighters()[e.who].id)}`);
           }
+        }
+        // The furnace lights once per round, when the round has burned FURNACE_LIT.
+        if (r.tally.burned >= FURNACE_LIT && litRound.current !== r.id) {
+          litRound.current = r.id;
+          arena.current?.flare(t);
+          audio.current?.play("furnace");
+          alert(`Furnace lit! ${formatRF(r.tally.burned, 1)} RF burned this round`);
+          setAnnouncer(`Furnace lit! This round has burned ${formatRF(r.tally.burned, 1)} RF.`);
         }
         // A new most-wanted Friend is announced.
         const w = wantedOf(r);
@@ -758,14 +778,27 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paused, target, withConfirm, flash, alert, sfx]);
 
-  const decide = useCallback((option: 0 | 1) => {
+  const decide = useCallback((option: 0 | 1 | 2) => {
     const rr = runner.current;
     if (paused || !rr || rr.player < 0) return;
     const d = rr.battle.pendingDecision(rr.player);
     if (!d) return;
-    rr.battle.decide(rr.player, DECISION_OPTIONS[d.kind][option]);
-    setFrame(n => n + 1);
-  }, [paused]);
+    const choice = DECISION_OPTIONS[d.kind][option];
+    if (choice !== PAID_OPTION[d.kind]) { rr.battle.decide(rr.player, choice); setFrame(n => n + 1); return; }
+    // The paid call: a gameplay payment like a sponsor item, 50% burned and 50% Friend rewards.
+    if (!ledger.current.canAfford(DECISION_PRICE)) { flash("Not enough simulated RF. Keys 1 and 2 are free."); return; }
+    withConfirm(() => {
+      const still = rr.battle.pendingDecision(rr.player);
+      if (!still || still.kind !== d.kind) { flash("Too late: your tactic decided."); return; }
+      ledger.current.spend("decision", DECISION_PRICE);
+      session.current.spent += DECISION_PRICE;
+      rr.recordYours("decision", DECISION_PRICE, rr.player);
+      rr.battle.decide(rr.player, choice);
+      sfx("burn");
+      alert(`You burned ${formatRF(splitPayment("decision", DECISION_PRICE).burned)} RF: ${DECISION_TEXT[d.kind].c}`);
+      setFrame(n => n + 1);
+    });
+  }, [paused, withConfirm, flash, alert, sfx]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -796,7 +829,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
       } else if (screen === "live") {
         if (k === "s") sponsor("shield"); else if (k === "m") sponsor("medkit"); else if (k === "r") sponsor("revive");
         else if (k === "t") setTarget(x => (x === "you" ? "camera" : "you"));
-        else if (k === "1") decide(0); else if (k === "2") decide(1);
+        else if (k === "1") decide(0); else if (k === "2") decide(1); else if (k === "3") decide(2);
         else if (k === "y") setShoutOpen(true);
         else if (k === "f") setRightTab(x => (x === "feed" ? "fighters" : "feed"));
       } else if (screen === "results") {
@@ -957,7 +990,11 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
                   <div>
                     <button className="rr-btn rr-primary" onClick={() => decide(0)}>{DECISION_TEXT[decision.kind].a} <kbd>1</kbd></button>
                     <button className="rr-btn" onClick={() => decide(1)}>{DECISION_TEXT[decision.kind].b} <kbd>2</kbd></button>
+                    <button className="rr-btn rr-paid" onClick={() => decide(2)} title={`${DECISION_TEXT[decision.kind].does} It ${CALL_VALUE[decision.kind]}.`}>
+                      {DECISION_TEXT[decision.kind].c} · {formatRF(DECISION_PRICE)} RF <kbd>3</kbd>
+                    </button>
                   </div>
+                  <small className="rr-paid-note">{DECISION_TEXT[decision.kind].does} 50% burned.</small>
                   <small>{mmss((decision.deadline + 1 - (snap?.t ?? 0)) * TICK_MS)} to decide · otherwise your tactic decides</small>
                 </div>
               )}
@@ -1067,11 +1104,11 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
               {results.unlocked.length > 0 && <p className="rr-unlocked" title={results.unlocked.join(", ")}>{results.unlocked.length > 1 ? `${results.unlocked.length} titles` : "Title"} unlocked: {results.unlocked.slice(0, 3).join(", ")}{results.unlocked.length > 3 ? ` +${results.unlocked.length - 3}` : ""}. Wear {results.unlocked.length > 1 ? "them" : "it"} from the Locker.</p>}
             </div>
             <div className="rr-panel rr-burn">
-              <p className="rr-muted">Burned this round <small>· spent → burned, by source</small></p>
+              <p className="rr-muted">Burned this round <small>· spent → burned, by source</small>{results.tally.burned >= FURNACE_LIT && <b className="rr-lit-badge">Furnace lit</b>}</p>
               <p className="rr-bebas rr-mid rr-amber rr-embers"><CountUp value={results.tally.burned} reduced={reducedMotion} /> RF</p>
               <p className="rr-row"><span>Entries ({results.tally.paid} × 1 RF)</span><span>{spentBurned(results.tally.entries, results.tally.burned - results.tally.bountyBurned - results.tally.crowdBurned - results.tally.yoursBurned)}</span></p>
               <p className="rr-row"><span>Other entrants and viewers (simulated)</span><span>{spentBurned(results.tally.crowd, results.tally.crowdBurned)}</span></p>
-              <p className="rr-row rr-row-yours"><span>Your sponsors and shouts</span><span>{spentBurned(results.tally.yours, results.tally.yoursBurned)}</span></p>
+              <p className="rr-row rr-row-yours"><span>Your sponsors, calls and shouts</span><span>{spentBurned(results.tally.yours, results.tally.yoursBurned)}</span></p>
               {results.myBurn.session > 0n && <p className="rr-row rr-row-mine"><span>You burned (all your payments)</span><span>{rfText(results.myBurn.round)} · {rfText(results.myBurn.session)} this session</span></p>}
               <p className="rr-row"><span>Bounties burned by the storm</span><span>{rfText(results.tally.bountyBurned)}</span></p>
               <p className="rr-row"><span>To Friend rewards</span><span>{rfText(results.tally.rewards)}</span></p>
@@ -1088,6 +1125,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
             <div className="rr-tiles">
               <div className="rr-tile live"><small>RF burned to date · live on-chain</small><b>{supply === undefined ? "…" : supply === null ? "unavailable" : `${Math.round((RF_INITIAL_SUPPLY - supply) / 1e5) / 10}M`}</b><em>{supply ? `supply ${(supply / 1e6).toFixed(2)}M of 1,024M` : "totalSupply of the RF token"}</em></div>
               <div className="rr-tile"><small>Burned in the last {HISTORY_ROUNDS} rounds · simulated</small><b>{rfText(history.reduce((a, h) => a + h.burned, 0n))}</b><em>{history.length ? `${formatRF(history.reduce((a, h) => a + h.burned, 0n) / BigInt(history.length), 1)} RF per round` : "replaying…"}</em></div>
+              <div className="rr-tile rr-tile-lit"><small>Furnace lit · {formatRF(FURNACE_LIT)}+ RF burned</small><b>{history.length ? `${history.filter(h => h.burned >= FURNACE_LIT).length} of the last ${history.length}` : "…"}</b><em>rounds, simulated</em></div>
               <div className="rr-tile"><small>You burned this session</small><b>{rfText(receipt.burned)}</b><em>+{rfText(receipt.rewards)} to rewards</em></div>
               <div className="rr-tile"><small>Your session</small><b>{session.current.rounds} round{session.current.rounds === 1 ? "" : "s"}</b><em>best {session.current.best ? ordinal(session.current.best) : "—"} · {session.current.kos} KO · won {rfText(receipt.won)}{session.current.kingmaker ? ` · Kingmaker ×${session.current.kingmaker}` : ""}</em></div>
             </div>
@@ -1176,7 +1214,7 @@ export default function RareRoyale({ friendId, client, paused }: GameComponentPr
             <div className="rr-panel rr-confirm">
               <h3>Simulated RF</h3>
               <p>This preview never asks for a transaction. Balances, entries, prizes and burns are simulated.</p>
-              <p>Live, every entry would send 0.6 RF to the round's top-10 ladder and 0.2 RF to the bounty on your head, burn 0.1 RF and fund 0.1 RF of active Friend rewards. Every sponsor payment would burn 50% and fund 50% rewards. Prizes are paid only from paid entries.</p>
+              <p>Live, every entry would send 0.6 RF to the round's top-10 ladder and 0.2 RF to the bounty on your head, burn 0.1 RF and fund 0.1 RF of active Friend rewards. Every sponsor payment, paid call (Smoke, Pry, Boost), shout and look would burn 50% and fund 50% rewards. Prizes are paid only from paid entries.</p>
               <div className="rr-row-btns">
                 <button className="rr-btn rr-primary" onClick={() => { setConfirmed(true); askConfirm(); setAskConfirm(null); }}>Got it <kbd>Enter</kbd></button>
                 <button className="rr-btn" onClick={() => setAskConfirm(null)}>Cancel</button>

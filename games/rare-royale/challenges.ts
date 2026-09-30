@@ -7,6 +7,10 @@ import type { Tactic } from "./engine/index.ts";
 export type RoundFacts = Readonly<{
   entered: boolean; place: number; kos: number; tactic: Tactic | null; loots: number;
   fanSaves: number; phaseReached: number; sponsoredOthers: number; won: boolean; kingmaker: boolean;
+  /** Smoke calls after which the Friend was still standing 10 seconds later. */
+  smokeEscapes: number;
+  /** Everything the viewer's own payments burned this session so far, in RF. */
+  sessionBurned: number;
 }>;
 
 export type Challenge = Readonly<{ id: string; text: string; title: string; test: (f: RoundFacts) => boolean }>;
@@ -15,6 +19,8 @@ export const CHALLENGES: readonly Challenge[] = [
   { id: "top10", text: "Finish in the top 10", title: "Contender", test: f => f.entered && f.place <= 10 },
   { id: "ko2", text: "Knock out 2 Friends in one round", title: "Brawler", test: f => f.entered && f.kos >= 2 },
   { id: "patron", text: "Sponsor another Friend", title: "Patron", test: f => f.sponsoredOthers >= 1 },
+  { id: "stoker", text: "Burn 5 RF in one session", title: "Stoker", test: f => f.sessionBurned >= 5 },
+  { id: "smoke", text: "Escape with Smoke", title: "Smoke Artist", test: f => f.entered && f.smokeEscapes >= 1 },
   { id: "loot5", text: "Pick up 5 items in one round", title: "Scavenger", test: f => f.entered && f.loots >= 5 },
   { id: "circle4", text: "Survive into the 4th circle", title: "Survivor", test: f => f.entered && f.phaseReached >= 3 },
   { id: "ghost", text: "Reach the top 10 with Hide", title: "Ghost", test: f => f.entered && f.tactic === "hide" && f.place <= 10 },

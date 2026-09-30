@@ -26,26 +26,30 @@ Every round starts with a 1-minute lobby from the moment you arrive ("Start now"
 - **Storm:** six circles, each one shifted inside the last; the storm hurts more every phase and forces rotations.
 - **Fights:** ranged, with line of sight through woods and rocks, cover inside buildings, armour, knockdowns and loot drops.
   A knocked-down Friend has 5 seconds for someone to buy it a second life.
-  Up to 4 free decisions per round: fight or flee, open a crate, sprint out of the storm.
+  Up to 4 quick decisions per round: fight or flee, open a crate, sprint out of the storm (keys 1 and 2, free), or the
+  paid call on key 3 for 1 RF: **Smoke** to vanish from a fight, **Pry** for loot one tier better, **Boost** out of the
+  storm. Up to 4 moments per round where burning is your tactical call.
 - **Sponsoring:** shield, medkit or second life for your Friend or the one on camera, dropped in a capsule with the
-  sponsor's name. A furnace in the dock fills with the round's burn. Sponsoring closes when 25 are left.
+  sponsor's name. A furnace in the dock fills with the round's burn; at 30 RF it is lit once per round (a flare of embers
+  in the arena, a banner and its own sound; a still banner with reduced motion). Sponsoring closes when 25 are left.
 - **Spectating:** the Fighters tab lists everyone still standing; pick one to follow it with the camera and sponsor it.
 - **Results:** the top 10 with their payouts, your place and what you won (ladder place plus bounties), damage,
   who knocked you out, the round's top sponsor and Kingmakers (who backed the winner), what the round burned and what
   your own payments burned this round and this session.
   **Replay the final** plays the last 20 seconds again with the winner on camera and names its Kingmakers.
-- **Hall of fame:** RF burned to date (live `totalSupply`), the burn of the last 12 rounds, and the latest champions with
-  each round's top sponsor.
+- **Hall of fame:** RF burned to date (live `totalSupply`), the burn of the last 12 rounds, how many of them lit the
+  furnace, and the latest champions with each round's top sponsor.
 - **Locker and shouts:** auras and titles for your Friend, and paid shouts in the arena. Looks only, never the fight.
-- **Challenges:** three goals in the lobby at a time (top 10, two knockouts, sponsor another Friend, back the winner
-  and more). Each unlocks a free title, win or lose. Progress lasts for the session.
+- **Challenges:** three goals in the lobby at a time (top 10, two knockouts, sponsor another Friend, burn 5 RF in a
+  session, escape with Smoke, back the winner and more; 11 in all). Each unlocks a free title, win or lose, that never
+  changes the fight. Progress lasts for the session.
 
 ## Controls
 
 | Where | Keys | Touch or mouse |
 |---|---|---|
 | Lobby | 1, 2, 3: tactic · E: enter for 1 RF · P: practice · L: locker | Tap a place on the map, the tactic cards and the buttons |
-| Battle | S: shield · M: medkit · R: second life · T: switch sponsor target · 1, 2: decisions · Y: shout (then 1–6) · F: Fighters tab | Dock buttons, tap a Friend in the Fighters tab to follow it |
+| Battle | S: shield · M: medkit · R: second life · T: switch sponsor target · 1, 2: free decisions · 3: paid call (1 RF) · Y: shout (then 1–6) · F: Fighters tab | Dock buttons, tap a Friend in the Fighters tab to follow it |
 | Results | V: replay the final | Replay the final button |
 | Anywhere | H: hall of fame · Esc: close · arrows and Enter in the guide | How to play, Sound and Hall of fame buttons |
 
@@ -65,6 +69,7 @@ The prices are examples. For higher prices, multiply them all by the same number
 | Second life (within 5 s of a knockdown; back with 50% HP) | 2, then 4, then 8 RF (max 3 per Friend per round) | 50% burned, 50% active Friend rewards |
 | Aura (Ember, Frost 2 RF · Starfall 5 RF) | once per session | 50% burned, 50% active Friend rewards; looks only |
 | Title (Underdog 1 · Showrunner 3 · High Roller 5 RF) | once per session | 50% burned, 50% active Friend rewards; looks only. Challenge titles are free |
+| Paid call in a decision: Smoke, Pry or Boost (key 3) | 1 RF | 50% burned, 50% active Friend rewards |
 | Shout | 1 RF | 50% burned, 50% active Friend rewards; a line in the ticker and over your Friend |
 
 - **Ladder:** with 50 paid entries the ladder is 30 RF: 8, 5, 4, 3 and 2.5 RF for places 1 to 5 and 1.5 RF for places
@@ -92,7 +97,8 @@ An average round moves 87.1 RF: 50 RF of entries and 37.1 RF of sponsoring and s
 viewers (0.74 RF each per round). 39.4 RF returns to players, 24.2 RF (28%) is burned and 23.6 RF funds active Friend
 rewards; the viewer's own cosmetics come on top. Without that crowd a round spends 50 RF and burns 5.6 RF (11%); at half of it, 66.5 RF and
 13.9 RF (21%). One real player alone burns 10% of what they spend with the entry only, 31% as a careful player (a shield and a
-medkit when hurt) and 44% buying every item. `BALANCE.md` has the tables and the crowd model.
+medkit when hurt), 41% paying for every Smoke, Pry and Boost call (4.54 RF spent, 1.87 RF burned a round) and 45% buying every
+item and call. No paid call pays for itself: each returns 0.16–0.20 RF per 1 RF. `BALANCE.md` has the tables and the crowd model.
 
 Fairness is checked by `npm run balance`; the results are in `BALANCE.md` and the lobby odds in `engine/odds.json`.
 No Generation, family or tactic earns more than 1.2× the average, every tactic returns within 5% of the average (the

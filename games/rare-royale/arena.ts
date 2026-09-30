@@ -11,8 +11,10 @@ export const CAM_W = 600, CAM_H = 300;
 
 type Shot = { born: number; dur: number; fx: number; fy: number; tx: number; ty: number; weapon: WeaponId; hit: boolean; dmg: number; armor: number; blocked: string; to: number; from: number };
 type Pop = { born: number; x: number; y: number; text: string; color: string };
-type Effect = { born: number; kind: "down" | "revive" | "loot" | "heal" | "flash" | "land" | "poof" | "capsule"; who: number; item?: string; by?: string; x: number; y: number };
+type Effect = { born: number; kind: "down" | "revive" | "loot" | "heal" | "flash" | "land" | "poof" | "capsule" | "smoke"; who: number; item?: string; by?: string; x: number; y: number };
 const CAPSULE_MS = 1500, CAPSULE_FALL = 900;
+/** A Smoke cloud lasts as long as the engine hides the Friend; the furnace flare lasts a few seconds. */
+const SMOKE_MS = 4000, FLARE_MS = 3200;
 const CAPSULE_COLOR: Readonly<Record<string, string>> = { shield: "#85B7EB", medkit: "#E24B4A", revive: "#FAC775" };
 /** A short body movement: a melee lunge, a shot's recoil or the knock-back of a hit (screen pixels, per sprite scale). */
 type Motion = { born: number; dur: number; who: number; dx: number; dy: number; amp: number };
@@ -25,6 +27,8 @@ export type ArenaView = Readonly<{
   push(snapshot: BattleSnapshot, events: readonly BattleEvent[], now: number): void;
   draw(now: number, focus: number, player: number, reducedMotion: boolean): void;
   drawMinimap(canvas: HTMLCanvasElement, player: number, now: number): void;
+  /** The furnace is lit: a warm flash and a shower of embers over the whole camera (a still banner with reduced motion). */
+  flare(now: number): void;
   /** Where the camera looks, in world units, and how far it sees (half the visible width). */
   view(): Readonly<{ x: number; y: number; halfWidth: number }>;
 }>;
@@ -96,6 +100,7 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
   let prev: BattleSnapshot | null = null, cur: BattleSnapshot | null = null, tickAt = 0;
   let camX = map.airship.ax, camY = map.airship.ay, zoom = 2, camInit = false;
   const shots: Shot[] = [], pops: Pop[] = [], effects: Effect[] = [];
+  let flareAt = -1e9;
   const hitFlash = new Map<number, number>();
   const motions: Motion[] = [];
   /** Camera shakes for hits and knockdowns on the Friend on camera. */
@@ -120,6 +125,7 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
 
   return {
     view: () => ({ x: camX, y: camY, halfWidth: CAM_W / 2 / zoom }),
+    flare(now) { flareAt = now; },
     push(snapshot, events, now) {
       prev = cur; cur = snapshot; tickAt = now;
       for (const e of events) {
@@ -142,6 +148,12 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
         else if (e.kind === "sponsor") effects.push({ born: now, kind: "capsule", who: e.who, item: e.item, by: e.by, x: 0, y: 0 });
         else if (e.kind === "heal") effects.push({ born: now, kind: "heal", who: e.who, x: 0, y: 0 });
         else if (e.kind === "land") effects.push({ born: now, kind: "land", who: e.who, x: 0, y: 0 });
+        else if (e.kind === "decided" && e.paid) {
+          // A paid call: its name rises over the Friend, and Smoke leaves a cloud for as long as it hides it.
+          const f = snapshot.fighters[e.who];
+          pops.push({ born: now, x: f.x, y: f.y - 3, text: e.option.toUpperCase(), color: "#FAC775" });
+          if (e.option === "smoke") effects.push({ born: now, kind: "smoke", who: e.who, x: f.x, y: f.y });
+        }
         else if (e.kind === "storm_hit") { const f = snapshot.fighters[e.who]; pops.push({ born: now, x: f.x, y: f.y, text: `-${e.dmg}`, color: "#AFA9EC" }); }
       }
       const cutoff = now - 4000;
@@ -342,6 +354,16 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
           }
           continue;
         }
+        if (e.kind === "smoke" && f && age >= 0 && age < SMOKE_MS) {
+          // A grey cloud that follows the Friend, thins out and drifts up; still puffs with reduced motion.
+          const p = posOf(e.who, k), x = sx(p.x), y = sy(p.y) - 10, s = age / SMOKE_MS, sc = Z >= 3 ? 2 : 1;
+          for (let q = 0; q < 8; q++) {
+            const a = q * Math.PI / 4 + (reducedMotion ? 0 : age / 900), r = (5 + (q % 3) * 2) * sc + (reducedMotion ? 0 : s * 6);
+            g.fillStyle = `rgba(200,198,214,${0.6 * (1 - s * s)})`;
+            g.beginPath(); g.arc(x + Math.cos(a) * r, y + Math.sin(a) * r * 0.6 - (reducedMotion ? 0 : s * 8), (4 + (q % 2) * 2) * sc, 0, Math.PI * 2); g.fill();
+          }
+          continue;
+        }
         if (age < 0 || age > 900 || !f) continue;
         if (e.kind === "poof") {
           const x = sx(e.x), y = sy(e.y) - 8, s = age / 900;
@@ -391,6 +413,30 @@ export function createArenaView(canvas: HTMLCanvasElement, map: GameMap, artOf: 
           g.fillStyle = YOU; g.beginPath(); g.moveTo(10, 0); g.lineTo(-6, -7); g.lineTo(-6, 7); g.fill();
           g.restore();
         }
+      }
+
+      // The furnace is lit: a warm flash, embers rising over the whole picture and a banner.
+      const fa = now - flareAt;
+      if (fa >= 0 && fa < FLARE_MS) {
+        const fade = fa < FLARE_MS - 500 ? 1 : (FLARE_MS - fa) / 500;
+        if (!reducedMotion) {
+          if (fa < 400) { g.fillStyle = `rgba(250,199,117,${0.45 * (1 - fa / 400)})`; g.fillRect(0, 0, CAM_W, CAM_H); }
+          for (let q = 0; q < 70; q++) {
+            const x = (q * 97 + (q % 5) * 13) % CAM_W + Math.sin(fa / 300 + q) * 6, speed = 0.08 + (q % 7) * 0.02;
+            const y = CAM_H + 10 - ((fa * speed + q * 37) % (CAM_H + 20)), e = q % 4 ? 3 : 5;
+            g.fillStyle = `rgba(216,90,48,${0.5 * fade})`; g.fillRect(Math.round(x) - 1, Math.round(y) - 1, e + 2, e + 2);
+            g.fillStyle = q % 3 ? `rgba(250,199,117,${0.95 * fade})` : `rgba(255,243,196,${fade})`;
+            g.fillRect(Math.round(x), Math.round(y), e, e);
+          }
+        }
+        const text = "FURNACE LIT!", rise = reducedMotion ? 0 : Math.max(0, 1 - fa / 300) * 12;
+        g.font = "16px Silkscreen, monospace";
+        const w = Math.ceil(g.measureText(text).width) + 20, bx = CAM_W / 2 - w / 2, by = CAM_H * 0.62 + rise;
+        g.globalAlpha = fade;
+        g.fillStyle = "rgba(14,16,32,.85)"; g.fillRect(bx, by, w, 26);
+        g.fillStyle = "#EF9F27"; g.fillRect(bx, by + 24, w, 2);
+        g.fillStyle = "#FAC775"; g.fillText(text, bx + 10, by + 18);
+        g.globalAlpha = 1;
       }
 
       // Place names while the camera is wide.

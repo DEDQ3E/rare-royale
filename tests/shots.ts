@@ -37,6 +37,19 @@ await testGame("./games/rare-royale", {
     await game.getByRole("button", { name: "Start now" }).click();
     const t0 = await game.locator("body").evaluate(() => Date.now());
     await game.getByLabel("Arena camera").waitFor();
+    // The first quick decision (usually the landing crate): the free options and the paid call on key 3.
+    for (let at = 16_000; at < 60_000; at += 1000) {
+      await page.clock.setSystemTime(t0 + at);
+      await page.waitForTimeout(250);
+      if (await game.locator(".rr-decision").isVisible().catch(() => false)) {
+        await shot("4b-decision");
+        await game.locator(".rr-decision .rr-paid").click();
+        await gotIt();
+        await page.waitForTimeout(400);
+        await shot("4c-paid-call");
+        break;
+      }
+    }
     for (const [at, name] of [[5_000, "4-live-drop"], [30_000, "5-live-landed"], [75_000, "6-live-fight"], [130_000, "6b-live-late"]] as const) {
       await page.clock.setSystemTime(t0 + at);
       await page.waitForTimeout(1500);

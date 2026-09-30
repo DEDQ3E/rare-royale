@@ -30,6 +30,9 @@ export const TUNING = {
   sprintMul: 1.5, sprintCost: 6, sprintTicks: 4,
   sponsorWindowMin: 25,
   maxDecisions: 4, decisionGapTicks: 12, decisionWindowTicks: 5, decisionHoldTicks: 10,
+  /** Paid calls. Smoke: hidden from every rival for a few seconds and untouchable for the first ones. Boost: a faster
+   * sprint with no HP cost. Pry: the next crate gives loot one tier better. */
+  smokeTicks: 4, smokeInvulnTicks: 2, boostMul: 1.7, boostTicks: 5,
   /** Storm circles: radius per phase, wait and shrink seconds, damage per second outside. */
   zoneRadius: [135, 88, 58, 36, 20, 9, 0],
   zoneWait: [34, 14, 12, 10, 8, 6],
@@ -52,9 +55,12 @@ export type FighterState = "air" | "alive" | "downed" | "out";
 export type Mode = "drop" | "loot" | "fight" | "rotate" | "retreat" | "hide" | "roam" | "heal" | "down";
 export type LootId = WeaponId | "armor20" | "armor35" | "armor50" | "bandages";
 export type DecisionKind = "engage" | "crate" | "storm";
-export const DECISION_OPTIONS: Readonly<Record<DecisionKind, readonly [string, string]>> = {
-  engage: ["fight", "flee"], crate: ["open", "skip"], storm: ["sprint", "steady"],
+/** Two free options and a third one that costs RF (see `PAID_OPTION`). */
+export const DECISION_OPTIONS: Readonly<Record<DecisionKind, readonly [string, string, string]>> = {
+  engage: ["fight", "flee", "smoke"], crate: ["open", "skip", "pry"], storm: ["sprint", "steady", "boost"],
 };
+/** The paid option of each decision: a gameplay payment of DECISION_PRICE (economy.ts). */
+export const PAID_OPTION: Readonly<Record<DecisionKind, string>> = { engage: "smoke", crate: "pry", storm: "boost" };
 export type KoCause = "fight" | "storm";
 
 export type FighterInit = FighterIdentity & Readonly<{ tactic?: Tactic; drop?: string }>;
@@ -76,6 +82,8 @@ export type Fighter = {
   downedAt: number; place: number; kos: number; koBy: number; koCause: "" | KoCause; damage: number;
   revives: number; invulnUntil: number; firstHitTaken: boolean; lastStandUsed: boolean;
   sprintUntil: number; sponsored: number;
+  /** Paid calls: hidden in smoke until, boosted until, and a pried next crate. */
+  smokeUntil: number; boostUntil: number; pry: boolean;
   /** Where the Friend is heading when nothing else needs it, and until when it keeps that plan. */
   goalX: number; goalY: number; goalUntil: number;
   /** Side-step direction in a firefight, kept for a few seconds. */
@@ -100,6 +108,7 @@ export type BattleEvent = Readonly<
   | { t: number; kind: "sponsor"; who: number; item: SponsorItemId; by: string }
   | { t: number; kind: "window_closed"; alive: number }
   | { t: number; kind: "decision"; who: number; decision: DecisionKind; deadline: number }
+  | { t: number; kind: "decided"; who: number; decision: DecisionKind; option: string; paid: boolean }
   | { t: number; kind: "winner"; who: number }
 >;
 
@@ -223,6 +232,7 @@ export function createBattle(options: BattleOptions): Battle {
       weapon: "fists", bandages: 0, charge: 0, target: -1, lastHitAt: -99, seenBy: [],
       downedAt: -1, place: 0, kos: 0, koBy: -1, koCause: "", damage: 0,
       revives: 0, invulnUntil: -1, firstHitTaken: false, lastStandUsed: false, sprintUntil: -1, sponsored: 0,
+      smokeUntil: -1, boostUntil: -1, pry: false,
       goalX: 0, goalY: 0, goalUntil: -1, strafe: 1, strafeUntil: -1,
     };
   });
@@ -232,6 +242,8 @@ export function createBattle(options: BattleOptions): Battle {
   const choices = new Map<number, Choice[]>();
 
   let tickEvents: BattleEvent[] = [];
+  /** Decisions answered between ticks: recorded at the start of the next tick, the first one they change. */
+  let queued: BattleEvent[] = [];
   const emit = (e: BattleEvent) => { events.push(e); tickEvents.push(e); };
   const standing = () => fighters.filter(f => f.state !== "out").length;
   const landed = (f: Fighter) => f.state === "alive";
@@ -257,13 +269,13 @@ export function createBattle(options: BattleOptions): Battle {
   function threats(f: Fighter) {
     const out: { o: Fighter; d: number }[] = [];
     for (const o of fighters) {
-      if (o === f || !landed(o)) continue;
+      if (o === f || !landed(o) || t < o.smokeUntil) continue;
       const d = dist(f.x, f.y, o.x, o.y);
       if (d <= sightOf(f, o) && !map.blocked(f.x, f.y, o.x, o.y)) out.push({ o, d });
     }
     return out.sort((a, b) => a.d - b.d);
   }
-  const speedOf = (f: Fighter) => (T.moveBase + f.stats.speed * T.movePerSpeed) * (f.mods.moveMul ?? 1) * (t < f.sprintUntil ? T.sprintMul : 1);
+  const speedOf = (f: Fighter) => (T.moveBase + f.stats.speed * T.movePerSpeed) * (f.mods.moveMul ?? 1) * (t < f.boostUntil ? T.boostMul : t < f.sprintUntil ? T.sprintMul : 1);
 
   function stepTo(f: Fighter, tx: number, ty: number, amount: number) {
     const d = dist(f.x, f.y, tx, ty);
@@ -345,10 +357,14 @@ export function createBattle(options: BattleOptions): Battle {
   }
   function openCrate(f: Fighter, i: number, rng: Rng) {
     crateOpen[i] = true;
-    const tier = Math.min(3, map.crates[i].tier + (rng.chance(f.stats.wits * 0.012 + (f.tactic === "loot" ? T.lootTierBonus : 0)) ? 1 : 0));
+    const usual = Math.min(3, map.crates[i].tier + (rng.chance(f.stats.wits * 0.012 + (f.tactic === "loot" ? T.lootTierBonus : 0)) ? 1 : 0));
+    // Pried open: one tier better than usual; a top crate gives only the best weapon or armour.
+    const tier = f.pry ? usual + 1 : usual;
+    f.pry = false;
     const table: readonly (readonly [LootId, number])[] = tier === 1
       ? [["slingshot", 35], ["armor20", 30], ["bandages", 35]]
-      : tier === 2 ? [["bow", 25], ["hammer", 20], ["armor35", 30], ["bandages", 25]] : [["wand", 35], ["armor50", 35], ["bow", 15], ["bandages", 15]];
+      : tier === 2 ? [["bow", 25], ["hammer", 20], ["armor35", 30], ["bandages", 25]]
+        : tier === 3 ? [["wand", 35], ["armor50", 35], ["bow", 15], ["bandages", 15]] : [["wand", 50], ["armor50", 50]];
     let roll = rng.next() * 100;
     for (const [item, w] of table) { roll -= w; if (roll <= 0) { loot(f, item); return; } }
   }
@@ -366,14 +382,14 @@ export function createBattle(options: BattleOptions): Battle {
     const seen = threats(f), nearest = seen[0];
     const w = WEAPONS[f.weapon], wounded = f.hp < f.maxHp * T.woundedFrac;
     const attacked = t - f.lastHitAt <= 3;
-    const engage = choiceFor(f, "engage");
+    const engage = choiceFor(f, "engage"), fleeing = engage === "flee" || engage === "smoke";
     let target: Fighter | null = null;
     // Unarmed and not under fire: grab the nearest crate first, like any sensible Friend after landing.
-    const grab = w.tier === 0 && !attacked && engage !== "fight" ? map.crates.findIndex((c, i) => !crateOpen[i] && dist(f.x, f.y, c.x, c.y) < 12) : -1;
+    const grab = w.tier === 0 && !attacked && engage !== "fight" && choiceFor(f, "crate") !== "skip" ? map.crates.findIndex((c, i) => !crateOpen[i] && dist(f.x, f.y, c.x, c.y) < 12) : -1;
     if (grab >= 0) {
       f.target = -1; f.mode = "loot";
       const c = map.crates[grab];
-      if (dist(f.x, f.y, c.x, c.y) <= 2.2) openCrate(f, grab, rng); else stepTo(f, c.x, c.y, speedOf(f));
+      if (dist(f.x, f.y, c.x, c.y) <= 2.2) openCrate(f, grab, rng); else { offerDecision(f, "crate"); stepTo(f, c.x, c.y, speedOf(f)); }
       return;
     }
     // The best target in sight: close, weak, or busy fighting someone else (a third party).
@@ -382,7 +398,7 @@ export function createBattle(options: BattleOptions): Battle {
       .map(s => ({ s, score: s.d + (s.o.hp + s.o.armor) * 0.12 - (s.o.state === "alive" && s.o.target >= 0 && s.o.target !== f.index ? 6 : 0) }))
       .sort((a, b) => a.score - b.score)[0]?.s ?? nearest;
     if (engage === "fight") target = nearest?.o ?? null;
-    else if (engage !== "flee" && nearest) {
+    else if (!fleeing && nearest) {
       const attacker = attacked ? seen.find(s => s.o.target === f.index)?.o ?? null : null;
       if (f.tactic === "fight") target = !wounded && (w.ranged || pick!.d < 14) ? pick!.o : attacker;
       else if (f.tactic === "loot") target = attacker ?? (nearest.d < w.range * 0.8 ? nearest.o : null);
@@ -396,7 +412,8 @@ export function createBattle(options: BattleOptions): Battle {
     const toNext = dist(f.x, f.y, zone.ncx, zone.ncy) - zone.nr * 0.7;
     const timeLeft = zone.nextChangeAt - t;
     const mustRotate = !inZone || (toNext > 0 && toNext / step > timeLeft - 4);
-    if (!inZone && zone.r > 0) offerDecision(f, "storm");
+    // The storm call comes when the storm has caught the Friend or will before it reaches the next circle.
+    if (mustRotate && zone.r > 0) offerDecision(f, "storm");
 
     if (mustRotate && !(target && inZone)) {
       f.mode = "rotate";
@@ -421,7 +438,7 @@ export function createBattle(options: BattleOptions): Battle {
       }
       return;
     }
-    if (nearest && (wounded || engage === "flee" || (f.tactic === "hide" && nearest.d < 18))) {
+    if (nearest && (wounded || fleeing || (f.tactic === "hide" && nearest.d < 18))) {
       f.mode = "retreat";
       if (!engage && !wounded) offerDecision(f, "engage");
       const a = Math.atan2(f.y - nearest.o.y, f.x - nearest.o.x), b = Math.atan2(zone.ncy - f.y, zone.ncx - f.x);
@@ -437,7 +454,7 @@ export function createBattle(options: BattleOptions): Battle {
     }
     // Loot: crates and fallen Friends' gear, inside the coming circle.
     const crateChoice = choiceFor(f, "crate");
-    const wantLoot = crateChoice !== "skip" && (!geared(f) || f.tactic === "loot" || crateChoice === "open");
+    const wantLoot = crateChoice !== "skip" && (!geared(f) || f.tactic === "loot" || crateChoice === "open" || crateChoice === "pry");
     if (wantLoot) {
       let best = -1, bestScore = Infinity, bestDeath: DeathCrate | null = null;
       const reach = f.tactic === "loot" ? 55 : 40;
@@ -489,6 +506,8 @@ export function createBattle(options: BattleOptions): Battle {
   function step(): readonly BattleEvent[] {
     if (over) return [];
     tickEvents = [];
+    for (const e of queued) emit(e);
+    queued = [];
     const rng = root.fork(`tick:${t}`);
     const zone = zoneAt(t);
     const key = `${zone.phase}:${zone.shrinking}`;
@@ -614,10 +633,20 @@ export function createBattle(options: BattleOptions): Battle {
     },
     decide(who, option) {
       const c = choices.get(who)?.at(-1);
-      if (!c || c.option || t > c.deadline || !DECISION_OPTIONS[c.kind].includes(option)) return false;
+      if (over || !c || c.option || t > c.deadline || !DECISION_OPTIONS[c.kind].includes(option)) return false;
       c.option = option;
       const f = fighters[who];
-      if (c.kind === "storm" && option === "sprint" && f.state === "alive") { f.sprintUntil = t + T.sprintTicks; f.hp = Math.max(1, f.hp - T.sprintCost); }
+      if (f.state === "alive") {
+        if (option === "sprint") { f.sprintUntil = t + T.sprintTicks; f.hp = Math.max(1, f.hp - T.sprintCost); }
+        else if (option === "boost") f.boostUntil = t + T.boostTicks;
+        else if (option === "pry") f.pry = true;
+        else if (option === "smoke") {
+          // Nobody can see the Friend for a moment, whoever was aiming at it loses it, and the first seconds are safe.
+          f.smokeUntil = t + T.smokeTicks; f.invulnUntil = Math.max(f.invulnUntil, t + T.smokeInvulnTicks);
+          for (const o of fighters) if (o.target === who) o.target = -1;
+        }
+      }
+      queued.push({ t, kind: "decided", who, decision: c.kind, option, paid: option === PAID_OPTION[c.kind] });
       return true;
     },
     isOver: () => over,

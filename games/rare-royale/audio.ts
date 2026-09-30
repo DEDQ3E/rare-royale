@@ -3,7 +3,7 @@
  * Palette: a stadium crowd built from vowel formants over noise with a stadium slap-back echo; a score in D minor
  * (i–VI–III–VII) that builds in layers with the battle (pad, bass, drums, arpeggio, lead hook, final-duel heartbeat
  * and risers); unpitched weapons (a rubber snap, a bow's thunk and whoosh, body thumps), ring-modulated star wands, inharmonic bells for loot and
- * sponsor items, a flame whoosh for every burn, an airship drone and a storm siren. The viewer's own Friend gets its
+ * sponsor items, a flame whoosh for every burn, a furnace roar when a round burns 30 RF, an airship drone and a storm siren. The viewer's own Friend gets its
  * own cues (hits, near misses, shield blocks, storm zaps, a heartbeat when low), and the score ducks under them.
  *
  * Nothing plays before `unlock()` is called from a player gesture. Muted, paused or hidden: the context is suspended. */
@@ -13,7 +13,7 @@ export type Cue =
   | "shot-fists" | "shot-slingshot" | "shot-hammer" | "shot-bow" | "shot-wand" | "hit" | "downed" | "out"
   | "loot" | "heal" | "shield" | "revive" | "zone" | "decision" | "bounty" | "win" | "lose"
   | "parachute" | "pickup-weapon" | "pickup-armor" | "pickup-bandage" | "pickup-gold" | "hurt" | "whiff" | "tink" | "zap"
-  | "warn" | "top10" | "final" | "airdrop" | "tab";
+  | "warn" | "top10" | "final" | "airdrop" | "tab" | "smoke" | "furnace";
 export type Scene = "off" | "lobby" | "battle" | "results";
 /** `far` (0 near to 1 at the edge of hearing) muffles a sound with distance. */
 export type PlayOptions = Readonly<{ gain?: number; pan?: number; far?: number }>;
@@ -110,7 +110,7 @@ export function createRoyaleAudio() {
   function play(cue: Cue, o: PlayOptions = {}) {
     if (!ctx || muted || paused || hidden || ctx.state !== "running") return false;
     const t = ctx.currentTime + 0.01, v = o.gain ?? 1, d = out(o.pan, o.far);
-    if (["go", "win", "lose", "revive", "bounty", "final", "top10", "hurt", "airdrop"].includes(cue)) duck(cue === "hurt" ? 0.6 : 0.4, cue === "win" || cue === "lose" ? 2.5 : 0.8);
+    if (["go", "win", "lose", "revive", "bounty", "final", "top10", "hurt", "airdrop", "furnace"].includes(cue)) duck(cue === "hurt" ? 0.6 : 0.4, cue === "win" || cue === "lose" ? 2.5 : 0.8);
     switch (cue) {
       case "ui": hiss(t, 0.05, 0.25 * v, d, "bandpass", 1800, 1800, 8); osc(t, "sine", 880, 880, 0.05, 0.08 * v, d); break;
       case "enter":
@@ -182,6 +182,14 @@ export function createRoyaleAudio() {
       }
       case "airdrop": hiss(t, 0.5, 0.18 * v, d, "bandpass", 3000, 600, 2, 0.05); bell(t + 0.35, midi(81), 0.1 * v, 0.6, d); break;
       case "tab": osc(t, "sine", 1320, 1320, 0.03, 0.06 * v, d, 0.001); break;
+      // A smoke grenade: a pop, then a soft hiss that spreads out.
+      case "smoke": thump(t, 180, 0.3 * v, d, 0.5); hiss(t + 0.03, 1.1, 0.3 * v, d, "lowpass", 2600, 500, 0.8, 0.05); break;
+      case "furnace": {
+        // The furnace catches: a deep roar that swells, crackling embers and a bright brass chord with the crowd.
+        osc(t, "sawtooth", 55, 38, 1.4, 0.12 * v, d, 0.25); hiss(t, 1.6, 0.45 * v, d, "bandpass", 180, 1400, 1.2, 0.35);
+        for (let i = 0; i < 14; i++) hiss(t + 0.2 + Math.random() * 1.2, 0.012, 0.3 * v, d, "highpass", 4500);
+        [62, 69, 74, 78].forEach((n, i) => brass(t + 0.35 + i * 0.06, n, 0.9, 0.08 * v, d)); crowd(t + 0.3, "ah", 0.35 * v, 1.8); break;
+      }
     }
     return true;
   }

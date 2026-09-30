@@ -2,8 +2,8 @@
  * simulated RF tally. The crowd is seeded by the round and tick, so viewers who do not change the battle see the same fans. */
 
 import {
-  applyOut, applyWin, createBattle, createRng, hash32, lineUp, withPlayer, roundSeed, settleRound, startBounties, splitPayment, revivePrice, ENTRY_PRICE, ROUND_SIZE, SHOUT_PRICE,
-  SHOUTS, SPONSOR_ITEMS, type Battle, type Bounties, type BattleEvent, type BattleSnapshot, type FighterInit, type Settlement, type SponsorItemId,
+  applyOut, applyWin, createBattle, createRng, hash32, lineUp, withPlayer, roundSeed, settleRound, startBounties, splitPayment, revivePrice, rf, ENTRY_PRICE, ROUND_SIZE, SHOUT_PRICE,
+  SHOUTS, SPONSOR_ITEMS, type Battle, type Bounties, type BattleEvent, type BattleSnapshot, type FighterInit, type Settlement, type SpendKind, type SponsorItemId,
 } from "./engine/index.ts";
 
 /** The round's simulated RF: entries in, sponsor payments, and where it all went. `bountyBurned`, `crowdBurned` and
@@ -20,12 +20,17 @@ export const emptyTally = (): Tally => ({ entries: 0n, paid: 0, crowd: 0n, yours
  * crowd level scales all four chances (1 in the game). */
 export const CROWD = { revive: 0.06, shield: 0.12, medkit: 0.09, shout: 0.02, hurtBelow: 0.6 } as const;
 
+/** A round that burns this much lights the furnace: a one-off flare in the arena and a tile in the hall of fame. */
+export const FURNACE_LIT = rf("30");
+/** A Smoke call counts as an escape when the Friend is still standing this many seconds later (or wins first). */
+export const SMOKE_ESCAPE_TICKS = 10;
+
 /** One recorded tick, for replays. Snapshots are copies, so the record never changes. */
 export type Frame = Readonly<{ snap: BattleSnapshot; events: readonly BattleEvent[] }>;
 /** An arena shout from the crowd or the viewer. */
 export type Shout = Readonly<{ t: number; by: string; text: string }>;
 /** What the viewer's Friend did this round, beyond the battle's own counters. */
-export type PlayerLog = { loots: number; phaseReached: number; fanSaves: number };
+export type PlayerLog = { loots: number; phaseReached: number; fanSaves: number; smokeEscapes: number };
 
 export type RoundRunner = Readonly<{
   id: number;
@@ -39,8 +44,9 @@ export type RoundRunner = Readonly<{
   settlement(): Settlement | null;
   /** Steps until the battle reaches `tick` (or ends). Returns every event produced, oldest first. */
   advanceTo(tick: number): BattleEvent[];
-  /** Records a sponsor payment by the viewer for fighter `who` in the round tally. */
-  recordYours(kind: SponsorItemId, amount: bigint, who: number): void;
+  /** Records a payment by the viewer in the round tally: a sponsor item for fighter `who` (which makes the viewer one
+   * of its backers) or a paid decision call for the viewer's own Friend. */
+  recordYours(kind: SponsorItemId | "decision", amount: bigint, who: number): void;
   /** The viewer's shout: a 1 RF gameplay payment. */
   shout(text: string): void;
   /** Every tick so far, oldest first. */
@@ -64,7 +70,7 @@ export function createRoundRunner(id: number, roster: readonly FighterInit[], pl
   const paid = seated.fighters.map((_, i) => !(practice && i === seated.index));
   const battle = createBattle({ seed: roundSeed(id), fighters: seated.fighters, deciders: seated.index >= 0 ? [seated.index] : [] });
   const tally = emptyTally();
-  const pay = (kind: "entry" | SponsorItemId | "cosmetic", amount: bigint) => {
+  const pay = (kind: SpendKind, amount: bigint) => {
     const s = splitPayment(kind, amount);
     tally.pool += s.pool; tally.bounty += s.bounty; tally.burned += s.burned; tally.rewards += s.rewards;
     return s.burned;
@@ -75,7 +81,8 @@ export function createRoundRunner(id: number, roster: readonly FighterInit[], pl
   const frames: Frame[] = [{ snap: battle.snapshot(), events: [] }];
   const shouts: Shout[] = [];
   const sponsors = new Map<string, bigint>(), backers = new Map<number, Set<string>>();
-  const log: PlayerLog = { loots: 0, phaseReached: 0, fanSaves: 0 };
+  const log: PlayerLog = { loots: 0, phaseReached: 0, fanSaves: 0, smokeEscapes: 0 };
+  let smokedAt = -1;
   const bounties = startBounties(paid);
   const backed = (who: number, by: string, price: bigint) => {
     sponsors.set(by, (sponsors.get(by) ?? 0n) + price);
@@ -121,7 +128,10 @@ export function createRoundRunner(id: number, roster: readonly FighterInit[], pl
     for (const e of events) {
       if (e.kind === "loot" && e.who === me) log.loots += 1;
       if (e.kind === "sponsor" && e.who === me && e.by !== "You") log.fanSaves += 1;
+      if (e.kind === "decided" && e.who === me && e.option === "smoke") smokedAt = e.t;
+      if (e.kind === "downed" && e.who === me) smokedAt = -1;
     }
+    if (smokedAt >= 0 && (snap.t - smokedAt >= SMOKE_ESCAPE_TICKS || snap.winner === me)) { log.smokeEscapes += 1; smokedAt = -1; }
     if (snap.fighters[me].state !== "out") log.phaseReached = Math.max(log.phaseReached, snap.zone.phase);
   }
 
@@ -138,7 +148,7 @@ export function createRoundRunner(id: number, roster: readonly FighterInit[], pl
       settle();
       return out;
     },
-    recordYours(kind, amount, who) { tally.yours += amount; tally.yoursBurned += pay(kind, amount); backed(who, "You", amount); },
+    recordYours(kind, amount, who) { tally.yours += amount; tally.yoursBurned += pay(kind, amount); if (kind !== "decision") backed(who, "You", amount); },
     shout(text) { tally.yours += SHOUT_PRICE; tally.yoursBurned += pay("cosmetic", SHOUT_PRICE); shouts.push({ t: battle.snapshot().t, by: "You", text }); },
   };
 }

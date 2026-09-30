@@ -6,7 +6,7 @@
 
 🎬 **Demo with sound (1 min):** recorded from the real SDK runtime with Sparkling Friend #66666 read live from mainnet (only the wallet is mocked; `tests/video.mjs`). It opens on the drop: a shield with its effect on the odds and its capsule, a paid shout, following and sponsoring another Friend from the Fighters tab, the final circle, a 3rd place (4 RF) with the round's burn split by source, the replay of the final, the hall of fame with the RF token's real supply read from mainnet, and the next lobby with its odds. **[▶ Watch the demo](https://dedq3e.github.io/rare-royale/demo.html)** (plays in the browser; [download the file](https://dedq3e.github.io/rare-royale/media/rare-royale.webm)). A second one-minute cut in MP4 (6.4 MB, `tests/video-pr.mjs`) starts in the lobby 11 seconds before the drop, enters on camera and plays the round to a 12th place: [rare-royale.mp4](https://github.com/DEDQ3E/rare-royale/raw/main/media/rare-royale.mp4).
 
-🔥 **About 1,500 RF burned a day per 1,000 players**, if each plays one 10-minute session a day (2.3 rounds) as a careful player (entry, one shield, a medkit when hurt), with no crowd counted. If everyone only enters: 230 RF a day; if everyone buys every item that helps: about 7,300 RF. Simulated.
+🔥 **About 1,500 RF burned a day per 1,000 players**, if each plays one 10-minute session a day (2.3 rounds) as a careful player (entry, one shield, a medkit when hurt), with no crowd counted. If everyone only enters: 230 RF a day; as a tactician who pays for every Smoke, Pry and Boost call the round offers: about 4,300 RF; buying every item and every call that helps: about 8,100 RF. Simulated.
 
 ✅ **Tested with a real wallet:** the whole current preview (FriendSDK v0.1.4) was played on Robinhood mainnet with a real wallet and a real Generations Friend: connecting, the ownership gate, the lobby, entering, sponsoring, shouts, the Locker, results, the replay, the hall of fame and the next round. The v0.1.4 preview build carries no transaction code, and RF itself stays simulated.
 
@@ -21,6 +21,8 @@
 | A shield (1 RF), bought mid-battle | 28% → 34% |
 | A medkit (1 RF), bought below half HP | 7% → 11% |
 | A second life (2 RF), bought when knocked down | 0% → 5% |
+| A Smoke call (1 RF), whenever an enemy is spotted | 23% → 37% |
+| A Pry call (1 RF), whenever a crate is near | 19% → 24% |
 
 The drop matters most: the quietest place about breaks even (1.00 RF back per 1 RF entry on average), the busiest 0.59 RF. That edge comes from the other entrants, never from the burn (the pool is fixed at 0.8 RF per entry), and live the map's counts would move as players choose. Fight reaches the top 10 least often but gets RF back most often, from bounties, so all three tactics return within 5% of the average.
 
@@ -40,7 +42,7 @@ A spectator-sponsored battle royale where your Generations Friend drops onto an 
 
 ## Token Activity at a glance
 
-Four ways to spend RF: the entry, sponsoring any Friend (a shield, a medkit, a second life for 2, then 4, then 8 RF), shouts and Locker cosmetics. Every payment except the entry burns 50% and funds 50% active Friend rewards (the protocol's own 50/50 rule). Both tables are reproduced by `npm run balance` ([BALANCE.md](BALANCE.md)).
+Five ways to spend RF: the entry, sponsoring any Friend (a shield, a medkit, a second life for 2, then 4, then 8 RF), paid calls in your Friend's quick decisions (Smoke, Pry, Boost for 1 RF), shouts and Locker cosmetics. **Up to 4 moments per round where burning is your tactical call.** Every payment except the entry burns 50% and funds 50% active Friend rewards (the protocol's own 50/50 rule). Both tables are reproduced by `npm run balance` ([BALANCE.md](BALANCE.md)).
 
 **One real player, with no crowd at all** (3,000 simulated rounds per profile, the same rounds for each; a 10-minute session is about 2.3 rounds):
 
@@ -48,7 +50,8 @@ Four ways to spend RF: the entry, sponsoring any Friend (a shield, a medkit, a s
 |---|---:|---:|---:|---:|---:|
 | Entry only | 1.00 RF | 0.10 RF | 10% | 0.81 RF | 2.3 / 0.2 RF |
 | Careful: entry, one shield, a medkit when below half HP | 2.13 RF | 0.66 RF | 31% | 1.06 RF | 4.9 / 1.5 RF |
-| All-in: every item whenever it helps | 7.16 RF | 3.18 RF | 44% | 1.66 RF | 16.6 / 7.4 RF |
+| Tactician: entry and every paid call (Smoke, Pry, Boost; 3.5 a round) | 4.54 RF | 1.87 RF | 41% | 1.39 RF | 10.5 / 4.3 RF |
+| All-in: every item and every paid call whenever it helps | 7.77 RF | 3.49 RF | 45% | 2.25 RF | 18.0 / 8.1 RF |
 
 **A whole round of 50 paid entrants**, by how much the simulated other entrants and viewers sponsor (300 rounds per level; the game plays 100%):
 
@@ -70,14 +73,14 @@ A complete battle royale that runs itself, in rounds of about four and a half mi
 
 - **Lobby.** Your Friend on a lit pedestal with its stats and family ability; this round's island with seven places to drop on (and how many Friends plan to land at each); a tactic (Fight, Hide, Loot); the entry panel with the prize ladder and **the real odds for that tactic** (averaged over all Friends, from the balance simulation); enter for 1 RF, practise for free, or just watch. A short *How to play* guide opens on the first visit and pauses the countdown.
 - **Drop.** An airship crosses the island and every Friend parachutes to its target.
-- **Battle.** Tiered loot (slingshot, hammer, bow, star wand, armour, bandages), six storm circles that shift and shrink, ranged fights with line of sight, cover inside buildings, knockdowns with a five-second window for a second life, and loot left behind. A broadcast camera follows your Friend (teal ring, YOU arrow, edge pointer, minimap marker), with a kill feed, an announcer and up to four quick decisions per round (fight or flee, open a crate, sprint out of the storm). Friends play with a plan: they head for places inside the coming circle, finish weakened rivals, join fights already under way, take cover in buildings and never chase into the storm. Every fight animates: lunges, recoil, knock-back on hits, wand sparks, knocked-down Friends lying with stars over their heads, a puff of smoke on elimination and a small camera shake for big hits. The storm eases in and out over six slow, shifting circles.
-- **Every payment is a moment.** A sponsor's shield, medkit or second life drops onto the Friend in a capsule under a little parachute, with the sponsor's name on it. A furnace in the dock fills with every RF burned this round and flashes each "+0.5", and the results count the round's burn up in embers.
+- **Battle.** Tiered loot (slingshot, hammer, bow, star wand, armour, bandages), six storm circles that shift and shrink, ranged fights with line of sight, cover inside buildings, knockdowns with a five-second window for a second life, and loot left behind. A broadcast camera follows your Friend (teal ring, YOU arrow, edge pointer, minimap marker), with a kill feed, an announcer and up to four quick decisions per round (fight or flee, open a crate, sprint out of the storm), each with two free options and a paid third one on key 3: **Smoke** (1 RF) hides your Friend from every rival for 4 seconds and gets it out of the fight, **Pry** (1 RF) makes a crate give loot one tier better, **Boost** (1 RF) runs out of the storm 70% faster with no HP cost. Friends play with a plan: they head for places inside the coming circle, finish weakened rivals, join fights already under way, take cover in buildings and never chase into the storm. Every fight animates: lunges, recoil, knock-back on hits, wand sparks, knocked-down Friends lying with stars over their heads, a puff of smoke on elimination and a small camera shake for big hits. The storm eases in and out over six slow, shifting circles.
+- **Every payment is a moment.** A sponsor's shield, medkit or second life drops onto the Friend in a capsule under a little parachute, with the sponsor's name on it. A furnace in the dock fills with every RF burned this round and flashes each "+0.5". When a round has burned 30 RF, the furnace is lit once: a flash and a shower of embers over the arena, a FURNACE LIT banner and its own roar (a still banner with reduced motion). The results count the round's burn up in embers.
 - **Crowd.** Anyone watching can sponsor your Friend or any other until 25 are left. The **Fighters** tab lists everyone still standing with HP and knockouts: tap one to follow it with the camera and sponsor it.
 - **Locker and shouts.** Auras (embers, frost, falling stars) and titles drawn on your Friend in the arena, and paid shouts in the announcer's ticker and a speech bubble. Looks only: they never change the fight.
-- **Challenges.** Three goals in the lobby at a time (finish top 10, two knockouts, sponsor another Friend, back the winner, win…). Each unlocks a free title, win or lose, so every round moves you forward.
+- **Challenges.** Three goals in the lobby at a time, eleven in all (finish top 10, two knockouts, sponsor another Friend, burn 5 RF in a session for the Stoker title, escape a fight with Smoke for Smoke Artist, back the winner, win…). Each unlocks a free title, win or lose, so every round moves you forward.
 - **Results.** The top 10 with their payouts, your place and what you won (ladder plus bounties), the round's top sponsor and its **Kingmakers** (everyone who sponsored the winner), exactly what the round burned, and what your own payments burned this round and this session. **Replay the final** plays the last 20 seconds again with the winner on camera and names its Kingmakers.
-- **Hall of fame.** RF burned to date read **live from the RF token's `totalSupply` on Robinhood mainnet**, the burn of the last 12 rounds, and the latest champions with each round's top sponsor (past rounds replay from their seeds, the same for everyone).
-- **Sound.** Its own synthesized arena sound, no samples: a formant-built stadium crowd with a slap-back echo; a score in D minor that builds in layers as the field shrinks (pad, bass, drums, arpeggio, a lead hook, risers and a heartbeat kick for the final duel); a rubber snap for slingshots, a thunk and whoosh for bows, dull thumps for hits, a ring-modulated star wand, bells for loot, a flame whoosh for every burn, the airship drone and the storm siren. Your own Friend gets its own cues (the parachute, weapon, armour and bandage pickups, hits, near misses, shield blocks, storm zaps and a heartbeat when low), with beeps before the storm moves and stingers for the top 10 and the final two; the score ducks under them and distant fights sound muffled. The Sound button cycles sound on, music off and sound off.
+- **Hall of fame.** RF burned to date read **live from the RF token's `totalSupply` on Robinhood mainnet**, the burn of the last 12 rounds, how many of them lit the furnace, and the latest champions with each round's top sponsor (past rounds replay from their seeds, the same for everyone).
+- **Sound.** Its own synthesized arena sound, no samples: a formant-built stadium crowd with a slap-back echo; a score in D minor that builds in layers as the field shrinks (pad, bass, drums, arpeggio, a lead hook, risers and a heartbeat kick for the final duel); a rubber snap for slingshots, a thunk and whoosh for bows, dull thumps for hits, a ring-modulated star wand, bells for loot, a flame whoosh for every burn, a furnace roar when a round passes 30 RF burned, a smoke pop for Smoke, the airship drone and the storm siren. Your own Friend gets its own cues (the parachute, weapon, armour and bandage pickups, hits, near misses, shield blocks, storm zaps and a heartbeat when low), with beeps before the storm moves and stingers for the top 10 and the final two; the score ducks under them and distant fights sound muffled. The Sound button cycles sound on, music off and sound off.
 
 ![Lobby: the Friend, the island, the tactic, the ladder and your odds](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/lobby.png)
 
@@ -98,6 +101,7 @@ Everything below is **simulated** in this preview and labelled on every screen. 
 | Second life (within 5 s of a knockdown; back with 50% HP) | 2, then 4, then 8 RF, max 3 per Friend per round | **50% burned** · 50% active Friend rewards |
 | Aura: Ember or Frost 2 RF, Starfall 5 RF | once per session | **50% burned** · 50% active Friend rewards · looks only |
 | Title: Underdog 1, Showrunner 3, High Roller 5 RF | once per session | **50% burned** · 50% active Friend rewards · looks only (challenge titles are free) |
+| Paid call in a quick decision: Smoke, Pry or Boost (key 3) | 1 RF, up to 4 a round | **50% burned** · 50% active Friend rewards |
 | Shout | 1 RF | **50% burned** · 50% active Friend rewards · a line in the arena |
 
 - The 50/50 split is the protocol's own rule for gameplay payments ([rarefriends.com/docs/economy](https://rarefriends.com/docs/economy)), so the game feeds both the burn and the rewards of every active Friend holder.
@@ -126,7 +130,7 @@ The average return is 0.79 RF per entry (0.8 RF goes back into the round; the st
 Stats, family abilities, tactics and sponsor items change the fight, within limits checked by `npm run balance`:
 
 - No Generation, family or tactic earns more than 1.2× the average return (highest: 1.15×, Colossus). **Every tactic returns within 5% of the average** (0.99× to 1.02×). No Generation, family or tactic averages 1 RF back per 1 RF entry (highest: 0.904 RF); only a smart drop comes near it (below).
-- **No purchase pays for itself.** Each purchase is tested by playing the same seeded round twice, with and without it: a shield returns 0.29 RF per 1 RF, a medkit 0.19, a second life 0.10, and buying everything every time 0.15. Each still raises the chance of a high place: a shield lifts the top-10 chance from 28% to 34%, a medkit bought when hurt from 7% to 11%, and a second life gives a knocked-down Friend a 5% chance of the top 10 instead of none. The dock shows these numbers when you point at an item. Purchases made in the last moments before sponsoring closes return 0.12–0.38 RF per 1 RF.
+- **No purchase pays for itself.** Each purchase is tested by playing the same seeded round twice, with and without it: a shield returns 0.29 RF per 1 RF, a medkit 0.19, a second life 0.10, a Smoke call 0.18, a Pry call 0.20, a Boost call 0.16, and buying every item and call every time 0.24. Each still raises the chance of a high place: a shield lifts the top-10 chance from 28% to 34%, a medkit bought when hurt from 7% to 11%, a second life gives a knocked-down Friend a 5% chance of the top 10 instead of none, and Smoke whenever an enemy is spotted lifts it from 23% to 37%. The dock shows these numbers when you point at an item, and each paid call's button shows its own. Purchases made in the last moments before sponsoring closes return 0.12–0.38 RF per 1 RF.
 - **The drop is a real choice.** Each round is played three times for the same Friend and tactic, changing only the drop: the quietest place on the lobby's map gives a 26% chance of the top 10 and 1.00 RF per entry on average, the tactic's own choice 20% and 0.83 RF, the busiest place 14% and 0.59 RF. A good drop wins RF from the other entrants, not from the burn; in the simulation the other 49 do not react to the map, while live players would.
 
 ## How does it use Rare Friends?
@@ -144,7 +148,7 @@ Open the preview, connect a browser wallet on **Robinhood mainnet (chain 4663)**
 | Where | Keys | Touch or mouse |
 |---|---|---|
 | Lobby | 1, 2, 3: tactic · E: enter for 1 RF · P: practice · L: locker | Tap a place on the map, the tactic cards and the buttons |
-| Battle | S: shield · M: medkit · R: second life · T: switch sponsor target · 1, 2: decisions · Y: shout · F: Fighters tab | Dock buttons; tap a Friend in the Fighters tab to follow it |
+| Battle | S: shield · M: medkit · R: second life · T: switch sponsor target · 1, 2: free decisions · 3: paid call (1 RF) · Y: shout · F: Fighters tab | Dock buttons; tap a Friend in the Fighters tab to follow it |
 | Results | V: replay the final | Replay the final button |
 | Anywhere | H: hall of fame · Esc: close · arrows and Enter in the guide | How to play, Sound and Hall of fame buttons |
 
@@ -168,11 +172,11 @@ On Windows, `play.bat` installs, builds and opens the game in the browser.
 | Check | Result |
 |---|---|
 | `npm run typecheck` | Pass |
-| `npm run test:engine` (map, stats, replay, one winner, sponsoring, decisions, economy, settlement, ledger, rounds, round recording and crowd payments, challenges) | 12 / 12 pass |
+| `npm run test:engine` (map, stats, replay, one winner, sponsoring, decisions, paid calls (1 RF split 50/50, their effects, recorded as events, the round replays identically), economy, settlement, ledger, rounds, round recording and crowd payments, challenges) | 13 / 13 pass |
 | `npm run check` (`friendsdk check`) | Valid; reference chance game: expected reward 0.8 RF, maximum 0.8 RF |
 | `npx friendsdk test games/rare-royale --width 960` and `--width 390` | Pass |
 | `npm run balance -- 6000 2500 --report` | All four fairness targets pass ([`BALANCE.md`](https://github.com/DEDQ3E/rare-royale/blob/main/BALANCE.md)) |
-| Browser flow (`tests/shots.ts`, SDK test runtime with a fake clock): guide, lobby, Locker purchases, entry, drop, shout, Fighters tab and follow, late game, results, replay of the final, hall of fame, at 960 × 808 and 390 × 844 | Pass (the SDK test RPC refuses the hall's live RF supply read, so that tile shows "unavailable" there) |
+| Browser flow (`tests/shots.ts`, SDK test runtime with a fake clock): guide, lobby, Locker purchases, entry, drop, a quick decision and its paid call (Pry, 1 RF: balance, furnace and alert), shout, Fighters tab and follow, late game, results, replay of the final, hall of fame, at 960 × 808 and 390 × 844 | Pass (the SDK test RPC refuses the hall's live RF supply read, so that tile shows "unavailable" there) |
 | Next round (`tests/next-round.ts`): a second round starts after the first, after waiting out the lobby and with Next round now | Pass |
 | Demo video (`tests/video.mjs`): real SDK runtime, Friend #66666 read live from mainnet, picture and sound checked after recording | Pass |
 | Audio (`Web Audio` in Chromium): starts on the first gesture, suspends on mute | Pass |

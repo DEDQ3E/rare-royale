@@ -7,7 +7,7 @@
  * Prizes are funded only by paid entries: seats nobody paid for are filled by wild Friends, who never take prizes.
  * Gameplay payments follow the Rare Friends protocol rule (rarefriends.com/docs/economy):
  * 50% is burned and 50% funds RF rewards for active Friends.
- * Sponsor items and cosmetics are gameplay payments in full. Nothing here is sent on chain. */
+ * Sponsor items, paid decision calls and cosmetics are gameplay payments in full. Nothing here is sent on chain. */
 
 export const RF = 10n ** 18n;
 /** Parses "0.5" style decimal RF strings into base units. */
@@ -63,8 +63,11 @@ export const COSMETICS: readonly Cosmetic[] = [
 export const SHOUT_PRICE = rf("1");
 export const SHOUTS: readonly string[] = ["Dinner's on me!", "Catch me if you can!", "Storm? What storm?", "For the Friends!", "Burn it all!", "GG, see you next round!"];
 
-export type SpendKind = "entry" | "shield" | "medkit" | "revive" | "cosmetic";
-export const SPEND_KINDS: readonly SpendKind[] = ["entry", "shield", "medkit", "revive", "cosmetic"];
+/** A paid call in a quick decision (Smoke, Pry or Boost): a gameplay payment, 50% burned and 50% rewards. */
+export const DECISION_PRICE = rf("1");
+
+export type SpendKind = "entry" | "shield" | "medkit" | "revive" | "cosmetic" | "decision";
+export const SPEND_KINDS: readonly SpendKind[] = ["entry", "shield", "medkit", "revive", "cosmetic", "decision"];
 
 export type Split = Readonly<{ pool: bigint; bounty: bigint; burned: bigint; rewards: bigint }>;
 

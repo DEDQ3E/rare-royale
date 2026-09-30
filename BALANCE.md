@@ -48,7 +48,7 @@ Battle length in seconds: p10 157, median 176, p90 191, max 291. Knockouts in fi
 
 ## Does any purchase pay for itself?
 
-Each pair plays the same seeded round twice for the same Friend: once without the purchase and once with it. The gain is the average extra prize among rounds where the purchase happened, with a 95% interval. Fairness holds when gain < cost.
+Each pair plays the same seeded round twice for the same Friend: once without the purchase and once with it. For a paid call (Smoke, Pry, Boost), "without" leaves the decision to the tactic, as when a player does not answer. The gain is the average extra prize among rounds where the purchase happened, with a 95% interval. Fairness holds when gain < cost.
 
 | Purchase | Rounds bought | Avg cost | Avg return gain | 95% interval | Gain per 1 RF spent | Top 10: without → with | Bought with 30 or fewer standing: gain / cost |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -57,7 +57,11 @@ Each pair plays the same seeded round twice for the same Friend: once without th
 | Second life, bought when downed | 1333 | 2.00 RF | 0.205 RF | 0.146 to 0.264 | 0.103 RF | 0.0% → 5.3% | 0.23 / 2.00 RF (220 rounds) |
 | Medkit, bought as late as possible (hurt, 30 or fewer standing) | 693 | 1.00 RF | 0.359 RF | 0.198 to 0.520 | 0.359 RF | 22.2% → 26.4% | 0.36 / 1.00 RF (693 rounds) |
 | Shield, bought as late as possible (30 or fewer standing) | 1322 | 1.00 RF | 0.382 RF | 0.285 to 0.479 | 0.382 RF | 37.0% → 45.5% | 0.38 / 1.00 RF (1322 rounds) |
-| Everything, every time (max spender) | 2500 | 6.02 RF | 0.908 RF | 0.807 to 1.008 | 0.151 RF | 20.6% → 39.6% | none |
+| Smoke (1 RF), whenever an enemy is spotted | 2105 | 2.28 RF | 0.417 RF | 0.297 to 0.538 | 0.183 RF | 22.5% → 36.8% | 1.17 / 1.28 RF (36 rounds) |
+| Pry (1 RF), whenever a crate is near | 2283 | 1.17 RF | 0.232 RF | 0.137 to 0.328 | 0.199 RF | 19.1% → 23.7% | -1.10 / 1.00 RF (7 rounds) |
+| Boost (1 RF), whenever caught in the storm | 769 | 1.25 RF | 0.202 RF | 0.021 to 0.383 | 0.161 RF | 22.1% → 23.9% | 0.24 / 1.11 RF (123 rounds) |
+| Every paid call, every time (up to 4 a round) | 2500 | 3.56 RF | 0.567 RF | 0.451 to 0.683 | 0.159 RF | 19.8% → 35.0% | none |
+| Everything, every time (max spender: items and calls) | 2500 | 6.63 RF | 1.568 RF | 1.425 to 1.711 | 0.236 RF | 19.1% → 52.6% | none |
 
 ## Where the burn comes from
 
@@ -71,13 +75,14 @@ The same 300 rounds (the game's roster, round ids 8000 to 8299, 50 paid entries)
 
 ## One real player
 
-What a single player spends and burns, with no crowd at all: 3,000 rounds per profile, random line-ups, the player's own purchases only. A session of 10 minutes holds about 2.3 rounds (60 s lobby, the battle, 25 s of results).
+What a single player spends and burns, with no crowd at all: 3,000 rounds per profile, random line-ups, the player's own purchases only. A session of 10 minutes holds about 2.3 rounds (60 s lobby, the battle, 25 s of results). A paid call costs 1 RF (50% burned) and needs a decision the round offers, at most 4 a round.
 
-| Player | Spent per round | Burned per round | Share burned | Back per round (average) | 10-minute session: spent / burned |
-|---|---:|---:|---:|---:|---:|
-| Entry only | 1.00 RF | 0.10 RF | 10% | 0.81 RF | 2.3 / 0.2 RF |
-| Careful: entry, one shield, a medkit when below half HP | 2.13 RF | 0.66 RF | 31% | 1.06 RF | 4.9 / 1.5 RF |
-| All-in: every item whenever it helps | 7.16 RF | 3.18 RF | 44% | 1.66 RF | 16.6 / 7.4 RF |
+| Player | Spent per round | Burned per round | Share burned | Paid calls per round | Back per round (average) | 10-minute session: spent / burned |
+|---|---:|---:|---:|---:|---:|---:|
+| Entry only | 1.00 RF | 0.10 RF | 10% | 0.00 | 0.81 RF | 2.3 / 0.2 RF |
+| Careful: entry, one shield, a medkit when below half HP | 2.13 RF | 0.66 RF | 31% | 0.00 | 1.06 RF | 4.9 / 1.5 RF |
+| Tactician: entry and every paid call (Smoke, Pry, Boost) | 4.54 RF | 1.87 RF | 41% | 3.54 | 1.39 RF | 10.5 / 4.3 RF |
+| All-in: every item and every paid call whenever it helps | 7.77 RF | 3.49 RF | 45% | 4.00 | 2.25 RF | 18.0 / 8.1 RF |
 
 ## Where to drop
 
@@ -96,4 +101,4 @@ Each of 2,500 rounds is played three times for the same Friend with the same tac
 - No group earns 1 RF or more per 1 RF entry: PASS (highest 0.904 RF).
 - No purchase's average gain reaches its cost, even at the top of the 95% interval, and no late purchase (100+ rounds) pays for itself: PASS.
 
-Simulated in 737.0 s.
+Simulated in 1035.8 s.

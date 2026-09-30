@@ -47,6 +47,32 @@
       "top10With": 0.053
     }
   },
+  "decisions": {
+    "engage": {
+      "perRF": 0.18,
+      "top10Without": 0.225,
+      "top10With": 0.368,
+      "perRound": 0.842
+    },
+    "crate": {
+      "perRF": 0.2,
+      "top10Without": 0.191,
+      "top10With": 0.237,
+      "perRound": 0.913
+    },
+    "storm": {
+      "perRF": 0.16,
+      "top10Without": 0.221,
+      "top10With": 0.239,
+      "perRound": 0.308
+    },
+    "all": {
+      "perRF": 0.16,
+      "top10Without": 0.198,
+      "top10With": 0.35,
+      "perRound": 1
+    }
+  },
   "crowdLevels": [
     {
       "level": 0,
@@ -76,21 +102,32 @@
       "spent": 1,
       "burned": 0.1,
       "share": 0.1,
-      "back": 0.81
+      "back": 0.81,
+      "calls": 0
     },
     {
       "name": "Careful: entry, one shield, a medkit when below half HP",
       "spent": 2.13,
       "burned": 0.66,
       "share": 0.312,
-      "back": 1.06
+      "back": 1.06,
+      "calls": 0
     },
     {
-      "name": "All-in: every item whenever it helps",
-      "spent": 7.16,
-      "burned": 3.18,
-      "share": 0.444,
-      "back": 1.66
+      "name": "Tactician: entry and every paid call (Smoke, Pry, Boost)",
+      "spent": 4.54,
+      "burned": 1.87,
+      "share": 0.412,
+      "back": 1.39,
+      "calls": 3.54
+    },
+    {
+      "name": "All-in: every item and every paid call whenever it helps",
+      "spent": 7.77,
+      "burned": 3.49,
+      "share": 0.449,
+      "back": 2.25,
+      "calls": 4
     }
   ],
   "sessionRounds": 2.3,
