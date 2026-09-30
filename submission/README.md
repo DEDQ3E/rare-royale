@@ -2,13 +2,13 @@
 
 🕹️ **Play:** https://dedq3e.github.io/rare-royale/
 
-🎬 **Demo with sound (60 s):** the real SDK runtime with Sparkling Friend #66666 read live from mainnet, only the wallet mocked (`tests/video-pr.mjs`). It starts in the lobby 11 seconds before the drop and enters on camera, then plays the round.
+🎬 **Demo with sound (60 s):** the real SDK runtime with Sparkling Friend #66666 read live from mainnet, only the wallet mocked (`tests/video-pr.mjs`). It starts in the lobby 11 seconds before the drop and enters on camera, then plays an ordinary round: Pry on the landing crate, a shield, a shout, Smoke out of a fight, the furnace lit, the late game and the results.
 
 https://github.com/user-attachments/assets/9022a669-b284-4b0b-99eb-2ad3cc4deb1c
 
 🔥 **About 1,500 RF burned a day per 1,000 players**, if each plays one 10-minute session a day (2.3 rounds) as a careful player (entry, one shield, a medkit when hurt), with no crowd counted. If everyone only enters: 230 RF a day; as a tactician who pays for every Smoke, Pry and Boost call the round offers: about 4,300 RF; buying every item and every call that helps: about 8,100 RF. Simulated.
 
-✅ **Tested with a real wallet:** the whole current preview (FriendSDK v0.1.4) was played on Robinhood mainnet with a real wallet and a real Generations Friend: connecting, the ownership gate, the lobby, entering, sponsoring, shouts, the Locker, results, the replay, the hall of fame and the next round. The v0.1.4 preview build carries no transaction code, and RF itself stays simulated.
+✅ **Tested with a real wallet:** the whole current preview (FriendSDK v0.1.4) was played on Robinhood mainnet with a real wallet and a real Generations Friend: connecting, the ownership gate, the lobby, entering, sponsoring, the paid calls (Smoke, Pry, Boost), shouts, the Locker, the challenges, results, the replay, the hall of fame and the next round. The v0.1.4 preview build carries no transaction code, and RF itself stays simulated.
 
 💰 **The RF prices are examples.** A 1 RF entry, a 1 RF shield and the rest are sample prices. If the live game needs higher prices, multiply every price by the same number (×5, ×10…): the splits, the burn share and every chance in this document stay the same, and only the RF amounts scale.
 

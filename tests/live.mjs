@@ -69,7 +69,8 @@ async function install(page, origin, id, errors) {
   });
 }
 
-/** Build the game once and serve it; `open(id, viewport)` connects, picks that Friend and waits for the game. */
+/** Build the game once and serve it; `open(id, viewport)` connects, picks that Friend and waits for the game.
+ * With `clock`, the page runs on a Playwright clock started at that time (ms), so the lobby opens a chosen round. */
 export async function liveRuntime({ launch = {} } = {}) {
   const temp = mkdtempSync(join(tmpdir(), "royale-live-"));
   const build = await buildGame(resolve("./games/rare-royale"), { outdir: join(temp, "dist") });
@@ -78,12 +79,13 @@ export async function liveRuntime({ launch = {} } = {}) {
   const origin = `http://127.0.0.1:${server.address().port}`;
   const browser = await chromium.launch(launch);
   return {
-    async open(id, { width = 1000, height = 760, scale = 1 } = {}) {
+    async open(id, { width = 1000, height = 760, scale = 1, clock } = {}) {
       const errors = [];
       const context = await browser.newContext({ viewport: { width, height }, hasTouch: width < 500, deviceScaleFactor: scale });
       const page = await context.newPage(); page.setDefaultTimeout(90000);
       page.on("pageerror", e => errors.push(String(e)));
       await install(page, origin, id, errors);
+      if (clock !== undefined) { await page.clock.install({ time: clock }); await page.clock.resume(); }
       await page.goto(origin);
       await page.getByRole("button", { name: /^Connect (wallet|Browser wallet)$/ }).click();
       await page.getByRole("button", { name: new RegExp(`^Friend #${id}\\b`) }).click();
