@@ -1,8 +1,10 @@
-https://github.com/user-attachments/assets/9022a669-b284-4b0b-99eb-2ad3cc4deb1c
-
 ![A live round: Friends fight inside the storm circle while the crowd sponsors them](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/battle.png)
 
-🕹️ **Play: https://dedq3e.github.io/rare-royale/** · 🎬 **[Demo with sound (1 min)](https://dedq3e.github.io/rare-royale/demo.html)**
+🕹️ **Play:** https://dedq3e.github.io/rare-royale/
+
+🎬 **Demo with sound (60 s):** the real SDK runtime with Sparkling Friend #66666 read live from mainnet, only the wallet mocked (`tests/video-pr.mjs`). It starts in the lobby 11 seconds before the drop and enters on camera, then plays the round.
+
+https://github.com/user-attachments/assets/9022a669-b284-4b0b-99eb-2ad3cc4deb1c
 
 🔥 **About 1,500 RF burned a day per 1,000 players**, if each plays one 10-minute session a day (2.3 rounds) as a careful player (entry, one shield, a medkit when hurt), with no crowd counted. If everyone only enters: 230 RF a day; if everyone buys every item that helps: about 7,300 RF. Simulated.
 
