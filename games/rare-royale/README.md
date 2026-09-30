@@ -62,7 +62,7 @@ The prices are examples. For higher prices, multiply them all by the same number
 | Practice | free | Same battle, no RF in or out, no prizes |
 | Shield (soaks the next 30 damage) | 1 RF | 50% burned, 50% active Friend rewards |
 | Medkit (+45 HP) | 1 RF | 50% burned, 50% active Friend rewards |
-| Second life | 2, then 4, then 8 RF (max 3 per Friend per round) | 50% burned, 50% active Friend rewards |
+| Second life (within 5 s of a knockdown; back with 50% HP) | 2, then 4, then 8 RF (max 3 per Friend per round) | 50% burned, 50% active Friend rewards |
 | Aura (Ember, Frost 2 RF · Starfall 5 RF) | once per session | 50% burned, 50% active Friend rewards; looks only |
 | Title (Underdog 1 · Showrunner 3 · High Roller 5 RF) | once per session | 50% burned, 50% active Friend rewards; looks only. Challenge titles are free |
 | Shout | 1 RF | 50% burned, 50% active Friend rewards; a line in the ticker and over your Friend |
@@ -89,15 +89,14 @@ The prices are examples. For higher prices, multiply them all by the same number
 | Loot | 43.1% | 17.5% | 17.5% | 2.6% | 0.804 RF |
 
 An average round moves 87.1 RF: 50 RF of entries and 37.1 RF of sponsoring and shouts from the simulated other entrants and
-viewers (0.74 RF each per round). Without that crowd a round spends 50 RF and burns 5.6 RF (11%); at half of it, 66.5 RF and
+viewers (0.74 RF each per round). 39.4 RF returns to players, 24.2 RF (28%) is burned and 23.6 RF funds active Friend
+rewards; the viewer's own cosmetics come on top. Without that crowd a round spends 50 RF and burns 5.6 RF (11%); at half of it, 66.5 RF and
 13.9 RF (21%). One real player alone burns 10% of what they spend with the entry only, 31% as a careful player (a shield and a
 medkit when hurt) and 44% buying every item. `BALANCE.md` has the tables and the crowd model.
-39.4 RF returns to players, 24.2 RF (28%) is burned and 23.6 RF funds active Friend rewards. The viewer's own
-cosmetics come on top.
 
 Fairness is checked by `npm run balance`; the results are in `BALANCE.md` and the lobby odds in `engine/odds.json`.
 No Generation, family or tactic earns more than 1.2× the average, every tactic returns within 5% of the average (the
-round, not the choice, decides which was right), no group averages 1 RF back per 1 RF entry, and no
+round, not the choice, decides which was right), no Generation, family or tactic averages 1 RF back per 1 RF entry (a drop at the quietest place comes nearest, about 1.00 RF), and no
 purchase pays for itself on average, including purchases made just before sponsoring closes.
 
 ## Credits

@@ -18,7 +18,7 @@
 | A medkit (1 RF), bought below half HP | 7% → 11% |
 | A second life (2 RF), bought when knocked down | 0% → 5% |
 
-A smart drop takes RF from other entrants, never from the burn: the quietest place returns 1.00 RF per entry, the busiest 0.59 RF. The three tactics return within 5% of each other.
+A smart drop takes RF from other entrants, never from the burn: the quietest place about breaks even (1.00 RF per entry), the busiest returns 0.59 RF. The three tactics return within 5% of each other.
 
 **Project name**
 Rare Royale
@@ -96,8 +96,8 @@ Everything is simulated; you start with 20 RF. The prices are examples that scal
   - ladder with 50 paid entries: places 1–10 pay 8, 5, 4, 3, 2.5, then 1.5 RF each;
   - bounties: a knockout pays half the victim's bounty and adds the other half to your own head, the biggest head (once worth 0.4 RF or more) is marked WANTED, and the winner keeps its own;
   - a round with fewer than 5 paid entries refunds every entry; practice is free.
-- **Sponsoring:** a shield (soaks the next 30 damage) or a medkit (+45 HP) costs 1 RF. A second life costs 2, then 4, then 8 RF, at most 3 per Friend per round. Sponsoring closes at 25 standing.
-- **Looks:** shouts cost 1 RF, auras 2–5 RF and titles 1–5 RF.
+- **Sponsoring:** a shield (soaks the next 30 damage) or a medkit (+45 HP) costs 1 RF. A second life (within 5 s of a knockdown, back with 50% HP) costs 2, then 4, then 8 RF, at most 3 per Friend per round. Sponsoring closes at 25 standing.
+- **Looks:** a shout costs 1 RF; auras Ember and Frost 2 RF, Starfall 5 RF; titles Underdog 1, Showrunner 3, High Roller 5 RF (each once per session; challenge titles are free).
 - **Nothing is kept or redeemed:** sponsor items, shouts and looks act at once, so there are no consumables, backing or redemption rules.
 - **Odds per 1 RF entry** (6,000 simulated rounds):
   - any RF back 45.5%, 1 RF or more 20.1%, win 2.0%, average return 0.79 RF;

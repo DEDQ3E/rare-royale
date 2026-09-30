@@ -22,7 +22,7 @@
 | A medkit (1 RF), bought below half HP | 7% → 11% |
 | A second life (2 RF), bought when knocked down | 0% → 5% |
 
-The drop matters most: the quietest place returns 1.00 RF per entry on average, the busiest 0.59 RF. That edge comes from the other entrants, never from the burn (the pool is fixed at 0.8 RF per entry), and live the map's counts would move as players choose. Fight reaches the top 10 least often but gets RF back most often, from bounties, so all three tactics return within 5% of the average.
+The drop matters most: the quietest place about breaks even (1.00 RF back per 1 RF entry on average), the busiest 0.59 RF. That edge comes from the other entrants, never from the burn (the pool is fixed at 0.8 RF per entry), and live the map's counts would move as players choose. Fight reaches the top 10 least often but gets RF back most often, from bounties, so all three tactics return within 5% of the average.
 
 ![The late game, sped up](https://raw.githubusercontent.com/DEDQ3E/rare-royale/main/media/rare-royale.gif)
 
@@ -95,14 +95,14 @@ Everything below is **simulated** in this preview and labelled on every screen. 
 | Practice | free | Same battle, no RF in or out |
 | Shield (soaks the next 30 damage) | 1 RF | **50% burned** · 50% active Friend rewards |
 | Medkit (+45 HP) | 1 RF | **50% burned** · 50% active Friend rewards |
-| Second life (within 5 s of a knockdown) | 2, then 4, then 8 RF, max 3 per Friend per round | **50% burned** · 50% active Friend rewards |
+| Second life (within 5 s of a knockdown; back with 50% HP) | 2, then 4, then 8 RF, max 3 per Friend per round | **50% burned** · 50% active Friend rewards |
 | Aura: Ember or Frost 2 RF, Starfall 5 RF | once per session | **50% burned** · 50% active Friend rewards · looks only |
 | Title: Underdog 1, Showrunner 3, High Roller 5 RF | once per session | **50% burned** · 50% active Friend rewards · looks only (challenge titles are free) |
 | Shout | 1 RF | **50% burned** · 50% active Friend rewards · a line in the arena |
 
 - The 50/50 split is the protocol's own rule for gameplay payments ([rarefriends.com/docs/economy](https://rarefriends.com/docs/economy)), so the game feeds both the burn and the rewards of every active Friend holder.
 - **Ladder:** with 50 paid entries, 30 RF: 8 · 5 · 4 · 3 · 2.5 RF for places 1–5 and 1.5 RF for places 6–10. Any top-10 place returns more than the entry.
-- **Progressive bounties:** every head starts at 0.2 RF. A knockout pays the paid entrant who made it **half** the victim's bounty in RF and adds the other half to its own head, so the best fighters grow into the most valuable targets. Once a head is worth 0.4 RF or more, the biggest one on the island is marked **WANTED** in the arena and on the minimap, and the Fighters tab shows every head's bounty. The winner keeps its whole head. If the storm or a wild Friend gets a Friend, its whole bounty **burns**.
+- **Progressive bounties:** every head starts at 0.2 RF. A knockout pays the paid entrant who made it **half** the victim's bounty in RF and adds the other half to its own head, so the best fighters grow into the most valuable targets. Once a head is worth 0.4 RF or more, the biggest one on the island is marked **WANTED** in the arena and on the minimap, and the Fighters tab shows every head that has grown past its starting 0.2 RF. The winner keeps its whole head. If the storm or a wild Friend gets a Friend, its whole bounty **burns**.
 - **Backed prizes:** prizes come only from the same round's paid entries. Unpaid seats are filled by *wild* Friends that fight but never take RF, and the ladder ranks paid entrants only; with fewer than 5 paid entries a round is free and entries are refunded. In this preview the other 49 seats are simulated paid entrants.
 - **Sponsoring closes when 25 are left**, so nobody can buy the finish.
 
@@ -125,7 +125,7 @@ The average return is 0.79 RF per entry (0.8 RF goes back into the round; the st
 
 Stats, family abilities, tactics and sponsor items change the fight, within limits checked by `npm run balance`:
 
-- No Generation, family or tactic earns more than 1.2× the average return (highest: 1.15×, Colossus). **Every tactic returns within 5% of the average** (0.99× to 1.02×). No group averages 1 RF back per 1 RF entry (highest: 0.904 RF).
+- No Generation, family or tactic earns more than 1.2× the average return (highest: 1.15×, Colossus). **Every tactic returns within 5% of the average** (0.99× to 1.02×). No Generation, family or tactic averages 1 RF back per 1 RF entry (highest: 0.904 RF); only a smart drop comes near it (below).
 - **No purchase pays for itself.** Each purchase is tested by playing the same seeded round twice, with and without it: a shield returns 0.29 RF per 1 RF, a medkit 0.19, a second life 0.10, and buying everything every time 0.15. Each still raises the chance of a high place: a shield lifts the top-10 chance from 28% to 34%, a medkit bought when hurt from 7% to 11%, and a second life gives a knocked-down Friend a 5% chance of the top 10 instead of none. The dock shows these numbers when you point at an item. Purchases made in the last moments before sponsoring closes return 0.12–0.38 RF per 1 RF.
 - **The drop is a real choice.** Each round is played three times for the same Friend and tactic, changing only the drop: the quietest place on the lobby's map gives a 26% chance of the top 10 and 1.00 RF per entry on average, the tactic's own choice 20% and 0.83 RF, the busiest place 14% and 0.59 RF. A good drop wins RF from the other entrants, not from the burn; in the simulation the other 49 do not react to the map, while live players would.
 
